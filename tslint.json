@@ -1,0 +1,15 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:recommended"
+    ],
+    "jsRules": {},
+    "rulesDirectory": [],
+    "rules": {
+        //использовать одинарные кавычки для строковых констант
+        "quotemark": [true, "single"],
+        //обязательное использование точки с запятой (как в C# или Java)
+        "semicolon": [true],
+        "no-console": false
+    }
+}
