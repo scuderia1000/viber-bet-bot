@@ -1,0 +1,10 @@
+*.md
+*.gitignore
+*.log
+*.ico
+*.svg
+*.snap
+*.ttf
+*.woff
+*.woff2
+*.lock
