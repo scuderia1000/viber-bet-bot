@@ -35,7 +35,7 @@ function createLogger() {
 
 const logger = createLogger();
 
-const TOKEN = process.env.BOT_ACCOUNT_TOKEN ?? '4c8703e87b000b22-1a55ea83c8934515-b65d362d8e7dba28';
+const TOKEN = process.env.BOT_ACCOUNT_TOKEN ?? '';
 const URL = process.env.NOW_URL || process.env.HEROKU_URL;
 
 const bot = new ViberBot(logger, {
@@ -62,4 +62,9 @@ const say = (response: ViberResponse, message: string): void => {
 
 bot.onSubscribe((response: ViberResponse) => {
   say(response, createMessage(response.userProfile.name, bot.name).hi());
+});
+
+bot.on(BotEvents.MESSAGE_RECEIVED, (message: Message, response: ViberResponse) => {
+  // Echo's back the message to the client. Your bot logic should sit here.
+  response.send(message);
 });
