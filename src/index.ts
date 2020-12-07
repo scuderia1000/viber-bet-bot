@@ -41,7 +41,7 @@ const URL = process.env.NOW_URL || process.env.HEROKU_URL;
 const bot = new ViberBot(logger, {
   authToken: TOKEN,
   name: 'Phoenix Bet Bot', // <--- Your bot name here
-  avatar: '', // It is recommended to be 720x720, and no more than 100kb.
+  avatar: 'https://viber-bot.s3.eu-central-1.amazonaws.com/phoenix_007.jpg', // It is recommended to be 720x720, and no more than 100kb.
 });
 
 if (URL) {
