@@ -47,11 +47,7 @@ const bot = new ViberBot(logger, {
 if (URL) {
   const port = process.env.PORT || 8080;
 
-  http
-    .createServer(bot.middleware())
-    .listen(port, () =>
-      bot.setWebhook(process.env.NOW_URL || process.env.HEROKU_URL || process.env.VERCEL_URL),
-    );
+  http.createServer(bot.middleware()).listen(port, () => bot.setWebhook(URL));
 } else {
   logger.debug(
     'Could not find the now.sh/Heroku environment variables. Please make sure you followed readme guide.',
