@@ -56,6 +56,8 @@ declare module 'viber-bot' {
   // eslint-disable-next-line import/export
   export namespace Message {
     export class Text extends Message {
+      text: string;
+
       constructor(text: string);
     }
   }

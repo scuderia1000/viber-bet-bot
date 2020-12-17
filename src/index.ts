@@ -3,6 +3,7 @@ import winston from 'winston';
 import * as http from 'http';
 import { ViberResponse } from './types/base';
 import { createMessage } from './util';
+import ngrok from './util/get-public-url';
 
 const TextMessage = Message.Text;
 
@@ -37,22 +38,13 @@ const logger = createLogger();
 
 const TOKEN = process.env.BOT_ACCOUNT_TOKEN ?? '';
 const URL = process.env.NOW_URL || process.env.HEROKU_URL;
+const PORT = process.env.PORT || 8080;
 
 const bot = new ViberBot(logger, {
   authToken: TOKEN,
   name: 'Phoenix Bet Bot', // <--- Your bot name here
   avatar: 'https://viber-bot.s3.eu-central-1.amazonaws.com/phoenix_007.jpg', // It is recommended to be 720x720, and no more than 100kb.
 });
-
-if (URL) {
-  const port = process.env.PORT || 8080;
-
-  http.createServer(bot.middleware()).listen(port, () => bot.setWebhook(URL));
-} else {
-  logger.debug(
-    'Could not find the now.sh/Heroku environment variables. Please make sure you followed readme guide.',
-  );
-}
 
 const say = (response: ViberResponse, message: string): void => {
   response.send(new TextMessage(message));
@@ -63,6 +55,27 @@ bot.onSubscribe((response: ViberResponse) => {
 });
 
 bot.on(BotEvents.MESSAGE_RECEIVED, (message: Message, response: ViberResponse) => {
+  logger.debug('message', message);
+  const messageText = (message as Message.Text).text;
+  const echoMessage = new TextMessage(`Hi ${response.userProfile?.name}! You send: ${messageText}`);
   // Echo's back the message to the client. Your bot logic should sit here.
-  response.send(message);
+  response.send(echoMessage);
 });
+
+if (URL) {
+  http.createServer(bot.middleware()).listen(PORT, () => bot.setWebhook(URL));
+} else {
+  logger.debug(
+    'Could not find the now.sh/Heroku environment variables. Please make sure you followed readme guide.',
+  );
+  ngrok
+    .getPublicUrl()
+    .then((publicUrl) => {
+      http.createServer(bot.middleware()).listen(PORT, () => bot.setWebhook(publicUrl));
+    })
+    .catch((error) => {
+      logger.debug('Can not connect to ngrok server. Is it running? 1111');
+      logger.error(error);
+      process.exit(1);
+    });
+}
