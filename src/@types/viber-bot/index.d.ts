@@ -32,6 +32,25 @@ declare module 'viber-bot' {
 
   export enum Events {
     MESSAGE_RECEIVED = 'MESSAGE_RECEIVED',
+    MESSAGE_SENT = 'message_sent',
+    SUBSCRIBED = 'subscribed',
+    UNSUBSCRIBED = 'unsubscribed',
+    CONVERSATION_STARTED = 'conversation_started',
+    ERROR = 'error',
+    FAILED = 'failed',
+  }
+
+  interface ConversationStartedOnFinishCallback {
+    (responseMessage: Message, optionalTrackingData?: JSON): void;
+  }
+
+  interface OnConversationStartedCallback {
+    (
+      userProfile: UserProfile,
+      isSubscribed: boolean,
+      context: string,
+      onFinish: ConversationStartedOnFinishCallback,
+    ): void;
   }
 
   export class Bot {
@@ -46,6 +65,8 @@ declare module 'viber-bot' {
     onSubscribe: (handler: SubscribeResponseHandlerCallback) => void;
 
     on: (event: Events, handler: (message: Message, response: ViberResponse) => void) => void;
+
+    onConversationStarted: (callback: OnConversationStartedCallback) => void;
   }
 
   // eslint-disable-next-line import/export

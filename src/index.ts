@@ -54,6 +54,10 @@ bot.onSubscribe((response: ViberResponse) => {
   say(response, createMessage(response.userProfile.name, bot.name).hi());
 });
 
+bot.onConversationStarted((userProfile, isSubscribed, context, onFinish) =>
+  onFinish(new TextMessage(`Hi, ${userProfile.name}! Nice to meet you.`)),
+);
+
 bot.on(BotEvents.MESSAGE_RECEIVED, (message: Message, response: ViberResponse) => {
   logger.debug('message', message);
   const messageText = (message as Message.Text).text;
