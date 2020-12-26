@@ -14,13 +14,13 @@ const options: RequestOptions = {
 
 const ngrok = {
   getPublicUrl: (): Promise<string> => {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve: (value?: string | PromiseLike<string>) => void, reject) => {
       const request = http.request(options, (response) => {
         response.setEncoding('utf-8');
         response.on('data', (data: string): void => {
           const config: NgrokConfig = JSON.parse(data);
           const httpTunnel = config.tunnels.filter((t) => t.proto === 'https').pop();
-          resolve(httpTunnel?.pulic_url);
+          resolve(httpTunnel?.pulic_url ?? '');
         });
       });
 
