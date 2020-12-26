@@ -14,23 +14,21 @@ const options: RequestOptions = {
 
 const ngrok = {
   getPublicUrl: (): Promise<string> => {
-    return new Promise<string>(
-      (resolve: (value?: string | PromiseLike<string>) => void, reject) => {
-        const request = http.request(options, (response) => {
-          response.setEncoding('utf-8');
-          response.on('data', (data: string): void => {
-            const config: NgrokConfig = JSON.parse(data);
-            const httpTunnel = config.tunnels.filter((t) => t.proto === 'https').pop();
-            resolve(httpTunnel?.pulic_url ?? '');
-          });
+    return new Promise<string>((resolve: (value: string | PromiseLike<string>) => void, reject) => {
+      const request = http.request(options, (response) => {
+        response.setEncoding('utf-8');
+        response.on('data', (data: string): void => {
+          const config: NgrokConfig = JSON.parse(data);
+          const httpTunnel = config.tunnels.filter((t) => t.proto === 'https').pop();
+          resolve(httpTunnel?.pulic_url ?? '');
         });
+      });
 
-        request.on('error', (e) => {
-          reject(e.message);
-        });
-        request.end();
-      },
-    );
+      request.on('error', (e) => {
+        reject(e.message);
+      });
+      request.end();
+    });
   },
 };
 
