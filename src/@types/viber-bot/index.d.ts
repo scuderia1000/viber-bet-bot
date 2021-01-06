@@ -67,6 +67,11 @@ declare module 'viber-bot' {
     on: (event: Events, handler: (message: Message, response: ViberResponse) => void) => void;
 
     onConversationStarted: (callback: OnConversationStartedCallback) => void;
+
+    onTextMessage: (
+      regex: RegExp,
+      handler: (message: Message, response: ViberResponse) => void,
+    ) => void;
   }
 
   // eslint-disable-next-line import/export
