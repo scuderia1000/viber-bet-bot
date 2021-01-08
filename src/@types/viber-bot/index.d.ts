@@ -84,6 +84,21 @@ declare module 'viber-bot' {
     export class Text extends Message {
       text: string;
 
+      optionalKeyboard?: any;
+
+      constructor(
+        text: string,
+        optionalKeyboard?: any,
+        optionalTrackingData?: any,
+        timestamp?: string,
+        token?: string,
+        minApiVersion?: number,
+      );
+    }
+
+    export class Keyboard extends Message {
+      text: string;
+
       constructor(text: string);
     }
   }
