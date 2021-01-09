@@ -1,7 +1,11 @@
-import winston from 'winston';
+import winston, { Logger } from 'winston';
 
-const createLogger = () => {
-  const logger = winston.createLogger({
+let logger: Logger;
+
+export const getLogger = (): Logger => logger;
+
+export const createLogger = (): Logger => {
+  logger = winston.createLogger({
     level: 'debug',
     transports: [
       //
@@ -26,5 +30,3 @@ const createLogger = () => {
   }
   return logger;
 };
-
-export default createLogger;

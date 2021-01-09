@@ -2,7 +2,7 @@ import { Bot, Bot as ViberBot, Events as BotEvents, Message } from 'viber-bot';
 import createLogger from '../util/logger';
 import { ViberResponse } from '../types/base';
 import simpleKeyboard from './keyboards';
-import conversationStartedText from '../const';
+import { conversationStartedText } from '../const';
 
 const initializeBot = (token: string): Bot => {
   const TextMessage = Message.Text;
