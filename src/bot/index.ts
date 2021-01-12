@@ -1,12 +1,11 @@
 import { Bot, Bot as ViberBot, Events as BotEvents, Message } from 'viber-bot';
-import createLogger from '../util/logger';
-import { ViberResponse } from '../types/base';
 import simpleKeyboard from './keyboards';
 import { conversationStartedText } from '../const';
+import { IModules } from '../domain';
+import logger from '../util/logger';
 
-const initializeBot = (token: string): Bot => {
+const initializeBot = (token: string, modules: IModules): Bot => {
   const TextMessage = Message.Text;
-  const logger = createLogger();
 
   const bot = new ViberBot(logger, {
     authToken: token,
@@ -14,11 +13,13 @@ const initializeBot = (token: string): Bot => {
     avatar: 'https://viber-bot.s3.eu-central-1.amazonaws.com/phoenix_007.jpg', // It is recommended to be 720x720, and no more than 100kb.
   });
 
-  const sendResponse = (response: ViberResponse, message: string): void => {
-    response.send(new TextMessage(message));
-  };
+  // const sendResponse = (response: ViberResponse, message: string): void => {
+  //   response.send(new TextMessage(message));
+  // };
 
-  bot.onConversationStarted((userProfile, isSubscribed, context, onFinish) =>
+  bot.onConversationStarted(async (userProfile, isSubscribed, context, onFinish) => {
+    logger.debug('userProfile conversation', userProfile);
+    await modules.userModule.userService.saveUser(userProfile);
     onFinish(
       new TextMessage(
         conversationStartedText(userProfile.name),
@@ -28,8 +29,8 @@ const initializeBot = (token: string): Bot => {
         undefined,
         4,
       ),
-    ),
-  );
+    );
+  });
 
   // bot.on(BotEvents.MESSAGE_RECEIVED, (message: Message, response: ViberResponse) => {
   //   logger.debug('message', message);
@@ -42,7 +43,8 @@ const initializeBot = (token: string): Bot => {
   // });
 
   // Нажали на кнопку Сделать прогноз
-  bot.onTextMessage(/^makePrediction$/i, (message, response) =>
+  bot.onTextMessage(/^makePrediction$/i, (message, response) => {
+    logger.debug('user', response.userProfile);
     response.send(
       new TextMessage(
         `Hi there ${response.userProfile.name}. I am ${bot.name}`,
@@ -52,8 +54,8 @@ const initializeBot = (token: string): Bot => {
         undefined,
         4,
       ),
-    ),
-  );
+    );
+  });
 
   return bot;
 };

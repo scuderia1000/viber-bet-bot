@@ -1,6 +1,5 @@
 import { Db } from 'mongodb';
-import { IUser } from '../model/User';
-import { getDb } from '../db';
+import { IUser } from './User';
 
 const collectionName = 'users';
 
@@ -13,8 +12,8 @@ export interface IUserDao {
 export class UserDao implements IUserDao {
   private db: Db;
 
-  constructor() {
-    this.db = getDb();
+  constructor(db: Db) {
+    this.db = db;
   }
 
   async saveUser(user: IUser): Promise<void> {

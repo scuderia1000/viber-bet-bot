@@ -30,6 +30,7 @@ module.exports = {
     'no-useless-constructor': 'off',
     '@typescript-eslint/no-useless-constructor': 'error',
     'no-shadow': 'off',
+    'no-underscore-dangle': 'off',
   },
   settings: {
     'import/resolver': {

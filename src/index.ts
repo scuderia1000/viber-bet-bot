@@ -1,18 +1,24 @@
 import * as http from 'http';
+import dotenv from 'dotenv';
 import ngrok from './util/get-public-url';
 import initializeBot from './bot';
-import { createLogger } from './util/logger';
-import { connectDb } from './db';
+import logger from './util/logger';
+import connectDb from './domain/db';
 import { DB } from './const';
+import getModules from './domain';
+
+// Записываем переменные окружения из .env файла в process.env
+if (process.env.NODE_ENV !== 'production') {
+  dotenv.config();
+}
 
 const TOKEN = process.env.BOT_ACCOUNT_TOKEN ?? '';
 const URL = process.env.NOW_URL || process.env.HEROKU_URL;
 const PORT = process.env.PORT || 8080;
-const logger = createLogger();
 
 connectDb()
-  .then(() => {
-    const bot = initializeBot(TOKEN);
+  .then((db) => {
+    const bot = initializeBot(TOKEN, getModules(db));
 
     if (URL) {
       http.createServer(bot.middleware()).listen(PORT, () => bot.setWebhook(URL));
