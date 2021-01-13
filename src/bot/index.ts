@@ -1,8 +1,9 @@
 import { Bot, Bot as ViberBot, Events as BotEvents, Message } from 'viber-bot';
-import simpleKeyboard from './keyboards';
+import { makePredictionKeyboard } from './keyboards';
 import { conversationStartedText } from '../const';
 import { IModules } from '../domain';
 import logger from '../util/logger';
+import getCompetition from '../api/football-data-org';
 
 const initializeBot = (token: string, modules: IModules): Bot => {
   const TextMessage = Message.Text;
@@ -18,12 +19,11 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   // };
 
   bot.onConversationStarted(async (userProfile, isSubscribed, context, onFinish) => {
-    logger.debug('userProfile conversation', userProfile);
     await modules.userModule.userService.saveUser(userProfile);
     onFinish(
       new TextMessage(
         conversationStartedText(userProfile.name),
-        simpleKeyboard(),
+        makePredictionKeyboard(),
         undefined,
         undefined,
         undefined,
@@ -45,10 +45,11 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   // Нажали на кнопку Сделать прогноз
   bot.onTextMessage(/^makePrediction$/i, (message, response) => {
     logger.debug('user', response.userProfile);
+    getCompetition();
     response.send(
       new TextMessage(
         `Hi there ${response.userProfile.name}. I am ${bot.name}`,
-        simpleKeyboard(),
+        makePredictionKeyboard(),
         undefined,
         undefined,
         undefined,

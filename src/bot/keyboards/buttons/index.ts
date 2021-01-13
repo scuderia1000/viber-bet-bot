@@ -1,4 +1,4 @@
-const fullScreenButton = (text: string, replayText: string, bgColor?: string) => ({
+const fullScreenButton = (text: string, replayText: string, bgColor = '#f7bb3f') => ({
   Columns: 6,
   Rows: 1,
   Text: text,
@@ -7,7 +7,7 @@ const fullScreenButton = (text: string, replayText: string, bgColor?: string) =>
   TextVAlign: 'center',
   ActionType: 'reply',
   ActionBody: replayText,
-  BgColor: '#f7bb3f',
+  BgColor: bgColor,
 });
 
 export default fullScreenButton;

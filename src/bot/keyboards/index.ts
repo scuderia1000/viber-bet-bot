@@ -1,4 +1,6 @@
 import fullScreenButton from './buttons';
+import { IKeyboardButton, InputFieldState, KeyboardType } from '../../types/base';
+import { BUTTON } from '../../const';
 
 const button = (number: number) => ({
   Columns: 6,
@@ -12,12 +14,15 @@ const button = (number: number) => ({
   BgColor: '#f7bb3f',
 });
 
-const simpleKeyboard = () => {
+export const hiddenInputKeyboard = (buttons: IKeyboardButton[]) => {
   return {
-    Type: 'keyboard',
-    InputFieldState: 'hidden',
-    Buttons: [fullScreenButton('Сделать прогноз', 'makePrediction')],
+    Type: KeyboardType.KEYBOARD,
+    InputFieldState: InputFieldState.HIDDEN,
+    Buttons: buttons,
   };
 };
 
-export default simpleKeyboard;
+export const makePredictionKeyboard = () =>
+  hiddenInputKeyboard([
+    fullScreenButton(BUTTON.MAKE_PREDICTION.LABEL, BUTTON.MAKE_PREDICTION.REPLAY_TEXT),
+  ]);

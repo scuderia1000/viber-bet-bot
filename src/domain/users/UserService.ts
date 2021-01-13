@@ -8,6 +8,7 @@ export interface IUserService {
   saveUser(user: IUser): Promise<void>;
   getUser(id: string): Promise<IUser | null>;
   getAllUsers(): Promise<IUser[]>;
+  replaceUser(user: IUser): Promise<void>;
 }
 
 export class UserService implements IUserService {
@@ -28,14 +29,12 @@ export class UserService implements IUserService {
       roles: [roleId],
     };
     const existUser = await this.userDao.getUser(userProfile.id);
-    logger.debug('user: %s', user)
-    logger.debug('existUser: %s', existUser)
     if (existUser) {
       user = {
         ...user,
         ...existUser,
       };
-      logger.debug('updated user: %s', existUser)
+      return this.replaceUser(user);
     }
     return this.userDao.saveUser(user);
   }
@@ -46,5 +45,9 @@ export class UserService implements IUserService {
 
   getUser(id: string): Promise<IUser | null> {
     return this.userDao.getUser(id);
+  }
+
+  replaceUser(user: IUser): Promise<void> {
+    return this.userDao.replaceUser(user);
   }
 }

@@ -11,3 +11,10 @@ export enum ROLES {
   ADMIN = 'admin',
   USER = 'user',
 }
+
+export const BUTTON = {
+  MAKE_PREDICTION: {
+    LABEL: 'Сделать прогноз',
+    REPLAY_TEXT: 'makePrediction',
+  },
+};

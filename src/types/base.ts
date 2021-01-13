@@ -32,3 +32,34 @@ export interface NgrokTunnel {
 export interface NgrokConfig {
   tunnels: NgrokTunnel[];
 }
+
+export enum KeyboardType {
+  KEYBOARD = 'keyboard',
+}
+
+/**
+ * Customize the keyboard input field
+ */
+export enum InputFieldState {
+  REGULAR = 'regular', // default
+  MINIMIZED = 'minimized',
+  HIDDEN = 'hidden',
+}
+
+export interface IKeyboardButton {
+  Columns: number;
+  Rows: number;
+  Text: string;
+  TextSize: string;
+  TextHAlign: string;
+  TextVAlign: string;
+  ActionType: string;
+  ActionBody: string;
+  BgColor: string;
+}
+
+export interface IKeyboard {
+  Type: KeyboardType;
+  InputFieldState?: InputFieldState;
+  Buttons: IKeyboardButton[];
+}
