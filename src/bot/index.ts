@@ -1,4 +1,4 @@
-import { Bot, Bot as ViberBot, Events as BotEvents, Message } from 'viber-bot';
+import { Bot, Bot as ViberBot, Message } from 'viber-bot';
 import { makePredictionKeyboard } from './keyboards';
 import { conversationStartedText } from '../const';
 import { IModules } from '../domain';

@@ -18,7 +18,9 @@ const PORT = process.env.PORT || 8080;
 
 connectDb()
   .then((db) => {
-    const bot = initializeBot(TOKEN, getModules(db));
+    const modules = getModules(db);
+
+    const bot = initializeBot(TOKEN, modules);
 
     if (URL) {
       http.createServer(bot.middleware()).listen(PORT, () => bot.setWebhook(URL));

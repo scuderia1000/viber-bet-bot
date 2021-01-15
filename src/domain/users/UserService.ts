@@ -2,7 +2,6 @@ import { ObjectId } from 'mongodb';
 import { IUser } from './User';
 import { IUserDao } from './UserDao';
 import { IRoleService } from '../roles/RoleService';
-import logger from '../../util/logger';
 
 export interface IUserService {
   saveUser(user: IUser): Promise<void>;

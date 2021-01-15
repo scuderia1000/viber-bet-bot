@@ -63,3 +63,16 @@ export interface IKeyboard {
   InputFieldState?: InputFieldState;
   Buttons: IKeyboardButton[];
 }
+
+export interface ICompetitionListeners {
+  update(): void;
+}
+
+export enum EventType {
+  UPDATE_SEASON = 'update_season',
+  UPDATE_MATCHES = 'UPDATE_MATCHES',
+}
+
+export interface IScheduler {
+  start(): void;
+}

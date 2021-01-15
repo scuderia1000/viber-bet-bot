@@ -9,7 +9,7 @@ const competitions = '/competitions';
 const championsLeague = '/CL';
 
 const getOptions = (path: string): RequestOptions => ({
-  hostname: 'http://api.football-data.org',
+  host: 'api.football-data.org',
   path,
   method: 'GET',
   headers: {
