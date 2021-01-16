@@ -1,14 +1,8 @@
 import { IIdNum } from '../Base';
+import { ISeason } from '../seasons/Season';
 
 interface IArea extends IIdNum {
   name: string;
-}
-
-interface ISeason extends IIdNum {
-  startDate: string;
-  endDate: string;
-  currentMatchday: number;
-  winner: string | null;
 }
 
 export interface ICompetition extends IIdNum {
@@ -17,7 +11,7 @@ export interface ICompetition extends IIdNum {
   code: string;
   emblemUrl: string;
   currentSeason: ISeason;
-  seasons: ISeason[];
+  seasons?: ISeason[];
   lastUpdated: string;
 }
 

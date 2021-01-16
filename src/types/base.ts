@@ -65,7 +65,7 @@ export interface IKeyboard {
 }
 
 export interface ICompetitionListeners {
-  update(): void;
+  update(data: any): void;
 }
 
 export enum EventType {

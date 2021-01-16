@@ -1,6 +1,6 @@
 import { Bot, Bot as ViberBot, Message } from 'viber-bot';
 import { makePredictionKeyboard } from './keyboards';
-import { conversationStartedText } from '../const';
+import { API, conversationStartedText } from '../const';
 import { IModules } from '../domain';
 import logger from '../util/logger';
 import getCompetition from '../api/football-data-org';
@@ -45,7 +45,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   // Нажали на кнопку Сделать прогноз
   bot.onTextMessage(/^makePrediction$/i, (message, response) => {
     logger.debug('user', response.userProfile);
-    getCompetition();
+    getCompetition(API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS);
     response.send(
       new TextMessage(
         `Hi there ${response.userProfile.name}. I am ${bot.name}`,

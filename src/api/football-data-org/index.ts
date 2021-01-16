@@ -1,12 +1,12 @@
 import * as http from 'http';
 import { RequestOptions } from 'http';
 import logger from '../../util/logger';
+import { API } from '../../const';
+import { ICompetition } from '../../domain/competitions/Competition';
 
-const prefix = '/v2';
+const prefix = API.FOOTBALL_DATA_ORG.PREFIX;
 // List one particular competition.
-const competitions = '/competitions';
-// код лиги чемпионов
-const championsLeague = '/CL';
+const competitions = API.FOOTBALL_DATA_ORG.COMPETITIONS;
 
 const getOptions = (path: string): RequestOptions => ({
   host: 'api.football-data.org',
@@ -17,26 +17,48 @@ const getOptions = (path: string): RequestOptions => ({
   },
 });
 
-const request = (options: RequestOptions): void => {
-  logger.debug('request options:', options);
+const request = (options: RequestOptions): Promise<any> => {
+  return new Promise<void>((resolve, reject) => {
+    const request = http.request(options, (response) => {
+      logger.debug(`statusCode: ${response.statusCode}`);
 
-  const request = http.request(options, (response) => {
-    logger.debug(`statusCode: ${response.statusCode}`);
+      response.setEncoding('utf8');
+      let responseBody = '';
 
-    response.on('data', (data) => {
-      logger.debug(`response data: ${data}`);
+      response.on('data', (chunk) => {
+        responseBody += chunk;
+      });
+
+      response.on('end', () => {
+        let parsedData;
+        try {
+          parsedData = JSON.parse(responseBody);
+        } catch (error) {
+          logger.error('Error parsing response data: %s', error);
+          reject();
+        }
+        resolve(parsedData);
+      });
     });
-  });
 
-  request.on('error', (error) => {
-    logger.error(error);
-  });
+    request.on('error', (error) => {
+      logger.error('Request error: %s', error);
+      reject();
+    });
 
-  request.end();
+    request.end();
+  });
 };
 
-const getCompetition = (code = championsLeague): void => {
-  request(getOptions(`${prefix}${competitions}${code}/`));
+const getCompetition = async (code: string): Promise<ICompetition> => {
+  let responseData;
+  try {
+    responseData = await request(getOptions(`/${prefix}/${competitions}/${code}/`));
+    logger.debug('responseData: %s', responseData);
+  } catch (error) {
+    logger.error(error);
+  }
+  return responseData;
 };
 
 export default getCompetition;

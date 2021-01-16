@@ -18,3 +18,13 @@ export const BUTTON = {
     REPLAY_TEXT: 'makePrediction',
   },
 };
+
+export const API = {
+  FOOTBALL_DATA_ORG: {
+    PREFIX: 'v2',
+    COMPETITIONS: 'competitions',
+    LEAGUE_CODE: {
+      CHAMPIONS: 'CL',
+    },
+  },
+};
