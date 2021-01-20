@@ -6,6 +6,8 @@ import logger from './util/logger';
 import connectDb from './domain/db';
 import { DB } from './const';
 import getModules from './domain';
+import { CompetitionsScheduler } from './schedulers/CompetitionsScheduler';
+import configSchedulers from './configSchedulers';
 
 // Записываем переменные окружения из .env файла в process.env
 if (process.env.NODE_ENV !== 'production') {
@@ -19,7 +21,7 @@ const PORT = process.env.PORT || 8080;
 connectDb()
   .then((db) => {
     const modules = getModules(db);
-
+    configSchedulers(modules);
     const bot = initializeBot(TOKEN, modules);
 
     if (URL) {

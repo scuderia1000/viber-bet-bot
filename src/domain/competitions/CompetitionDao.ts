@@ -8,6 +8,7 @@ export interface ICompetitionDao {
   getCompetitionWithScheduledMatches(competitionId: number): Promise<ICompetition | null>;
   save(competition: ICompetition): Promise<void>;
   get(id: number): Promise<ICompetition | null>;
+  update(competition: ICompetition): Promise<void>;
 }
 
 export class CompetitionDao implements ICompetitionDao {
@@ -32,5 +33,12 @@ export class CompetitionDao implements ICompetitionDao {
   async get(id: number): Promise<ICompetition | null> {
     const result = await this.db.collection<ICompetition>(collectionName).findOne({ _id: id });
     return result;
+  }
+
+  async update(competition: ICompetition): Promise<void> {
+    await this.db
+      .collection<ICompetition>(collectionName)
+      .replaceOne({ _id: competition._id }, competition);
+    logger.debug('Successfully update competition: %s', competition);
   }
 }

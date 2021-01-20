@@ -65,12 +65,13 @@ export interface IKeyboard {
 }
 
 export interface ICompetitionListeners {
-  update(data: any): void;
+  update(data: any): Promise<void>;
 }
 
 export enum EventType {
-  UPDATE_SEASON = 'update_season',
-  UPDATE_MATCHES = 'UPDATE_MATCHES',
+  GET_COMPETITION = 'get_competition',
+  GET_SEASON = 'get_season',
+  GET_MATCHES = 'get_matches',
 }
 
 export interface IScheduler {

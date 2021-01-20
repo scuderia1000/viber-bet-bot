@@ -1,5 +1,5 @@
 import { ObjectId } from 'mongodb';
-import { IBase } from '../Base';
+import { IBase } from '../types/Base';
 
 export interface IRole extends IBase {
   name: string;

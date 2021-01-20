@@ -1,10 +1,43 @@
-import { IId } from '../Base';
+import { IApiId, IMongoIdNum, IObject } from '../types/Base';
+import MongoId from '../types/MongoId';
 
-export interface ISeason extends IId {
+interface IBaseSeason {
+  competitionId: number;
   startDate: string;
   endDate: string;
   currentMatchday: number;
   winner: string | null;
 }
 
-export const Season = (props: ISeason) => ({ ...props });
+export type ISeason = IBaseSeason & IMongoIdNum & IObject;
+export type IApiSeason = IBaseSeason & IApiId;
+
+export class Season extends MongoId implements ISeason {
+  competitionId: number;
+
+  currentMatchday: number;
+
+  endDate: string;
+
+  startDate: string;
+
+  winner: string | null;
+
+  constructor(props: ISeason | IApiSeason) {
+    super(props);
+    this.competitionId = props.competitionId;
+    this.currentMatchday = props.currentMatchday;
+    this.endDate = props.endDate;
+    this.startDate = props.startDate;
+    this.winner = props.winner;
+  }
+
+  equals(season: ISeason): boolean {
+    return (
+      this._id === season._id &&
+      this.startDate === season.startDate &&
+      this.endDate === season.endDate
+    );
+  }
+}
+// export const Season = (props: ISeason) => ({ ...props });

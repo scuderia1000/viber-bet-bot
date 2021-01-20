@@ -1,6 +1,6 @@
 import { UserProfile } from 'viber-bot';
 import { ObjectId } from 'mongodb';
-import { IBase } from '../Base';
+import { IBase } from '../types/Base';
 
 export interface IUser extends UserProfile, IBase {
   roles?: ObjectId[];

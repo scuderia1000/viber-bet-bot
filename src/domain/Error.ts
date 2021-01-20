@@ -1,4 +1,4 @@
-import { IError } from './Base';
+import { IError } from './types/Base';
 
 class Error implements IError {
   message: string;

@@ -1,4 +1,3 @@
-import getCompetition from '../../api/football-data-org';
 import { EventType, ICompetitionListeners } from '../../types/base';
 import logger from '../../util/logger';
 
@@ -9,6 +8,7 @@ export interface IEventManager {
 }
 
 export class EventManager implements IEventManager {
+  // Пока на 1 тип события может быть только 1 слушатель
   private listeners: Map<EventType, ICompetitionListeners> = new Map();
 
   // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
@@ -19,17 +19,10 @@ export class EventManager implements IEventManager {
   }
 
   public subscribe(eventType: EventType, listener: ICompetitionListeners): void {
+    this.listeners.set(eventType, listener);
   }
 
-  public unsubscribe(eventType: EventType, listener: ICompetitionListeners): void {
+  public unsubscribe(eventType: EventType): void {
+    this.listeners.delete(eventType);
   }
-
 }
-
-// const observeCompetition = (requestInterval: number = defaultInterval): void => {
-//   setInterval(() => {
-//     getCompetition();
-//   }, requestInterval);
-// };
-//
-// export default observeCompetition;

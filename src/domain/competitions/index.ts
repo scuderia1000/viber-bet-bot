@@ -1,9 +1,9 @@
 import { Db } from 'mongodb';
 import { CompetitionDao, ICompetitionDao } from './CompetitionDao';
-import { CompetitionService, ICompetitionService } from './CompetitionService';
+import { CompetitionService } from './CompetitionService';
 
 export interface ICompetitionModule {
-  competitionService: ICompetitionService;
+  competitionService: CompetitionService;
   competitionDao: ICompetitionDao;
 }
 

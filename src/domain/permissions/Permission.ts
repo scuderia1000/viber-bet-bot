@@ -1,4 +1,4 @@
-import { IBase } from '../Base';
+import { IBase } from '../types/Base';
 
 export interface IPermission extends IBase {
   name: string;

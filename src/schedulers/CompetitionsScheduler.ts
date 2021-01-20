@@ -1,11 +1,13 @@
 import { EventManager } from './event-manager';
-import { IScheduler } from '../types/base';
-import { ICompetition } from '../domain/competitions/Competition';
+import { EventType, IScheduler } from '../types/base';
+import { Competition, ICompetition } from '../domain/competitions/Competition';
 import getCompetition from '../api/football-data-org';
 import { API } from '../const';
 import { ISeasonService } from '../domain/seasons/SeasonService';
+import { ICompetitionService } from '../domain/competitions/CompetitionService';
+import { Season } from '../domain/seasons/Season';
 
-const defaultInterval = 60 * 60 * 1000; // 1 час
+const defaultInterval = 24 * 60 * 60 * 1000; // 1 день
 // код лиги чемпионов
 const championsLeague = API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS;
 
@@ -18,30 +20,51 @@ export interface ICompetitionsScheduler {
   updateMatches(matches: any): void;
   // update or create new match
   updateMatch(match: any): void;
-  getCompetition(): void;
+  getCompetition(code?: string): Promise<void>;
 }
 
-export class CompetitionsScheduler implements IScheduler, ICompetitionsScheduler {
+export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler {
   private seasonService: ISeasonService;
+
+  private competitionService: ICompetitionService;
 
   public events: EventManager;
 
-  private timerId: number;
+  // eslint-disable-next-line no-undef
+  private timer: NodeJS.Timeout | undefined;
 
-  constructor(events: EventManager, seasonService: ISeasonService) {
+  constructor(
+    events: EventManager,
+    competitionService: ICompetitionService,
+    seasonService: ISeasonService,
+  ) {
     this.events = events;
     this.seasonService = seasonService;
+    this.competitionService = competitionService;
   }
 
-  start(intervalInMS: number = defaultInterval): void {
-    this.timerId = setTimeout(async function callback() {
-
-    }, intervalInMS)
+  start(delayInMs: number = defaultInterval): void {
+    // eslint-disable-next-line @typescript-eslint/no-this-alias
+    const me = this;
+    let { timer } = me;
+    timer = setTimeout(async function callback() {
+      await me.getCompetition();
+      // eslint-disable-next-line no-unused-vars
+      timer = setTimeout(callback, delayInMs);
+    }, delayInMs);
   }
 
   async getCompetition(code: string = championsLeague): Promise<void> {
-    const competition = await getCompetition(code);
-    await this.seasonService.save(competition.currentSeason);
+    const result = await getCompetition(code);
+    if (result) {
+      const currentSeason = new Season(result.currentSeason);
+      const competition = new Competition({ ...result, currentSeason });
+      if (competition.seasons) {
+        delete competition.seasons;
+      }
+      this.events.notify(EventType.GET_COMPETITION, competition);
+      this.events.notify(EventType.GET_SEASON, competition);
+    }
   }
 
   updateCompetition(competition: ICompetition): void {}
