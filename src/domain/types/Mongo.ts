@@ -1,6 +1,6 @@
 import { IApiId, IMongoIdNum } from './Base';
 
-abstract class MongoId {
+abstract class Mongo {
   _id: number;
 
   protected constructor(props: IMongoIdNum | IApiId) {
@@ -12,4 +12,4 @@ abstract class MongoId {
   }
 }
 
-export default MongoId;
+export default Mongo;

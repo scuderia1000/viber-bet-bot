@@ -1,10 +1,9 @@
-import { IApiId, IMongoIdNum, IObject } from '../types/Base';
+import { DateTimeISOString, IApiId, IMongoIdNum, IObject } from '../types/Base';
 import { ISeason } from '../seasons/Season';
-import MongoId from '../types/MongoId';
-
-interface IArea extends IMongoIdNum {
-  name: string;
-}
+import Mongo from '../types/Mongo';
+import { IArea } from '../areas/Area';
+import { IMatch } from '../matches/Match';
+import Collection from '../../annotation/Collection';
 
 interface IBaseCompetition {
   area: IArea;
@@ -12,14 +11,16 @@ interface IBaseCompetition {
   code: string;
   emblemUrl: string;
   currentSeason: ISeason;
-  lastUpdated: string;
+  lastUpdated: DateTimeISOString;
   seasons?: ISeason[];
+  matches?: IMatch[];
 }
 
 export type ICompetition = IBaseCompetition & IMongoIdNum & IObject;
 export type IApiCompetition = IBaseCompetition & IApiId;
 
-export class Competition extends MongoId implements ICompetition {
+@Collection('competitions')
+export class Competition extends Mongo implements ICompetition {
   area: IArea;
 
   code: string;
@@ -29,6 +30,8 @@ export class Competition extends MongoId implements ICompetition {
   emblemUrl: string;
 
   lastUpdated: string;
+
+  matches?: IMatch[];
 
   name: string;
 
@@ -41,6 +44,7 @@ export class Competition extends MongoId implements ICompetition {
     this.currentSeason = props.currentSeason;
     this.emblemUrl = props.emblemUrl;
     this.lastUpdated = props.lastUpdated;
+    this.matches = props.matches;
     this.name = props.name;
     this.seasons = props.seasons;
   }

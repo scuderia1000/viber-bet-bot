@@ -23,3 +23,30 @@ export interface IApiId {
 export interface IObject {
   equals(instance: any): boolean;
 }
+
+export enum MatchStatus {
+  SCHEDULED = 'SCHEDULED',
+  LIVE = 'LIVE',
+  IN_PLAY = 'IN_PLAY',
+  PAUSED = 'PAUSED',
+  FINISHED = 'FINISHED',
+  POSTPONED = 'POSTPONED',
+  SUSPENDED = 'SUSPENDED',
+  CANCELED = 'CANCELED',
+}
+
+export type DateTimeISOString = string;
+
+export enum Winner {
+  AWAY_TEAM = 'AWAY_TEAM',
+  HOME_TEAM = 'HOME_TEAM',
+}
+
+export enum PlayerRole {
+  PLAYER = 'PLAYER',
+  COACH = 'COACH',
+}
+
+export interface ICollectionName {
+  collectionName: string;
+}

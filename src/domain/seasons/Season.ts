@@ -1,5 +1,5 @@
 import { IApiId, IMongoIdNum, IObject } from '../types/Base';
-import MongoId from '../types/MongoId';
+import Mongo from '../types/Mongo';
 
 interface IBaseSeason {
   competitionId: number;
@@ -12,7 +12,7 @@ interface IBaseSeason {
 export type ISeason = IBaseSeason & IMongoIdNum & IObject;
 export type IApiSeason = IBaseSeason & IApiId;
 
-export class Season extends MongoId implements ISeason {
+export class Season extends Mongo implements ISeason {
   competitionId: number;
 
   currentMatchday: number;
