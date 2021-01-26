@@ -1,7 +1,8 @@
-import { IMongoIdNum } from '../types/Base';
+import { IMongoId, IMongoIdNum } from '../types/Base';
 
-export interface ICommonDao<E extends IMongoIdNum> {
+export interface ICommonDao<E extends IMongoIdNum | IMongoId> {
   save(entity: E): Promise<void>;
   update(entity: E): Promise<void>;
   get(id: number): Promise<E | null>;
+  getAll(): Promise<E[]>;
 }

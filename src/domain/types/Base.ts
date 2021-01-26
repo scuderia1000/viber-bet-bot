@@ -1,6 +1,6 @@
 import { ObjectId } from 'mongodb';
 
-export interface IBase {
+export interface IMongoId {
   _id?: ObjectId;
 }
 
@@ -19,6 +19,12 @@ export interface IError {
 export interface IApiId {
   id: number;
 }
+
+export interface IViberApiId {
+  id: string;
+}
+
+export type MongoId = number | string | ObjectId;
 
 export interface IObject {
   equals(instance: any): boolean;

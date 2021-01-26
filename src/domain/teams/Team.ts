@@ -1,8 +1,9 @@
 import { IArea } from '../areas/Area';
-import { DateTimeISOString, IApiId, IMongoIdNum, IObject } from '../types/Base';
+import { DateTimeISOString, IApiId, IMongoId, IMongoIdNum, IObject } from '../types/Base';
 import Mongo from '../types/Mongo';
 import { ICompetition } from '../competitions/Competition';
 import { IPlayer } from '../players/Player';
+import Collection from '../../annotation/Collection';
 
 interface IBaseTeamShort {
   name: string;
@@ -25,12 +26,13 @@ interface IBaseTeam extends IBaseTeamShort {
   lastUpdated: DateTimeISOString;
 }
 
-export type ITeam = IBaseTeam & IMongoIdNum & IObject;
+export type ITeam = IBaseTeam & IMongoId & IObject;
 export type IApiTeam = IBaseTeam & IApiId;
 
 export type ITeamShort = IBaseTeamShort & IMongoIdNum & IObject;
 export type IApiTeamShort = IBaseTeam & IApiId;
 
+@Collection('teams')
 export class Team extends Mongo implements ITeam {
   activeCompetitions: ICompetition[];
 

@@ -9,6 +9,7 @@ import {
 } from '../types/Base';
 import { ITeamShort } from '../teams/Team';
 import Mongo from '../types/Mongo';
+import Collection from '../../annotation/Collection';
 
 interface IScoreResult {
   homeTeam: number | null;
@@ -43,6 +44,7 @@ interface IBaseMatch {
 export type IMatch = IBaseMatch & IMongoIdNum & IObject;
 export type IApiMatch = IBaseMatch & IApiId;
 
+@Collection('matches')
 export class Match extends Mongo implements IMatch {
   awayTeam: ITeamShort;
 

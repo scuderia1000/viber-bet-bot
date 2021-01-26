@@ -1,33 +1,21 @@
 import { ISeason } from './Season';
 import { ISeasonDao } from './SeasonDao';
-import changeIdProperty from '../../util/changeIdProperty';
 import { ICompetitionListeners } from '../../types/base';
 import { ICompetition } from '../competitions/Competition';
+import AbstractService from '../common/AbstractService';
+import { IService } from '../common/IService';
+import { ICommonDao } from '../common/ICommonDao';
 
-export interface ISeasonService {
-  get(id: number): Promise<ISeason | null>;
-  save(season: ISeason): Promise<void>;
-  updateSeason(season: ISeason): Promise<void>;
-  isSeasonsEqual(seasonOne: ISeason, seasonTwo: ISeason): boolean;
-}
+export type ISeasonService = IService<ISeason>;
 
-export class SeasonService implements ISeasonService, ICompetitionListeners {
-  private seasonDao: ISeasonDao;
+export class SeasonService
+  extends AbstractService<ISeason>
+  implements ISeasonService, ICompetitionListeners {
+  private readonly dao: ISeasonDao;
 
   constructor(seasonDao: ISeasonDao) {
-    this.seasonDao = seasonDao;
-  }
-
-  get(id: number): Promise<ISeason | null> {
-    return this.seasonDao.get(id);
-  }
-
-  save(season: ISeason): Promise<void> {
-    return this.seasonDao.save(season);
-  }
-
-  updateSeason(season: ISeason): Promise<void> {
-    return this.seasonDao.update(season);
+    super();
+    this.dao = seasonDao;
   }
 
   async update(competition: ICompetition): Promise<void> {
@@ -35,16 +23,16 @@ export class SeasonService implements ISeasonService, ICompetitionListeners {
 
     const { currentSeason } = competition;
     currentSeason.competitionId = competition._id;
+
     const existSeason = await this.get(currentSeason._id);
     if (!existSeason) {
       await this.save(currentSeason);
     } else if (!currentSeason.equals(existSeason)) {
-      await this.updateSeason(currentSeason);
+      await this.updateEntity(currentSeason);
     }
   }
 
-  isSeasonsEqual = (seasonOne: ISeason, seasonTwo: ISeason): boolean =>
-    seasonOne._id === seasonTwo._id &&
-    seasonOne.startDate === seasonTwo.startDate &&
-    seasonOne.endDate === seasonTwo.endDate;
+  getDao(): ICommonDao<ISeason> {
+    return this.dao;
+  }
 }

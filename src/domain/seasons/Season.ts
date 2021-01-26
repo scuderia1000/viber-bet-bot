@@ -1,7 +1,9 @@
-import { IApiId, IMongoIdNum, IObject } from '../types/Base';
+import { IApiId, IMongoId, IMongoIdNum, IObject } from '../types/Base';
 import Mongo from '../types/Mongo';
+import Collection from '../../annotation/Collection';
 
 interface IBaseSeason {
+  apiId?: number;
   competitionId: number;
   startDate: string;
   endDate: string;
@@ -9,10 +11,11 @@ interface IBaseSeason {
   winner: string | null;
 }
 
-export type ISeason = IBaseSeason & IMongoIdNum & IObject;
+export type ISeason = IBaseSeason & IMongoId;
 export type IApiSeason = IBaseSeason & IApiId;
 
-export class Season extends Mongo implements ISeason {
+@Collection('seasons')
+export class Season extends Mongo implements ISeason, IObject {
   competitionId: number;
 
   currentMatchday: number;
@@ -23,13 +26,16 @@ export class Season extends Mongo implements ISeason {
 
   winner: string | null;
 
+  apiId?: number;
+
   constructor(props: ISeason | IApiSeason) {
-    super(props);
+    super(props as ISeason);
     this.competitionId = props.competitionId;
     this.currentMatchday = props.currentMatchday;
     this.endDate = props.endDate;
     this.startDate = props.startDate;
     this.winner = props.winner;
+    this.apiId = (props as IApiSeason).id;
   }
 
   equals(season: ISeason): boolean {

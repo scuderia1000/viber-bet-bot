@@ -1,13 +1,14 @@
-import { IApiId, IMongoIdNum } from './Base';
+import { ObjectId } from 'mongodb';
+import { IMongoId } from './Base';
 
 abstract class Mongo {
-  _id: number;
+  _id: ObjectId;
 
-  protected constructor(props: IMongoIdNum | IApiId) {
-    if ('_id' in props) {
+  protected constructor(props: IMongoId) {
+    if (props._id) {
       this._id = props._id;
     } else {
-      this._id = props.id;
+      this._id = new ObjectId();
     }
   }
 }

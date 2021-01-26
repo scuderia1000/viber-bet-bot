@@ -4,8 +4,9 @@ import { ICompetitionDao } from './CompetitionDao';
 import { ICompetitionListeners } from '../../types/base';
 import AbstractService from '../common/AbstractService';
 import { ICommonDao } from '../common/ICommonDao';
+import { IService } from '../common/IService';
 
-export interface ICompetitionService {
+export interface ICompetitionService extends IService<ICompetition> {
   getScheduledMatches(competitionId: number): Promise<ICompetition | IError>;
 }
 

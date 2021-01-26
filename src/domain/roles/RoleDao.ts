@@ -1,33 +1,19 @@
 import { Db } from 'mongodb';
-import { IRole } from './Role';
+import { IRole, Role } from './Role';
+import { ICommonDao } from '../common/ICommonDao';
+import CRUDDao from '../common/CRUDDao';
 
-const collectionName = 'roles';
-
-export interface IRoleDao {
+export interface IRoleDao extends ICommonDao<IRole> {
   getRoleByName(name: string): Promise<IRole | null>;
-  getAllRoles(): Promise<IRole[]>;
-  saveRole(role: IRole): Promise<void>;
 }
 
-export class RoleDao implements IRoleDao {
-  private db: Db;
-
+export class RoleDao extends CRUDDao<IRole> implements IRoleDao {
   constructor(db: Db) {
-    this.db = db;
+    super(db, Role);
   }
 
   async getRoleByName(name: string): Promise<IRole | null> {
-    const role = await this.db.collection<IRole>(collectionName).findOne({ name });
+    const role = await this.collection.findOne({ name });
     return role;
-  }
-
-  async getAllRoles(): Promise<IRole[]> {
-    const cursor = await this.db.collection<IRole>(collectionName).find();
-    const roles = await cursor.toArray();
-    return roles;
-  }
-
-  async saveRole(role: IRole): Promise<void> {
-    await this.db.collection<IRole>(collectionName).insertOne(role);
   }
 }

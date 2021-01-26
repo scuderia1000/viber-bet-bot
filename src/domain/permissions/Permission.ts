@@ -1,6 +1,6 @@
-import { IBase } from '../types/Base';
+import { IMongoId } from '../types/Base';
 
-export interface IPermission extends IBase {
+export interface IPermission extends IMongoId {
   name: string;
   description: string;
 }

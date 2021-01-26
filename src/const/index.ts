@@ -4,7 +4,6 @@ export const conversationStartedText = (userName: string): string =>
 export const DB = {
   DEFAULT_NAME: 'viber-bet-bot',
   SUCCESS_CONNECTION: 'Connected successfully to DB server',
-  ERROR_CONNECTION: 'Fail connect to DB server',
 };
 
 export enum ROLES {

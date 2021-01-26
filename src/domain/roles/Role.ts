@@ -1,13 +1,27 @@
-import { ObjectId } from 'mongodb';
-import { IBase } from '../types/Base';
+import { IMongoId, IObject } from '../types/Base';
+import Mongo from '../types/Mongo';
+import Collection from '../../annotation/Collection';
 
-export interface IRole extends IBase {
+export interface IRoleBase extends IMongoId {
   name: string;
   permissions?: string[];
 }
 
-export const Role = (name: string, permissions?: string[], _id?: ObjectId): IRole => ({
-  name,
-  permissions,
-  _id,
-});
+export type IRole = IRoleBase & IMongoId;
+
+@Collection('roles')
+export class Role extends Mongo implements IRole, IObject {
+  name: string;
+
+  permissions?: string[];
+
+  constructor(props: IRole) {
+    super(props);
+    this.name = props.name;
+    this.permissions = props.permissions;
+  }
+
+  equals(role: IRole): boolean {
+    return this._id === role._id;
+  }
+}

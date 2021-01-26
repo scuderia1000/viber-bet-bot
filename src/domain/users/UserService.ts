@@ -2,21 +2,20 @@ import { ObjectId } from 'mongodb';
 import { IUser } from './User';
 import { IUserDao } from './UserDao';
 import { IRoleService } from '../roles/RoleService';
+import { IService } from '../common/IService';
+import AbstractService from '../common/AbstractService';
+import { ICommonDao } from '../common/ICommonDao';
 
-export interface IUserService {
-  saveUser(user: IUser): Promise<void>;
-  getUser(id: string): Promise<IUser | null>;
-  getAllUsers(): Promise<IUser[]>;
-  replaceUser(user: IUser): Promise<void>;
-}
+export type IUserService = IService<IUser>;
 
-export class UserService implements IUserService {
-  private userDao: IUserDao;
+export class UserService extends AbstractService<IUser> implements IUserService {
+  private dao: IUserDao;
 
   private roleService: IRoleService;
 
-  constructor(userDao: IUserDao, roleService: IRoleService) {
-    this.userDao = userDao;
+  constructor(dao: IUserDao, roleService: IRoleService) {
+    super();
+    this.dao = dao;
     this.roleService = roleService;
   }
 
@@ -27,7 +26,7 @@ export class UserService implements IUserService {
       ...userProfile,
       roles: [roleId],
     };
-    const existUser = await this.userDao.getUser(userProfile.id);
+    const existUser = await this.dao.getUser(userProfile.id);
     if (existUser) {
       user = {
         ...user,
@@ -35,18 +34,10 @@ export class UserService implements IUserService {
       };
       return this.replaceUser(user);
     }
-    return this.userDao.saveUser(user);
+    return this.dao.saveUser(user);
   }
 
-  getAllUsers(): Promise<IUser[]> {
-    return this.userDao.getAllUsers();
-  }
-
-  getUser(id: string): Promise<IUser | null> {
-    return this.userDao.getUser(id);
-  }
-
-  replaceUser(user: IUser): Promise<void> {
-    return this.userDao.replaceUser(user);
+  getDao(): ICommonDao<IUser> {
+    return this.dao;
   }
 }

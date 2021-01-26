@@ -1,13 +1,13 @@
+import 'reflect-metadata';
 import { EventManager } from './event-manager';
 import { EventType, IScheduler } from '../types/base';
 import { Competition, ICompetition } from '../domain/competitions/Competition';
 import getCompetition from '../api/football-data-org';
 import { API } from '../const';
-import { ISeasonService } from '../domain/seasons/SeasonService';
-import { ICompetitionService } from '../domain/competitions/CompetitionService';
 import { Season } from '../domain/seasons/Season';
 
-const defaultInterval = 24 * 60 * 60 * 1000; // 1 день
+const defaultInterval = 10 * 1000;
+// const defaultInterval = 24 * 60 * 60 * 1000; // 1 день
 // код лиги чемпионов
 const championsLeague = API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS;
 
@@ -24,23 +24,13 @@ export interface ICompetitionsScheduler {
 }
 
 export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler {
-  private seasonService: ISeasonService;
-
-  private competitionService: ICompetitionService;
-
   public events: EventManager;
 
   // eslint-disable-next-line no-undef
   private timer: NodeJS.Timeout | undefined;
 
-  constructor(
-    events: EventManager,
-    competitionService: ICompetitionService,
-    seasonService: ISeasonService,
-  ) {
+  constructor(events: EventManager) {
     this.events = events;
-    this.seasonService = seasonService;
-    this.competitionService = competitionService;
   }
 
   start(delayInMs: number = defaultInterval): void {

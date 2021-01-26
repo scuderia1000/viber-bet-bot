@@ -6,7 +6,6 @@ import logger from './util/logger';
 import connectDb from './domain/db';
 import { DB } from './const';
 import getModules from './domain';
-import { CompetitionsScheduler } from './schedulers/CompetitionsScheduler';
 import configSchedulers from './configSchedulers';
 
 // Записываем переменные окружения из .env файла в process.env
@@ -43,6 +42,5 @@ connectDb()
     }
   })
   .catch((err) => {
-    logger.error(DB.ERROR_CONNECTION);
-    logger.error(err);
+    logger.error(`DB error: `, err);
   });

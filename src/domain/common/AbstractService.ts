@@ -1,11 +1,11 @@
-import { IMongoIdNum } from '../types/Base';
+import { IMongoId, IMongoIdNum } from '../types/Base';
 import { IService } from './IService';
 import { ICommonDao } from './ICommonDao';
 
-abstract class AbstractService<E extends IMongoIdNum> implements IService<E> {
+abstract class AbstractService<E extends IMongoIdNum | IMongoId> implements IService<E> {
   abstract getDao(): ICommonDao<E>;
 
-  get(id: number): Promise<E> {
+  get(id: number): Promise<E | null> {
     return this.getDao().get(id);
   }
 
@@ -15,6 +15,10 @@ abstract class AbstractService<E extends IMongoIdNum> implements IService<E> {
 
   updateEntity(entity: E): Promise<void> {
     return this.getDao().update(entity);
+  }
+
+  getAll(): Promise<E[]> {
+    return this.getDao().getAll();
   }
 }
 
