@@ -1,6 +1,6 @@
 import { IArea } from '../areas/Area';
 import { DateTimeISOString, IApiId, IMongoId, IMongoIdNum, IObject } from '../types/Base';
-import Mongo from '../types/Mongo';
+import MongoId from '../types/MongoId';
 import { ICompetition } from '../competitions/Competition';
 import { IPlayer } from '../players/Player';
 import Collection from '../../annotation/Collection';
@@ -33,7 +33,7 @@ export type ITeamShort = IBaseTeamShort & IMongoIdNum & IObject;
 export type IApiTeamShort = IBaseTeam & IApiId;
 
 @Collection('teams')
-export class Team extends Mongo implements ITeam {
+export class Team extends MongoId implements ITeam {
   activeCompetitions: ICompetition[];
 
   address: string;
@@ -88,7 +88,7 @@ export class Team extends Mongo implements ITeam {
   }
 }
 
-export class TeamShort extends Mongo implements ITeamShort {
+export class TeamShort extends MongoId implements ITeamShort {
   name: string;
 
   constructor(props: ITeamShort | IApiTeamShort) {

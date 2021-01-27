@@ -1,34 +1,28 @@
 import { ObjectId } from 'mongodb';
 
+export interface IId<T> {
+  id?: T;
+}
+
 export interface IMongoId {
   _id?: ObjectId;
-}
-
-export interface IMongoIdNum {
-  _id: number;
-}
-
-export interface IId extends IMongoIdNum {
-  id?: number;
 }
 
 export interface IError {
   message: string;
 }
 
-export interface IApiId {
-  id: number;
-}
-
-export interface IViberApiId {
-  id: string;
-}
-
-export type MongoId = number | string | ObjectId;
-
 export interface IObject {
-  equals(instance: any): boolean;
+  equals(object: any): boolean;
 }
+
+// export interface IApiId {
+//   id: number;
+// }
+//
+// export interface IViberApiId {
+//   id: string;
+// }
 
 export enum MatchStatus {
   SCHEDULED = 'SCHEDULED',

@@ -1,24 +1,20 @@
 import { UserProfile } from 'viber-bot';
 import { ObjectId } from 'mongodb';
-import { IMongoId, IObject, IViberApiId } from '../types/Base';
-import Mongo from '../types/Mongo';
+import { IId, IMongoId, IObject } from '../types/Base';
 import Collection from '../../annotation/Collection';
+import ViberEntity from '../common/ViberEntity';
 
 export interface IUserBase extends Omit<UserProfile, 'id'> {
-  viberId?: string;
   roles?: ObjectId[];
 }
 
-export type IUser = IUserBase & IMongoId;
-export type IApiUser = IUserBase & IViberApiId;
+export type IUser = IUserBase & IId<string> & IMongoId & IObject;
 
 @Collection('users')
-export class User extends Mongo implements IUser, IObject {
+export class User extends ViberEntity implements IUser {
   avatar: string;
 
   name: string;
-
-  viberId?: string;
 
   country?: string;
 
@@ -26,19 +22,16 @@ export class User extends Mongo implements IUser, IObject {
 
   roles?: ObjectId[];
 
-  constructor(props: IUser | IApiUser) {
-    super(props as IUser);
+  constructor(props: IUser) {
+    super(props._id, props.id);
     this.avatar = props.avatar;
     this.country = props.country;
     this.language = props.language;
     this.name = props.name;
     this.roles = props.roles;
-    if ('id' in props) {
-      this.viberId = props.id;
-    }
   }
 
-  equals(user: IUser | IApiUser): boolean {
-    return this.viberId === (user as IApiUser)?.id;
+  equals(user: IUser): boolean {
+    return this.id === user.id;
   }
 }

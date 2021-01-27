@@ -1,8 +1,8 @@
-import { IMongoId, IMongoIdNum } from '../types/Base';
+import { IMongoId } from '../types/Base';
 import { IService } from './IService';
 import { ICommonDao } from './ICommonDao';
 
-abstract class AbstractService<E extends IMongoIdNum | IMongoId> implements IService<E> {
+abstract class AbstractService<E extends IMongoId> implements IService<E> {
   abstract getDao(): ICommonDao<E>;
 
   get(id: number): Promise<E | null> {

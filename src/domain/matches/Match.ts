@@ -8,7 +8,7 @@ import {
   Winner,
 } from '../types/Base';
 import { ITeamShort } from '../teams/Team';
-import Mongo from '../types/Mongo';
+import MongoId from '../types/MongoId';
 import Collection from '../../annotation/Collection';
 
 interface IScoreResult {
@@ -45,7 +45,7 @@ export type IMatch = IBaseMatch & IMongoIdNum & IObject;
 export type IApiMatch = IBaseMatch & IApiId;
 
 @Collection('matches')
-export class Match extends Mongo implements IMatch {
+export class Match extends MongoId implements IMatch {
   awayTeam: ITeamShort;
 
   group: string | null;

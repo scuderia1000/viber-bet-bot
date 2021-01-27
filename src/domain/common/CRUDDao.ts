@@ -1,18 +1,18 @@
 import 'reflect-metadata';
 import { Collection, Db, FilterQuery, OptionalId } from 'mongodb';
 import { ICommonDao } from './ICommonDao';
-import { IMongoId, IMongoIdNum } from '../types/Base';
+import { IMongoId } from '../types/Base';
 import logger from '../../util/logger';
-import { IRole } from '../roles/Role';
 
-class CRUDDao<E extends IMongoIdNum | IMongoId> implements ICommonDao<E> {
+class CRUDDao<E extends IMongoId> implements ICommonDao<E> {
   protected readonly collection: Collection<E>;
 
   protected readonly db: Db;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private readonly target: any;
 
-  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
+  // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types,@typescript-eslint/no-explicit-any
   constructor(db: Db, target: any) {
     this.db = db;
     this.target = target;

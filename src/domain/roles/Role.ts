@@ -1,22 +1,22 @@
-import { IMongoId, IObject } from '../types/Base';
-import Mongo from '../types/Mongo';
+import { IId, IMongoId, IObject } from '../types/Base';
 import Collection from '../../annotation/Collection';
+import ViberEntity from '../common/ViberEntity';
 
 export interface IRoleBase extends IMongoId {
   name: string;
   permissions?: string[];
 }
 
-export type IRole = IRoleBase & IMongoId;
+export type IRole = IRoleBase & IId<string> & IMongoId;
 
 @Collection('roles')
-export class Role extends Mongo implements IRole, IObject {
+export class Role extends ViberEntity implements IRole {
   name: string;
 
   permissions?: string[];
 
   constructor(props: IRole) {
-    super(props);
+    super(props._id, props.id);
     this.name = props.name;
     this.permissions = props.permissions;
   }

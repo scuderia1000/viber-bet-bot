@@ -9,7 +9,7 @@ import { ICommonDao } from '../common/ICommonDao';
 export type IUserService = IService<IUser>;
 
 export class UserService extends AbstractService<IUser> implements IUserService {
-  private dao: IUserDao;
+  private readonly dao: IUserDao;
 
   private roleService: IRoleService;
 

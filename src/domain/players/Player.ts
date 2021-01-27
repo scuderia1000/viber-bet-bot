@@ -1,5 +1,5 @@
 import { DateTimeISOString, IApiId, IMongoIdNum, IObject, PlayerRole } from '../types/Base';
-import Mongo from '../types/Mongo';
+import MongoId from '../types/MongoId';
 import Collection from '../../annotation/Collection';
 
 interface IBasePlayer {
@@ -16,7 +16,7 @@ export type IPlayer = IBasePlayer & IMongoIdNum & IObject;
 export type IApiPlayer = IBasePlayer & IApiId;
 
 @Collection('players')
-export class Player extends Mongo implements IPlayer {
+export class Player extends MongoId implements IPlayer {
   countryOfBirth: string;
 
   dateOfBirth: DateTimeISOString;

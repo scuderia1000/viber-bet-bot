@@ -24,7 +24,7 @@ export class SeasonService
     const { currentSeason } = competition;
     currentSeason.competitionId = competition._id;
 
-    const existSeason = await this.get(currentSeason._id);
+    const existSeason = await this.get(currentSeason.id);
     if (!existSeason) {
       await this.save(currentSeason);
     } else if (!currentSeason.equals(existSeason)) {

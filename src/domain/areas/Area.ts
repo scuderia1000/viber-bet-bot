@@ -1,5 +1,5 @@
 import { IApiId, IMongoIdNum, IObject } from '../types/Base';
-import Mongo from '../types/Mongo';
+import MongoId from '../types/MongoId';
 
 interface IBaseArea {
   name: string;
@@ -8,7 +8,7 @@ interface IBaseArea {
 export type IArea = IBaseArea & IMongoIdNum & IObject;
 export type IApiArea = IBaseArea & IApiId;
 
-export class Area extends Mongo implements IArea {
+export class Area extends MongoId implements IArea {
   name: string;
 
   constructor(props: IArea | IApiArea) {
