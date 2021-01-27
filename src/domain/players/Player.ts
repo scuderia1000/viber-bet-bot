@@ -1,6 +1,6 @@
-import { DateTimeISOString, IApiId, IMongoIdNum, IObject, PlayerRole } from '../types/Base';
-import MongoId from '../types/MongoId';
+import { DateTimeISOString, IId, IMongoId, IObject, PlayerRole } from '../types/Base';
 import Collection from '../../annotation/Collection';
+import ApiEntity from '../common/ApiEntity';
 
 interface IBasePlayer {
   name: string;
@@ -12,11 +12,10 @@ interface IBasePlayer {
   role: PlayerRole;
 }
 
-export type IPlayer = IBasePlayer & IMongoIdNum & IObject;
-export type IApiPlayer = IBasePlayer & IApiId;
+export type IPlayer = IBasePlayer & IId<number> & IMongoId & IObject;
 
 @Collection('players')
-export class Player extends MongoId implements IPlayer {
+export class Player extends ApiEntity implements IPlayer {
   countryOfBirth: string;
 
   dateOfBirth: DateTimeISOString;
@@ -31,8 +30,8 @@ export class Player extends MongoId implements IPlayer {
 
   shirtNumber: number | null;
 
-  constructor(props: IPlayer | IApiPlayer) {
-    super(props);
+  constructor(props: IPlayer) {
+    super(props._id, props.id);
     this.countryOfBirth = props.countryOfBirth;
     this.dateOfBirth = props.dateOfBirth;
     this.name = props.name;
@@ -44,7 +43,7 @@ export class Player extends MongoId implements IPlayer {
 
   equals(player: IPlayer): boolean {
     return (
-      this._id === player._id &&
+      this.id === player.id &&
       this.name === player.name &&
       this.position === player.position &&
       this.role === player.role &&

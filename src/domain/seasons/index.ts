@@ -1,22 +1,18 @@
 import { Db } from 'mongodb';
 import { SeasonService } from './SeasonService';
 import { ISeasonDao, SeasonDao } from './SeasonDao';
+import { IModule } from '../types/Base';
 
-export interface ISeasonsModule {
-  seasonService: SeasonService;
-  seasonDao: ISeasonDao;
-}
+export type ISeasonsModule = IModule<SeasonService, ISeasonDao>;
 
 const getSeasonModule = (db: Db): ISeasonsModule => {
-  const seasonDao = new SeasonDao(db);
-  const seasonService = new SeasonService(seasonDao);
+  const dao = new SeasonDao(db);
+  const service = new SeasonService(dao);
 
   return {
-    seasonDao,
-    seasonService,
+    service,
+    dao,
   };
 };
 
-export const seasonsModule = {
-  getSeasonModule,
-};
+export default getSeasonModule;

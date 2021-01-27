@@ -29,7 +29,9 @@ export class CompetitionService
   }
 
   async update(competition: ICompetition): Promise<void> {
-    const existCompetition = await this.get(competition._id);
+    if (!competition.id) return;
+
+    const existCompetition = await this.get(competition.id);
     if (!existCompetition) {
       await this.save(competition);
     } else if (!competition.equals(existCompetition)) {

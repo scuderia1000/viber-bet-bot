@@ -3,24 +3,20 @@ import { IUserService, UserService } from './UserService';
 import { IUserDao, UserDao } from './UserDao';
 import { RoleDao } from '../roles/RoleDao';
 import { RoleService } from '../roles/RoleService';
+import { IModule } from '../types/Base';
 
-export interface IUserModule {
-  userService: IUserService;
-  userDao: IUserDao;
-}
+export type IUserModule = IModule<IUserService, IUserDao>;
 
 const getUserModule = (db: Db): IUserModule => {
-  const userDao = new UserDao(db);
+  const dao = new UserDao(db);
   const roleDao = new RoleDao(db);
   const roleService = new RoleService(roleDao);
-  const userService = new UserService(userDao, roleService);
+  const service = new UserService(dao, roleService);
 
   return {
-    userDao,
-    userService,
+    dao,
+    service,
   };
 };
 
-export const userModule = {
-  getUserModule,
-};
+export default getUserModule;

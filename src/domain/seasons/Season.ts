@@ -1,10 +1,10 @@
+import { ObjectId } from 'mongodb';
 import { IId, IMongoId, IObject } from '../types/Base';
 import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
-import { ObjectId } from 'mongodb';
 
 interface IBaseSeason {
-  competitionId: ObjectId;
+  competitionId?: ObjectId;
   startDate: string;
   endDate: string;
   currentMatchday: number;
@@ -15,7 +15,7 @@ export type ISeason = IBaseSeason & IId<number> & IMongoId & IObject;
 
 @Collection('seasons')
 export class Season extends ApiEntity implements IBaseSeason {
-  competitionId: ObjectId;
+  competitionId?: ObjectId;
 
   currentMatchday: number;
 

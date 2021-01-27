@@ -1,4 +1,6 @@
 import { ObjectId } from 'mongodb';
+import { IService } from '../common/IService';
+import { ICommonDao } from '../common/ICommonDao';
 
 export interface IId<T> {
   id?: T;
@@ -8,6 +10,11 @@ export interface IMongoId {
   _id?: ObjectId;
 }
 
+export interface IModule<S extends IService<any>, D extends ICommonDao<any>> {
+  service: S;
+  dao: D;
+}
+
 export interface IError {
   message: string;
 }
@@ -15,14 +22,6 @@ export interface IError {
 export interface IObject {
   equals(object: any): boolean;
 }
-
-// export interface IApiId {
-//   id: number;
-// }
-//
-// export interface IViberApiId {
-//   id: string;
-// }
 
 export enum MatchStatus {
   SCHEDULED = 'SCHEDULED',

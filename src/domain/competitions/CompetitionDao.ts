@@ -14,7 +14,7 @@ export class CompetitionDao extends CRUDDao<ICompetition> implements ICompetitio
 
   // TODO добавить статус
   async getCompetitionWithScheduledMatches(competitionId: number): Promise<ICompetition | null> {
-    const results = await this.collection.findOne({ _id: competitionId });
+    const results = await this.collection.findOne({ id: competitionId });
     return results;
   }
 }

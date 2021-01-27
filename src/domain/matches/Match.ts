@@ -1,15 +1,8 @@
 import { ISeason } from '../seasons/Season';
-import {
-  DateTimeISOString,
-  IApiId,
-  IMongoIdNum,
-  IObject,
-  MatchStatus,
-  Winner,
-} from '../types/Base';
-import { ITeamShort } from '../teams/Team';
-import MongoId from '../types/MongoId';
+import { DateTimeISOString, IId, IMongoId, IObject, MatchStatus, Winner } from '../types/Base';
 import Collection from '../../annotation/Collection';
+import ApiEntity from '../common/ApiEntity';
+import { ITeamShort } from '../teams/ShortTeam';
 
 interface IScoreResult {
   homeTeam: number | null;
@@ -41,11 +34,10 @@ interface IBaseMatch {
   awayTeam: ITeamShort;
 }
 
-export type IMatch = IBaseMatch & IMongoIdNum & IObject;
-export type IApiMatch = IBaseMatch & IApiId;
+export type IMatch = IBaseMatch & IId<number> & IMongoId & IObject;
 
 @Collection('matches')
-export class Match extends MongoId implements IMatch {
+export class Match extends ApiEntity implements IMatch {
   awayTeam: ITeamShort;
 
   group: string | null;
@@ -66,8 +58,8 @@ export class Match extends MongoId implements IMatch {
 
   utcDate: string;
 
-  constructor(props: IMatch | IApiMatch) {
-    super(props);
+  constructor(props: IMatch) {
+    super(props._id, props.id);
     this.awayTeam = props.awayTeam;
     this.group = props.group;
     this.homeTeam = props.homeTeam;

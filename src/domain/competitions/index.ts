@@ -1,22 +1,18 @@
 import { Db } from 'mongodb';
 import { CompetitionDao, ICompetitionDao } from './CompetitionDao';
 import { CompetitionService } from './CompetitionService';
+import { IModule } from '../types/Base';
 
-export interface ICompetitionModule {
-  competitionService: CompetitionService;
-  competitionDao: ICompetitionDao;
-}
+export type ICompetitionModule = IModule<CompetitionService, ICompetitionDao>;
 
 const getCompetitionModule = (db: Db): ICompetitionModule => {
-  const competitionDao = new CompetitionDao(db);
-  const competitionService = new CompetitionService(competitionDao);
+  const dao = new CompetitionDao(db);
+  const service = new CompetitionService(dao);
 
   return {
-    competitionDao,
-    competitionService,
+    dao,
+    service,
   };
 };
 
-export const competitionModule = {
-  getCompetitionModule,
-};
+export default getCompetitionModule;

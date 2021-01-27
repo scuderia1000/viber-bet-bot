@@ -1,18 +1,17 @@
-import { IApiId, IMongoIdNum, IObject } from '../types/Base';
-import MongoId from '../types/MongoId';
+import { IId, IMongoId, IObject } from '../types/Base';
+import ApiEntity from '../common/ApiEntity';
 
 interface IBaseArea {
   name: string;
 }
 
-export type IArea = IBaseArea & IMongoIdNum & IObject;
-export type IApiArea = IBaseArea & IApiId;
+export type IArea = IBaseArea & IId<number> & IMongoId & IObject;
 
-export class Area extends MongoId implements IArea {
+export class Area extends ApiEntity implements IArea {
   name: string;
 
-  constructor(props: IArea | IApiArea) {
-    super(props);
+  constructor(props: IArea) {
+    super(props._id, props.id);
     this.name = props.name;
   }
 
