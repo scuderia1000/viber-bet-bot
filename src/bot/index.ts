@@ -11,7 +11,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   const bot = new ViberBot(logger, {
     authToken: token,
     name: 'Phoenix Bet Bot', // <--- Your bot name here
-    avatar: 'https://viber-bot.s3.eu-central-1.amazonaws.com/phoenix_007.jpg', // It is recommended to be 720x720, and no more than 100kb.
+    avatar: 'https://drive.google.com/file/d/1mIEk848MQRMjPd7lpaZEmjYCqmDKwpHv/view?usp=sharing', // It is recommended to be 720x720, and no more than 100kb.
   });
 
   // const sendResponse = (response: ViberResponse, message: string): void => {
@@ -19,7 +19,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   // };
 
   bot.onConversationStarted(async (userProfile, isSubscribed, context, onFinish) => {
-    await modules.userModule.userService.saveUser(userProfile);
+    await modules.userModule.service.saveViberUser(userProfile);
     onFinish(
       new TextMessage(
         conversationStartedText(userProfile.name),

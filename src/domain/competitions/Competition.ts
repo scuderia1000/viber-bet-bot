@@ -1,9 +1,10 @@
-import { DateTimeISOString, IApiId, IId, IMongoId, IObject } from '../types/Base';
+import { DateTimeISOString, IId, IMongoId } from '../types/Base';
 import { ISeason } from '../seasons/Season';
 import { IArea } from '../areas/Area';
 import { IMatch } from '../matches/Match';
 import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
+import CommonObject from '../common/CommonObject';
 
 interface IBaseCompetition {
   area: IArea;
@@ -16,7 +17,7 @@ interface IBaseCompetition {
   matches?: IMatch[];
 }
 
-export type ICompetition = IBaseCompetition & IId<number> & IMongoId & IObject;
+export type ICompetition = IBaseCompetition & IId<number> & IMongoId & CommonObject;
 
 @Collection('competitions')
 export class Competition extends ApiEntity implements ICompetition {
@@ -36,7 +37,7 @@ export class Competition extends ApiEntity implements ICompetition {
 
   seasons?: ISeason[];
 
-  constructor(props: ICompetition & IId<number>) {
+  constructor(props: Omit<ICompetition, 'equals'>) {
     super(props._id, props.id);
     this.area = props.area;
     this.code = props.code;

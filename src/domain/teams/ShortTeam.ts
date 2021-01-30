@@ -1,11 +1,11 @@
-import { IId, IMongoId, IObject } from '../types/Base';
+import { IId, IMongoId } from '../types/Base';
 import ApiEntity from '../common/ApiEntity';
 
 interface IBaseTeamShort {
   name: string;
 }
 
-export type ITeamShort = IBaseTeamShort & IId<number> & IMongoId & IObject;
+export type ITeamShort = IBaseTeamShort & IId<number> & IMongoId;
 
 export class TeamShort extends ApiEntity implements ITeamShort {
   name: string;

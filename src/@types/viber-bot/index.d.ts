@@ -1,7 +1,7 @@
 // eslint-disable-next-line max-classes-per-file
 declare module 'viber-bot' {
   interface UserProfile {
-    id: string;
+    id?: string;
     name: string;
     avatar: string;
     country?: string;

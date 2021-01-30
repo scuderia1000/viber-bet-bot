@@ -7,7 +7,7 @@ export interface IId<T> {
 }
 
 export interface IMongoId {
-  _id?: ObjectId;
+  _id: ObjectId;
 }
 
 export interface IModule<S extends IService<any>, D extends ICommonDao<any>> {

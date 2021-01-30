@@ -14,6 +14,6 @@ export class RoleDao extends CRUDDao<IRole> implements IRoleDao {
 
   async getRoleByName(name: string): Promise<IRole | null> {
     const role = await this.collection.findOne({ name });
-    return role;
+    return this.toEntity(role);
   }
 }

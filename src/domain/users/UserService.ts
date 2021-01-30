@@ -1,12 +1,15 @@
-import { ObjectId } from 'mongodb';
-import { IUser } from './User';
+import { UserProfile } from 'viber-bot';
+import { IUser, User } from './User';
 import { IUserDao } from './UserDao';
 import { IRoleService } from '../roles/RoleService';
 import { IService } from '../common/IService';
 import AbstractService from '../common/AbstractService';
 import { ICommonDao } from '../common/ICommonDao';
+import { ROLES } from '../../const';
 
-export type IUserService = IService<IUser>;
+export interface IUserService extends IService<IUser> {
+  saveViberUser(user: UserProfile): Promise<void>;
+}
 
 export class UserService extends AbstractService<IUser> implements IUserService {
   private readonly dao: IUserDao;
@@ -19,22 +22,24 @@ export class UserService extends AbstractService<IUser> implements IUserService 
     this.roleService = roleService;
   }
 
-  async saveUser(userProfile: IUser): Promise<void> {
-    const roleUser = await this.roleService.getRoleUser();
-    const roleId = roleUser?._id ?? new ObjectId();
-    let user = {
-      ...userProfile,
-      roles: [roleId],
-    };
-    const existUser = await this.dao.getUser(userProfile.id);
-    if (existUser) {
-      user = {
-        ...user,
-        ...existUser,
-      };
-      return this.replaceUser(user);
+  async saveViberUser(userProfile: UserProfile): Promise<void> {
+    if (!userProfile.id) return;
+
+    const roles = [];
+    const roleUser = await this.roleService.getRoleByName(ROLES.USER);
+    roles.push(roleUser);
+
+    const viberAdminsIds = await this.dao.getViberAdminsIds();
+    if (viberAdminsIds.includes(userProfile.id)) {
+      const roleAdmin = await this.roleService.getRoleByName(ROLES.ADMIN);
+      roles.push(roleAdmin);
     }
-    return this.dao.saveUser(user);
+    const user = new User({ ...userProfile, roles });
+
+    const existUser = await this.getById(userProfile.id);
+    if (!existUser) {
+      await this.save(user);
+    }
   }
 
   getDao(): ICommonDao<IUser> {

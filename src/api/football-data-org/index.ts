@@ -2,7 +2,7 @@ import * as http from 'http';
 import { RequestOptions } from 'http';
 import logger from '../../util/logger';
 import { API } from '../../const';
-import { IApiCompetition } from '../../domain/competitions/Competition';
+import { ICompetition } from '../../domain/competitions/Competition';
 
 const prefix = API.FOOTBALL_DATA_ORG.PREFIX;
 // List one particular competition.
@@ -50,7 +50,7 @@ const request = (options: RequestOptions): Promise<any> => {
   });
 };
 
-const getCompetition = async (code: string): Promise<IApiCompetition> => {
+const getCompetition = async (code: string): Promise<ICompetition> => {
   let responseData;
   try {
     responseData = await request(getOptions(`/${prefix}/${competitions}/${code}/`));

@@ -1,4 +1,4 @@
-import { DateTimeISOString, IId, IMongoId, IObject, PlayerRole } from '../types/Base';
+import { DateTimeISOString, IId, IMongoId, PlayerRole } from '../types/Base';
 import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
 
@@ -12,7 +12,7 @@ interface IBasePlayer {
   role: PlayerRole;
 }
 
-export type IPlayer = IBasePlayer & IId<number> & IMongoId & IObject;
+export type IPlayer = IBasePlayer & IId<number> & IMongoId;
 
 @Collection('players')
 export class Player extends ApiEntity implements IPlayer {

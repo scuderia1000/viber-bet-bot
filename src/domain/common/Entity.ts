@@ -1,9 +1,9 @@
 import { ObjectId } from 'mongodb';
+import CommonObject from './CommonObject';
 import { IMongoId } from '../types/Base';
-import Object from './Object';
 
-class Entity extends Object implements IMongoId {
-  _id?: ObjectId;
+class Entity extends CommonObject implements IMongoId {
+  _id: ObjectId;
 
   protected constructor(id?: ObjectId) {
     super();

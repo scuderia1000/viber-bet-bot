@@ -6,6 +6,7 @@ import getAreaModule, { IAreaModule } from './areas';
 import getTeamModule, { ITeamModule } from './teams';
 import getMatchModule, { IMatchModule } from './matches';
 import getPlayerModule, { IPlayerModule } from './players';
+import getRoleModule, { IRoleModule } from './roles';
 
 export interface IModules {
   userModule: IUserModule;
@@ -15,6 +16,7 @@ export interface IModules {
   teamModule: ITeamModule;
   matchModule: IMatchModule;
   playerModule: IPlayerModule;
+  roleModule: IRoleModule;
 }
 
 const getModules = (db: Db): IModules => ({
@@ -25,6 +27,7 @@ const getModules = (db: Db): IModules => ({
   teamModule: getTeamModule(db),
   matchModule: getMatchModule(db),
   playerModule: getPlayerModule(db),
+  roleModule: getRoleModule(db),
 });
 
 export default getModules;

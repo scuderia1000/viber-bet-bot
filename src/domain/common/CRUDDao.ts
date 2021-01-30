@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Collection, Db, FilterQuery, OptionalId } from 'mongodb';
+import { Collection, Db, FilterQuery, ObjectId, OptionalId } from 'mongodb';
 import { ICommonDao } from './ICommonDao';
 import { IMongoId } from '../types/Base';
 import logger from '../../util/logger';
@@ -19,9 +19,15 @@ class CRUDDao<E extends IMongoId> implements ICommonDao<E> {
     this.collection = db.collection(Reflect.getMetadata('collectionName', target));
   }
 
-  async get(id: number): Promise<E | null> {
+  async getByMongoId(id: ObjectId): Promise<E | null> {
     const dbResult = await this.collection.findOne({ _id: id } as FilterQuery<E>);
-    logger.debug('Get entity is: %s', dbResult);
+    logger.debug('getByMongoId entity is: %s', dbResult);
+    return this.toEntity(dbResult);
+  }
+
+  async getById(id: number | string): Promise<E | null> {
+    const dbResult = await this.collection.findOne({ id } as FilterQuery<E>);
+    logger.debug('getById: %s entity is: %s', id, dbResult);
     return this.toEntity(dbResult);
   }
 
@@ -35,9 +41,9 @@ class CRUDDao<E extends IMongoId> implements ICommonDao<E> {
     logger.debug('Successfully update entity: %s', entity);
   }
 
-  private toEntity(dbResult: any): E | null {
+  toEntity(dbResult: any): E | null {
     let entity: any;
-    if (this.target instanceof Function) {
+    if (dbResult && this.target instanceof Function) {
       entity = new (<any>this.target)(dbResult);
       return entity;
     }

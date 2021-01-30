@@ -1,5 +1,5 @@
 import { ISeason } from '../seasons/Season';
-import { DateTimeISOString, IId, IMongoId, IObject, MatchStatus, Winner } from '../types/Base';
+import { DateTimeISOString, IId, IMongoId, MatchStatus, Winner } from '../types/Base';
 import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
 import { ITeamShort } from '../teams/ShortTeam';
@@ -34,7 +34,7 @@ interface IBaseMatch {
   awayTeam: ITeamShort;
 }
 
-export type IMatch = IBaseMatch & IId<number> & IMongoId & IObject;
+export type IMatch = IBaseMatch & IId<number> & IMongoId;
 
 @Collection('matches')
 export class Match extends ApiEntity implements IMatch {

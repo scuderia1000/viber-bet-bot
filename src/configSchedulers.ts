@@ -5,8 +5,8 @@ import { EventType } from './types/base';
 
 const configSchedulers = (modules: IModules): void => {
   const eventManager = new EventManager();
-  const { competitionService } = modules.competitionModule;
-  const { seasonService } = modules.seasonsModule;
+  const { service: competitionService } = modules.competitionModule;
+  const { service: seasonService } = modules.seasonsModule;
   const competitionScheduler = new CompetitionsScheduler(eventManager);
   competitionScheduler.events.subscribe(EventType.GET_COMPETITION, competitionService);
   competitionScheduler.events.subscribe(EventType.GET_SEASON, seasonService);

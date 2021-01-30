@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { IRole, Role } from './Role';
 import { IRoleDao } from './RoleDao';
 import { ROLES } from '../../const';
@@ -6,8 +7,7 @@ import AbstractService from '../common/AbstractService';
 import { ICommonDao } from '../common/ICommonDao';
 
 export interface IRoleService extends IService<IRole> {
-  getRoleByName(name: string): Promise<IRole | null>;
-  getRoleUser(): Promise<IRole>;
+  getRoleByName(name: string): Promise<IRole>;
 }
 
 export class RoleService extends AbstractService<IRole> implements IRoleService {
@@ -18,17 +18,13 @@ export class RoleService extends AbstractService<IRole> implements IRoleService 
     this.dao = dao;
   }
 
-  getRoleByName(name: string): Promise<IRole | null> {
-    return this.dao.getRoleByName(name);
-  }
-
-  async getRoleUser(): Promise<IRole> {
-    let roleUser = await this.getRoleByName(ROLES.USER);
-    if (!roleUser) {
-      roleUser = new Role({ name: ROLES.USER });
-      await this.save(roleUser);
+  async getRoleByName(name: ROLES): Promise<IRole> {
+    let role = await this.dao.getRoleByName(name);
+    if (!role) {
+      role = new Role({ name, _id: new ObjectId() });
+      await this.save(role);
     }
-    return roleUser;
+    return role;
   }
 
   getDao(): ICommonDao<IRole> {

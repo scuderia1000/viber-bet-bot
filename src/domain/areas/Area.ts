@@ -1,12 +1,14 @@
-import { IId, IMongoId, IObject } from '../types/Base';
+import { IId, IMongoId } from '../types/Base';
 import ApiEntity from '../common/ApiEntity';
+import Collection from '../../annotation/Collection';
 
 interface IBaseArea {
   name: string;
 }
 
-export type IArea = IBaseArea & IId<number> & IMongoId & IObject;
+export type IArea = IBaseArea & IId<number> & IMongoId;
 
+@Collection('areas')
 export class Area extends ApiEntity implements IArea {
   name: string;
 
