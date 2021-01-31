@@ -1,5 +1,12 @@
 import 'reflect-metadata';
-import { Collection, Db, FilterQuery, ObjectId, OptionalId } from 'mongodb';
+import {
+  BulkWriteOperation,
+  Collection,
+  Db,
+  FilterQuery,
+  ObjectId,
+  OptionalId,
+} from 'mongodb';
 import { ICommonDao } from './ICommonDao';
 import { IMongoId } from '../types/Base';
 import logger from '../../util/logger';
@@ -55,6 +62,28 @@ class CRUDDao<E extends IMongoId> implements ICommonDao<E> {
     const cursor = await this.collection.find();
     const result = await cursor.toArray();
     return result;
+  }
+
+  async insertMany(docs: E[]): Promise<number> {
+    const result = await this.collection.insertMany(docs as Array<OptionalId<E>>, {
+      ordered: true,
+    });
+    logger.debug('insertMany result: %s', result);
+    return result.insertedCount;
+  }
+
+  async replaceMany(docs: E[]): Promise<void> {
+    const operations: BulkWriteOperation<E>[] = [];
+    docs.forEach((doc) => {
+      operations.push({
+        replaceOne: {
+          filter: { _id: doc._id } as FilterQuery<E>,
+          replacement: doc,
+        },
+      });
+    });
+    const result = await this.collection.bulkWrite(operations, { ordered: true });
+    logger.debug('replaceMany result: %s', JSON.stringify(result));
   }
 }
 

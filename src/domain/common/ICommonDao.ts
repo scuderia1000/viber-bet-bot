@@ -8,4 +8,6 @@ export interface ICommonDao<E extends IMongoId> {
   getByMongoId(id: ObjectId): Promise<E | null>;
   getAll(): Promise<E[]>;
   toEntity(dbResult: any): E | null;
+  insertMany(docs: E[]): Promise<number>;
+  replaceMany(docs: E[]): Promise<void>;
 }

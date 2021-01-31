@@ -1,9 +1,9 @@
 import { Db } from 'mongodb';
 import { IModule } from '../types/Base';
-import { IMatchService, MatchService } from './MatchService';
+import { MatchService } from './MatchService';
 import { IMatchDao, MatchDao } from './MatchDao';
 
-export type IMatchModule = IModule<IMatchService, IMatchDao>;
+export type IMatchModule = IModule<MatchService, IMatchDao>;
 
 const getMatchModule = (db: Db): IMatchModule => {
   const dao = new MatchDao(db);

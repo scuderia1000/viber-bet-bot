@@ -1,30 +1,26 @@
 import 'reflect-metadata';
 import { EventManager } from './event-manager';
 import { EventType, IScheduler } from '../types/base';
-import { Competition, ICompetition } from '../domain/competitions/Competition';
+import { Competition } from '../domain/competitions/Competition';
 import getApiFootballDataOrg, { IFootballDataOrgApi } from '../api/football-data-org';
-import { API } from '../const';
 import { Season } from '../domain/seasons/Season';
 import { Match } from '../domain/matches/Match';
 
-const defaultInterval = 10 * 1000;
-// const defaultInterval = 24 * 60 * 60 * 1000; // 1 день
+const competitionUpdateInterval = 24 * 60 * 60 * 1000; // 1 день
+const matchesUpdateInterval = 10 * 1000; // 10 сек
+// const matchesUpdateInterval = 60 * 60 * 1000; // 1 час
 
 export interface ICompetitionsScheduler {
-  // update or create new competition
-  updateCompetition(competition: ICompetition): void;
-  // update or create new season
-  updateSeason(season: any): void;
-  // update or create new matches
-  updateMatches(matches: any): void;
-  // update or create new match
-  updateMatch(match: any): void;
   getCompetition(
     competitionCode: string,
     api: IFootballDataOrgApi,
     events: EventManager,
   ): () => Promise<void>;
-  updateCompetitionMatches(): Promise<void>;
+  updateCompetitionMatches(
+    competitionCode: string,
+    api: IFootballDataOrgApi,
+    events: EventManager,
+  ): () => Promise<void>;
 }
 
 export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler {
@@ -45,7 +41,14 @@ export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler
   }
 
   run(): void {
-    this.start(this.getCompetition(this.competitionCode, this.api, this.events), defaultInterval);
+    this.start(
+      this.getCompetition(this.competitionCode, this.api, this.events),
+      competitionUpdateInterval,
+    );
+    this.start(
+      this.updateCompetitionMatches(this.competitionCode, this.api, this.events),
+      matchesUpdateInterval,
+    );
   }
 
   start(cb: any, delayInMs?: number): void {
@@ -80,19 +83,21 @@ export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler
     };
   }
 
-  async updateCompetitionMatches(): Promise<void> {
-    const competitionWithMatches = await this.api.getCompetitionMatches(this.competitionCode);
-    if (!competitionWithMatches || !competitionWithMatches.matches) return;
+  // eslint-disable-next-line class-methods-use-this
+  updateCompetitionMatches(
+    competitionCode: string,
+    api: IFootballDataOrgApi,
+    events: EventManager,
+  ): () => Promise<void> {
+    // eslint-disable-next-line func-names
+    return async function () {
+      const competitionWithMatches = await api.getCompetitionMatches(competitionCode);
+      if (!competitionWithMatches || !competitionWithMatches.matches) return;
 
-    const matches = competitionWithMatches.matches.map((match) => new Match(match));
-    console.log('matches', matches);
+      const matches = competitionWithMatches.matches.map((match) => new Match(match));
+      const currentSeason = new Season(matches[0].season);
+      const competition = new Competition({ ...competitionWithMatches, currentSeason, matches });
+      events.notify(EventType.GET_MATCHES, competition);
+    };
   }
-
-  updateCompetition(competition: ICompetition): void {}
-
-  updateMatch(match: any): void {}
-
-  updateMatches(matches: any): void {}
-
-  updateSeason(season: any): void {}
 }

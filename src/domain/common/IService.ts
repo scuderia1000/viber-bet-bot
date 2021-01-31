@@ -7,4 +7,6 @@ export interface IService<E extends IMongoId> {
   getById(id: number | string): Promise<E | null>;
   getByMongoId(id: ObjectId): Promise<E | null>;
   getAll(): Promise<E[]>;
+  insertMany(docs: E[]): Promise<number>;
+  replaceMany(docs: E[]): Promise<void>;
 }

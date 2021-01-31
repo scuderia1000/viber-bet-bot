@@ -1,8 +1,9 @@
-import { ISeason } from '../seasons/Season';
+import { ISeason, Season } from '../seasons/Season';
 import { DateTimeISOString, IId, IMongoId, MatchStatus, Winner } from '../types/Base';
 import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
-import { ITeamShort } from '../teams/ShortTeam';
+import { ITeamShort, TeamShort } from '../teams/ShortTeam';
+import CommonObject from '../common/CommonObject';
 
 interface IScoreResult {
   homeTeam: number | null;
@@ -20,6 +21,9 @@ interface IScore {
 
 interface IBaseMatch {
   season: ISeason;
+  /**
+   * Дата начала матча
+   */
   utcDate: string;
   status: MatchStatus;
   matchday: string | null;
@@ -34,7 +38,7 @@ interface IBaseMatch {
   awayTeam: ITeamShort;
 }
 
-export type IMatch = IBaseMatch & IId<number> & IMongoId;
+export type IMatch = IBaseMatch & IId<number> & IMongoId & CommonObject;
 
 @Collection('matches')
 export class Match extends ApiEntity implements IMatch {
@@ -60,19 +64,19 @@ export class Match extends ApiEntity implements IMatch {
 
   constructor(props: IMatch) {
     super(props._id, props.id);
-    this.awayTeam = props.awayTeam;
+    this.awayTeam = new TeamShort(props.awayTeam);
     this.group = props.group;
-    this.homeTeam = props.homeTeam;
+    this.homeTeam = new TeamShort(props.homeTeam);
     this.lastUpdated = props.lastUpdated;
     this.matchday = props.matchday;
     this.score = props.score;
-    this.season = props.season;
+    this.season = new Season(props.season);
     this.stage = props.stage;
     this.status = props.status;
     this.utcDate = props.utcDate;
   }
 
   equals(match: IMatch): boolean {
-    return this._id === match._id && this.status === match.status && this.utcDate === match.utcDate;
+    return this.id === match.id && this.status === match.status && this.utcDate === match.utcDate;
   }
 }

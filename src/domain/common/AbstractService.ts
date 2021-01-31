@@ -25,6 +25,14 @@ abstract class AbstractService<E extends IMongoId> implements IService<E> {
   getAll(): Promise<E[]> {
     return this.getDao().getAll();
   }
+
+  insertMany(docs: E[]): Promise<number> {
+    return this.getDao().insertMany(docs);
+  }
+
+  replaceMany(docs: E[]): Promise<void> {
+    return this.getDao().replaceMany(docs);
+  }
 }
 
 export default AbstractService;
