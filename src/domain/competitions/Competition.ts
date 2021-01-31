@@ -51,7 +51,7 @@ export class Competition extends ApiEntity implements ICompetition {
 
   equals(competition: ICompetition): boolean {
     return (
-      this._id === competition._id &&
+      this.id === competition.id &&
       this.code === competition.code &&
       this.currentSeason.equals(competition.currentSeason) &&
       this.name === competition.name

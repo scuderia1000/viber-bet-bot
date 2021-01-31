@@ -3,10 +3,12 @@ import { RequestOptions } from 'http';
 import logger from '../../util/logger';
 import { API } from '../../const';
 import { ICompetition } from '../../domain/competitions/Competition';
+import { IMatch } from '../../domain/matches/Match';
 
 const prefix = API.FOOTBALL_DATA_ORG.PREFIX;
 // List one particular competition.
 const competitions = API.FOOTBALL_DATA_ORG.COMPETITIONS;
+const matches = API.FOOTBALL_DATA_ORG.MATCHES;
 
 const getOptions = (path: string): RequestOptions => ({
   host: 'api.football-data.org',
@@ -50,15 +52,38 @@ const request = (options: RequestOptions): Promise<any> => {
   });
 };
 
-const getCompetition = async (code: string): Promise<ICompetition> => {
-  let responseData;
-  try {
-    responseData = await request(getOptions(`/${prefix}/${competitions}/${code}/`));
-    logger.debug('responseData: %s', responseData);
-  } catch (error) {
-    logger.error(error);
-  }
-  return responseData;
+export interface IFootballDataOrgApi {
+  getCompetition(code: string): Promise<ICompetition>;
+  getCompetitionMatches(code: string): Promise<ICompetition>;
+}
+
+const getApiFootballDataOrg = (): IFootballDataOrgApi => {
+  const getCompetition = async (code: string): Promise<ICompetition> => {
+    let responseData;
+    try {
+      responseData = await request(getOptions(`/${prefix}/${competitions}/${code}/`));
+      logger.debug('responseData: %s', responseData);
+    } catch (error) {
+      logger.error(error);
+    }
+    return responseData;
+  };
+
+  const getCompetitionMatches = async (code: string): Promise<ICompetition> => {
+    let responseData;
+    try {
+      responseData = await request(getOptions(`/${prefix}/${competitions}/${code}/${matches}/`));
+      logger.debug('responseData: %s', responseData);
+    } catch (error) {
+      logger.error(error);
+    }
+    return responseData;
+  };
+
+  return {
+    getCompetition,
+    getCompetitionMatches,
+  };
 };
 
-export default getCompetition;
+export default getApiFootballDataOrg;

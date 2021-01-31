@@ -75,5 +75,5 @@ export enum EventType {
 }
 
 export interface IScheduler {
-  start(): void;
+  run(): void;
 }

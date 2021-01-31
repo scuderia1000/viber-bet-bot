@@ -2,14 +2,13 @@ import 'reflect-metadata';
 import { EventManager } from './event-manager';
 import { EventType, IScheduler } from '../types/base';
 import { Competition, ICompetition } from '../domain/competitions/Competition';
-import getCompetition from '../api/football-data-org';
+import getApiFootballDataOrg, { IFootballDataOrgApi } from '../api/football-data-org';
 import { API } from '../const';
 import { Season } from '../domain/seasons/Season';
+import { Match } from '../domain/matches/Match';
 
 const defaultInterval = 10 * 1000;
 // const defaultInterval = 24 * 60 * 60 * 1000; // 1 день
-// код лиги чемпионов
-const championsLeague = API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS;
 
 export interface ICompetitionsScheduler {
   // update or create new competition
@@ -20,41 +19,73 @@ export interface ICompetitionsScheduler {
   updateMatches(matches: any): void;
   // update or create new match
   updateMatch(match: any): void;
-  getCompetition(code?: string): Promise<void>;
+  getCompetition(
+    competitionCode: string,
+    api: IFootballDataOrgApi,
+    events: EventManager,
+  ): () => Promise<void>;
+  updateCompetitionMatches(): Promise<void>;
 }
 
 export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler {
   public events: EventManager;
 
-  // eslint-disable-next-line no-undef
-  private timer: NodeJS.Timeout | undefined;
+  private readonly api: IFootballDataOrgApi;
 
-  constructor(events: EventManager) {
+  private readonly competitionCode: string;
+
+  private timer?: number;
+  // eslint-disable-next-line no-undef
+  // private timer: NodeJS.Timeout | undefined;
+
+  constructor(events: EventManager, competitionCode: string) {
     this.events = events;
+    this.api = getApiFootballDataOrg();
+    this.competitionCode = competitionCode;
   }
 
-  start(delayInMs: number = defaultInterval): void {
+  run(): void {
+    this.start(this.getCompetition(this.competitionCode, this.api, this.events), defaultInterval);
+  }
+
+  start(cb: any, delayInMs?: number): void {
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const me = this;
     let { timer } = me;
     timer = setTimeout(async function callback() {
-      await me.getCompetition();
+      await cb();
       // eslint-disable-next-line no-unused-vars
       timer = setTimeout(callback, delayInMs);
     }, delayInMs);
   }
 
-  async getCompetition(code: string = championsLeague): Promise<void> {
-    const result = await getCompetition(code);
-    if (result) {
+  // eslint-disable-next-line class-methods-use-this
+  getCompetition(
+    competitionCode: string,
+    api: IFootballDataOrgApi,
+    events: EventManager,
+  ): () => Promise<void> {
+    // eslint-disable-next-line func-names
+    return async function () {
+      const result = await api.getCompetition(competitionCode);
+      if (!result) return;
+
       const currentSeason = new Season(result.currentSeason);
       const competition = new Competition({ ...result, currentSeason });
       if (competition.seasons) {
         delete competition.seasons;
       }
-      this.events.notify(EventType.GET_COMPETITION, competition);
-      this.events.notify(EventType.GET_SEASON, competition);
-    }
+      events.notify(EventType.GET_COMPETITION, competition);
+      events.notify(EventType.GET_SEASON, competition);
+    };
+  }
+
+  async updateCompetitionMatches(): Promise<void> {
+    const competitionWithMatches = await this.api.getCompetitionMatches(this.competitionCode);
+    if (!competitionWithMatches || !competitionWithMatches.matches) return;
+
+    const matches = competitionWithMatches.matches.map((match) => new Match(match));
+    console.log('matches', matches);
   }
 
   updateCompetition(competition: ICompetition): void {}

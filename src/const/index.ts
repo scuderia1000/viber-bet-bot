@@ -22,6 +22,7 @@ export const API = {
   FOOTBALL_DATA_ORG: {
     PREFIX: 'v2',
     COMPETITIONS: 'competitions',
+    MATCHES: 'matches',
     LEAGUE_CODE: {
       CHAMPIONS: 'CL',
     },

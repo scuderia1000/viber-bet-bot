@@ -45,7 +45,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   // Нажали на кнопку Сделать прогноз
   bot.onTextMessage(/^makePrediction$/i, (message, response) => {
     logger.debug('user', response.userProfile);
-    getCompetition(API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS);
+    // getCompetition(API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS);
     response.send(
       new TextMessage(
         `Hi there ${response.userProfile.name}. I am ${bot.name}`,
