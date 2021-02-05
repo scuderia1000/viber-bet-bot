@@ -23,6 +23,7 @@ export const API = {
     PREFIX: 'v2',
     COMPETITIONS: 'competitions',
     MATCHES: 'matches',
+    TEAMS: 'teams',
     LEAGUE_CODE: {
       CHAMPIONS: 'CL',
     },

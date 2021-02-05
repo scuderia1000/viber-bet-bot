@@ -1,4 +1,5 @@
 import { UserProfile } from 'viber-bot';
+import { ObjectId } from 'mongodb';
 import { IUser, User } from './User';
 import { IUserDao } from './UserDao';
 import { IRoleService } from '../roles/RoleService';
@@ -34,7 +35,7 @@ export class UserService extends AbstractService<IUser> implements IUserService 
       const roleAdmin = await this.roleService.getRoleByName(ROLES.ADMIN);
       roles.push(roleAdmin);
     }
-    const user = new User({ ...userProfile, roles });
+    const user = new User({ ...userProfile, roles, _id: new ObjectId() });
 
     const existUser = await this.getById(userProfile.id);
     if (!existUser) {

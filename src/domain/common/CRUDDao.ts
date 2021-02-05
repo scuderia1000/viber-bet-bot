@@ -61,6 +61,7 @@ class CRUDDao<E extends IMongoId> implements ICommonDao<E> {
   async getAll(): Promise<E[]> {
     const cursor = await this.collection.find();
     const result = await cursor.toArray();
+    logger.debug('getAll result count: %n', result.length);
     return result;
   }
 

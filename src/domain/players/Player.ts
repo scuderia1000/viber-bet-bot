@@ -31,7 +31,7 @@ export class Player extends ApiEntity implements IPlayer {
   shirtNumber: number | null;
 
   constructor(props: IPlayer) {
-    super(props._id, props.id);
+    super(props.id, props._id);
     this.countryOfBirth = props.countryOfBirth;
     this.dateOfBirth = props.dateOfBirth;
     this.name = props.name;

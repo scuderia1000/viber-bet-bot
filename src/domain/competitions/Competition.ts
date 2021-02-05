@@ -5,6 +5,7 @@ import { IMatch } from '../matches/Match';
 import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
 import CommonObject from '../common/CommonObject';
+import { ITeam } from '../teams/Team';
 
 interface IBaseCompetition {
   area: IArea;
@@ -15,6 +16,8 @@ interface IBaseCompetition {
   lastUpdated: DateTimeISOString;
   seasons?: ISeason[];
   matches?: IMatch[];
+  teams?: ITeam[];
+  season?: ISeason;
 }
 
 export type ICompetition = IBaseCompetition & IId<number> & IMongoId & CommonObject;
@@ -37,8 +40,12 @@ export class Competition extends ApiEntity implements ICompetition {
 
   seasons?: ISeason[];
 
+  teams?: ITeam[];
+
+  season?: ISeason;
+
   constructor(props: Omit<ICompetition, 'equals'>) {
-    super(props._id, props.id);
+    super(props.id, props._id);
     this.area = props.area;
     this.code = props.code;
     this.currentSeason = props.currentSeason;
@@ -47,6 +54,8 @@ export class Competition extends ApiEntity implements ICompetition {
     this.matches = props.matches;
     this.name = props.name;
     this.seasons = props.seasons;
+    this.teams = props.teams;
+    this.season = props.season;
   }
 
   equals(competition: ICompetition): boolean {

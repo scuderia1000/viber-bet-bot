@@ -3,7 +3,7 @@ import { IService } from '../common/IService';
 import { ICommonDao } from '../common/ICommonDao';
 
 export interface IId<T> {
-  id?: T;
+  id: T;
 }
 
 export interface IMongoId {

@@ -72,8 +72,18 @@ export enum EventType {
   GET_COMPETITION = 'get_competition',
   GET_SEASON = 'get_season',
   GET_MATCHES = 'get_matches',
+  GET_TEAMS = 'get_teams',
 }
 
 export interface IScheduler {
   run(): void;
+}
+
+export enum ButtonSize {
+  XS = 1,
+  S = 2,
+  M = 3,
+  L = 4,
+  XL = 5,
+  XXL = 6,
 }

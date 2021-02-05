@@ -21,6 +21,11 @@ export interface ICompetitionsScheduler {
     api: IFootballDataOrgApi,
     events: EventManager,
   ): () => Promise<void>;
+  updateCompetitionTeams(
+    competitionCode: string,
+    api: IFootballDataOrgApi,
+    events: EventManager,
+  ): () => Promise<void>;
 }
 
 export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler {
@@ -47,6 +52,10 @@ export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler
     );
     this.start(
       this.updateCompetitionMatches(this.competitionCode, this.api, this.events),
+      matchesUpdateInterval,
+    );
+    this.start(
+      this.updateCompetitionTeams(this.competitionCode, this.api, this.events),
       matchesUpdateInterval,
     );
   }
@@ -94,10 +103,22 @@ export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler
       const competitionWithMatches = await api.getCompetitionMatches(competitionCode);
       if (!competitionWithMatches || !competitionWithMatches.matches) return;
 
-      const matches = competitionWithMatches.matches.map((match) => new Match(match));
-      const currentSeason = new Season(matches[0].season);
-      const competition = new Competition({ ...competitionWithMatches, currentSeason, matches });
-      events.notify(EventType.GET_MATCHES, competition);
+      events.notify(EventType.GET_MATCHES, competitionWithMatches);
+    };
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  updateCompetitionTeams(
+    competitionCode: string,
+    api: IFootballDataOrgApi,
+    events: EventManager,
+  ): () => Promise<void> {
+    // eslint-disable-next-line func-names
+    return async function () {
+      const competitionTeams = await api.getCompetitionTeams(competitionCode);
+      if (!competitionTeams) return;
+
+      events.notify(EventType.GET_TEAMS, competitionTeams);
     };
   }
 }

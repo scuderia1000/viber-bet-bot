@@ -27,7 +27,7 @@ export class Season extends ApiEntity implements IBaseSeason {
   winner: string | null;
 
   constructor(props: ISeason) {
-    super(props._id, props.id);
+    super(props.id, props._id);
     this.competitionId = props.competitionId;
     this.currentMatchday = props.currentMatchday;
     this.endDate = props.endDate;

@@ -3,12 +3,13 @@ import { RequestOptions } from 'http';
 import logger from '../../util/logger';
 import { API } from '../../const';
 import { ICompetition } from '../../domain/competitions/Competition';
-import { IMatch } from '../../domain/matches/Match';
+import { ITeam } from '../../domain/teams/Team';
 
 const prefix = API.FOOTBALL_DATA_ORG.PREFIX;
 // List one particular competition.
 const competitions = API.FOOTBALL_DATA_ORG.COMPETITIONS;
 const matches = API.FOOTBALL_DATA_ORG.MATCHES;
+const teams = API.FOOTBALL_DATA_ORG.TEAMS;
 
 const getOptions = (path: string): RequestOptions => ({
   host: 'api.football-data.org',
@@ -55,13 +56,14 @@ const request = (options: RequestOptions): Promise<any> => {
 export interface IFootballDataOrgApi {
   getCompetition(code: string): Promise<ICompetition>;
   getCompetitionMatches(code: string): Promise<ICompetition>;
+  getCompetitionTeams(code: string): Promise<ITeam>;
 }
 
 const getApiFootballDataOrg = (): IFootballDataOrgApi => {
-  const getCompetition = async (code: string): Promise<ICompetition> => {
+  const getRequest = async (url: string): Promise<any> => {
     let responseData;
     try {
-      responseData = await request(getOptions(`/${prefix}/${competitions}/${code}/`));
+      responseData = await request(getOptions(url));
       logger.debug('responseData: %s', responseData);
     } catch (error) {
       logger.error(error);
@@ -69,20 +71,25 @@ const getApiFootballDataOrg = (): IFootballDataOrgApi => {
     return responseData;
   };
 
+  const getCompetition = async (code: string): Promise<ICompetition> => {
+    const responseData = await getRequest(`/${prefix}/${competitions}/${code}/`);
+    return responseData;
+  };
+
   const getCompetitionMatches = async (code: string): Promise<ICompetition> => {
-    let responseData;
-    try {
-      responseData = await request(getOptions(`/${prefix}/${competitions}/${code}/${matches}/`));
-      logger.debug('responseData: %s', responseData);
-    } catch (error) {
-      logger.error(error);
-    }
+    const responseData = await getRequest(`/${prefix}/${competitions}/${code}/${matches}/`);
+    return responseData;
+  };
+
+  const getCompetitionTeams = async (code: string): Promise<ITeam> => {
+    const responseData = await getRequest(`/${prefix}/${competitions}/${code}/${teams}/`);
     return responseData;
   };
 
   return {
     getCompetition,
     getCompetitionMatches,
+    getCompetitionTeams,
   };
 };
 

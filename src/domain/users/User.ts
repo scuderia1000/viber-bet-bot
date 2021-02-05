@@ -22,8 +22,8 @@ export class User extends ViberEntity implements IUser {
 
   roles: IRole[];
 
-  constructor(props: Omit<IUser, '_id'>) {
-    super(props);
+  constructor(props: IUser) {
+    super(props.id, props._id);
     this.avatar = props.avatar;
     this.country = props.country;
     this.language = props.language;

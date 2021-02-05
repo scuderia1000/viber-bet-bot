@@ -1,4 +1,4 @@
-import { ISeason, Season } from '../seasons/Season';
+import { ISeason } from '../seasons/Season';
 import { DateTimeISOString, IId, IMongoId, MatchStatus, Winner } from '../types/Base';
 import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
@@ -24,7 +24,7 @@ interface IBaseMatch {
   /**
    * Дата начала матча
    */
-  utcDate: string;
+  utcDate: Date;
   status: MatchStatus;
   matchday: string | null;
   // TODO как узнать какие есть этапы?
@@ -60,23 +60,27 @@ export class Match extends ApiEntity implements IMatch {
 
   status: MatchStatus;
 
-  utcDate: string;
+  utcDate: Date;
 
-  constructor(props: IMatch) {
-    super(props._id, props.id);
+  constructor(props: Omit<IMatch, 'equals'>) {
+    super(props.id, props._id);
     this.awayTeam = new TeamShort(props.awayTeam);
     this.group = props.group;
     this.homeTeam = new TeamShort(props.homeTeam);
     this.lastUpdated = props.lastUpdated;
     this.matchday = props.matchday;
     this.score = props.score;
-    this.season = new Season(props.season);
+    this.season = props.season;
     this.stage = props.stage;
     this.status = props.status;
-    this.utcDate = props.utcDate;
+    this.utcDate = new Date(props.utcDate);
   }
 
   equals(match: IMatch): boolean {
-    return this.id === match.id && this.status === match.status && this.utcDate === match.utcDate;
+    return (
+      this.id === match.id &&
+      this.status === match.status &&
+      this.utcDate.getTime() === match.utcDate.getTime()
+    );
   }
 }

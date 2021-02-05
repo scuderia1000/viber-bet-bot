@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { IMongoId } from '../types/Base';
+import ApiEntity from './ApiEntity';
 
 export interface IService<E extends IMongoId> {
   save(entity: E): Promise<void>;
@@ -9,4 +10,8 @@ export interface IService<E extends IMongoId> {
   getAll(): Promise<E[]>;
   insertMany(docs: E[]): Promise<number>;
   replaceMany(docs: E[]): Promise<void>;
+  updateEntities<D extends ApiEntity>(
+    existEntities: Record<number, E>,
+    apiEntities: D[],
+  ): Promise<void>;
 }

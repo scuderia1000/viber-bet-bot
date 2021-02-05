@@ -13,7 +13,7 @@ export class Area extends ApiEntity implements IArea {
   name: string;
 
   constructor(props: IArea) {
-    super(props._id, props.id);
+    super(props.id, props._id);
     this.name = props.name;
   }
 

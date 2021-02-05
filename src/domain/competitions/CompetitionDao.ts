@@ -4,7 +4,7 @@ import CRUDDao from '../common/CRUDDao';
 import { ICommonDao } from '../common/ICommonDao';
 
 export interface ICompetitionDao extends ICommonDao<ICompetition> {
-  getCompetitionWithScheduledMatches(competitionId: number): Promise<ICompetition | null>;
+  getCompetitionByCode(code: string): Promise<ICompetition | null>;
 }
 
 export class CompetitionDao extends CRUDDao<ICompetition> implements ICompetitionDao {
@@ -12,9 +12,8 @@ export class CompetitionDao extends CRUDDao<ICompetition> implements ICompetitio
     super(db, Competition);
   }
 
-  // TODO добавить статус
-  async getCompetitionWithScheduledMatches(competitionId: number): Promise<ICompetition | null> {
-    const results = await this.collection.findOne({ id: competitionId });
-    return results;
+  async getCompetitionByCode(code: string): Promise<ICompetition | null> {
+    const results = await this.collection.findOne({ code });
+    return this.toEntity(results);
   }
 }

@@ -1,55 +1,67 @@
 import { IService } from '../common/IService';
-import { IMatch } from './Match';
+import { IMatch, Match } from './Match';
 import AbstractService from '../common/AbstractService';
 import { ICompetitionListeners } from '../../types/base';
 import { IMatchDao } from './MatchDao';
 import { ICommonDao } from '../common/ICommonDao';
 import { ICompetition } from '../competitions/Competition';
+import { ICompetitionService } from '../competitions/CompetitionService';
+import { MatchStatus } from '../types/Base';
+import { ISeasonService } from '../seasons/SeasonService';
 
-export type IMatchService = IService<IMatch>;
+export interface IMatchService extends IService<IMatch> {
+  getScheduledMatches(competitionCode: string): Promise<IMatch[]>;
+}
 
 export class MatchService
   extends AbstractService<IMatch>
   implements IMatchService, ICompetitionListeners {
   private readonly dao: IMatchDao;
 
-  constructor(dao: IMatchDao) {
+  private readonly competitionService: ICompetitionService;
+
+  private readonly seasonService: ISeasonService;
+
+  constructor(
+    dao: IMatchDao,
+    competitionService: ICompetitionService,
+    seasonService: ISeasonService,
+  ) {
     super();
     this.dao = dao;
+    this.competitionService = competitionService;
+    this.seasonService = seasonService;
   }
 
   getDao(): ICommonDao<IMatch> {
     return this.dao;
   }
 
-  async update(competition: ICompetition): Promise<void> {
-    const { matches, currentSeason } = competition;
+  // TODO подумать, как изменить параметр, приходит не объект класса Competition, а просто объект с полями как в Competition
+  async update(competitionWithMatches: ICompetition): Promise<void> {
+    if (!competitionWithMatches || !competitionWithMatches.matches) return;
 
-    if (!matches) return;
+    const currentSeason = await this.seasonService.getById(
+      competitionWithMatches.matches[0].season.id,
+    );
 
-    const newMatches: IMatch[] = [];
-    const updateMatches: IMatch[] = [];
-    const existMatches = await this.dao.getMatchesBySeasonId(currentSeason?.id);
-    const existMatchesIds = Object.keys(existMatches);
-    if (existMatchesIds.length) {
-      matches.forEach((match) => {
-        if (!match.id) return;
+    if (!currentSeason) return;
 
-        if (existMatches[match.id]) {
-          if (!match.equals(existMatches[match.id])) {
-            // Заменяем _id на существующий в базе, т.к. при создании объекта из api создается новый _id (в api нет этого поля)
-            // eslint-disable-next-line no-param-reassign
-            match._id = existMatches[match.id]._id;
-            updateMatches.push(match);
-          }
-        } else {
-          newMatches.push(match);
-        }
-      });
-      if (updateMatches.length) await this.replaceMany(updateMatches);
-      if (newMatches.length) await this.insertMany(newMatches);
-    } else {
-      await this.insertMany(matches);
-    }
+    const matches = competitionWithMatches.matches.map(
+      (match) => new Match({ ...match, season: currentSeason }),
+    );
+    const existMatches = await this.dao.getMatchesBySeasonId(currentSeason.id);
+    await this.updateEntities(existMatches, matches);
+  }
+
+  async getScheduledMatches(competitionCode: string): Promise<IMatch[]> {
+    const competition = await this.competitionService.getCompetitionByCode(competitionCode);
+    if (!competition || !competition.currentSeason._id) return Promise.resolve([]);
+
+    const matches = await this.dao.getSeasonMatchesByStatus(
+      competition.currentSeason._id,
+      MatchStatus.SCHEDULED,
+    );
+    return matches;
   }
 }

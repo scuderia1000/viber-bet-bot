@@ -3,6 +3,7 @@ import ApiEntity from '../common/ApiEntity';
 
 interface IBaseTeamShort {
   name: string;
+  crestUrl: string;
 }
 
 export type ITeamShort = IBaseTeamShort & IId<number> & IMongoId;
@@ -10,9 +11,12 @@ export type ITeamShort = IBaseTeamShort & IId<number> & IMongoId;
 export class TeamShort extends ApiEntity implements ITeamShort {
   name: string;
 
+  crestUrl: string;
+
   constructor(props: ITeamShort) {
-    super(props._id, props.id);
+    super(props.id, props._id);
     this.name = props.name;
+    this.crestUrl = props.crestUrl;
   }
 
   equals(team: ITeamShort): boolean {

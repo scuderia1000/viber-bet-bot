@@ -1,5 +1,5 @@
 import { Bot, Bot as ViberBot, Message } from 'viber-bot';
-import { makePredictionKeyboard } from './keyboards';
+import { getScheduledMatchesKeyboard, makePredictionKeyboard } from './keyboards';
 import { API, conversationStartedText } from '../const';
 import { IModules } from '../domain';
 import logger from '../util/logger';
@@ -43,12 +43,30 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   // });
 
   // Нажали на кнопку Сделать прогноз
-  bot.onTextMessage(/^makePrediction$/i, (message, response) => {
+  bot.onTextMessage(/^makePrediction$/i, async (message, response) => {
     logger.debug('user', response.userProfile);
-    // getCompetition(API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS);
+
+    const scheduledMatches = await modules.matchModule.service.getScheduledMatches(
+      API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS,
+    );
+
     response.send(
       new TextMessage(
         `Hi there ${response.userProfile.name}. I am ${bot.name}`,
+        getScheduledMatchesKeyboard(scheduledMatches),
+        undefined,
+        undefined,
+        undefined,
+        4,
+      ),
+    );
+  });
+  // TODO пока переход сразу на Сделать прогноз
+  // Нажали на кнопку Назад
+  bot.onTextMessage(/^back$/i, async (message, response) => {
+    response.send(
+      new TextMessage(
+        `Hi there ${response.userProfile.name}. You are go back`,
         makePredictionKeyboard(),
         undefined,
         undefined,

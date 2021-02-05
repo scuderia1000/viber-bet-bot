@@ -10,7 +10,6 @@ interface IBaseTeam {
   activeCompetitions: ICompetition[];
   shortName: string;
   tla: string;
-  crestUrl: string;
   address: string;
   phone: string;
   website: string;
@@ -33,8 +32,6 @@ export class Team extends TeamShort implements ITeam {
   area: IArea;
 
   clubColors: string;
-
-  crestUrl: string;
 
   email: string;
 
@@ -60,7 +57,6 @@ export class Team extends TeamShort implements ITeam {
     this.address = props.address;
     this.area = props.area;
     this.clubColors = props.clubColors;
-    this.crestUrl = props.crestUrl;
     this.email = props.email;
     this.founded = props.founded;
     this.lastUpdated = props.lastUpdated;
@@ -73,6 +69,6 @@ export class Team extends TeamShort implements ITeam {
   }
 
   equals(team: ITeam): boolean {
-    return this._id === team._id && this.lastUpdated === team.lastUpdated;
+    return this.id === team.id && this.lastUpdated === team.lastUpdated;
   }
 }
