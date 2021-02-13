@@ -1,12 +1,13 @@
 import { Bot, Bot as ViberBot, Message } from 'viber-bot';
-import { getScheduledMatchesKeyboard, makePredictionKeyboard } from './keyboards';
+import { makePredictionKeyboard } from './keyboards';
 import { API, conversationStartedText } from '../const';
 import { IModules } from '../domain';
 import logger from '../util/logger';
-import getCompetition from '../api/football-data-org';
+import getScheduledMatchesMessage from './messages/rich-media';
 
 const initializeBot = (token: string, modules: IModules): Bot => {
   const TextMessage = Message.Text;
+  const RichMediaMessage = Message.RichMedia;
 
   const bot = new ViberBot(logger, {
     authToken: token,
@@ -32,28 +33,20 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     );
   });
 
-  // bot.on(BotEvents.MESSAGE_RECEIVED, (message: Message, response: ViberResponse) => {
-  //   logger.debug('message', message);
-  //   const messageText = (message as Message.Text).text;
-  //   const echoMessage = new TextMessage(
-  //     `Hi ${response.userProfile?.name}! You send: ${messageText}`,
-  //   );
-  //   // Echo's back the message to the client. Your bot logic should sit here.
-  //   response.send(echoMessage);
-  // });
-
   // Нажали на кнопку Сделать прогноз
   bot.onTextMessage(/^makePrediction$/i, async (message, response) => {
     logger.debug('user', response.userProfile);
+    logger.debug('makePrediction message', message);
 
     const scheduledMatches = await modules.matchModule.service.getScheduledMatches(
       API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS,
     );
 
     response.send(
-      new TextMessage(
-        `Hi there ${response.userProfile.name}. I am ${bot.name}`,
-        getScheduledMatchesKeyboard(scheduledMatches),
+      new RichMediaMessage(
+        getScheduledMatchesMessage(scheduledMatches),
+        makePredictionKeyboard(),
+        undefined,
         undefined,
         undefined,
         undefined,
@@ -61,7 +54,19 @@ const initializeBot = (token: string, modules: IModules): Bot => {
       ),
     );
   });
-  // TODO пока переход сразу на Сделать прогноз
+
+  // Нажали на кнопку Сделать прогноз в сообщении о матчах
+  bot.onTextMessage(/^matchPrediction_.*$/i, async (message, response) => {
+    logger.debug('user', response.userProfile);
+    logger.debug('matchPrediction_ message', message);
+
+    // const scheduledMatches = await modules.matchModule.service.getScheduledMatches(
+    //   API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS,
+    // );
+    //
+    // response.send(new RichMediaMessage(getScheduledMatchesMessage(scheduledMatches)));
+  });
+  // TODO пока переход сразу на Сделать прогноз, добавить историю и переходить на предыдущий шаг
   // Нажали на кнопку Назад
   bot.onTextMessage(/^back$/i, async (message, response) => {
     response.send(

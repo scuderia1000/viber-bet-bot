@@ -36,6 +36,7 @@
     "mongodb": "^3.6.3",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
+    "sharp": "^0.27.1",
     "viber-bot": "^1.0.16",
     "winston": "^3.3.3",
     "winston-console-formatter": "^1.0.0-beta.3"

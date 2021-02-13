@@ -3,7 +3,7 @@ import { DateTimeISOString } from '../types/Base';
 import { ICompetition } from '../competitions/Competition';
 import { IPlayer } from '../players/Player';
 import Collection from '../../annotation/Collection';
-import { ITeamShort, TeamShort } from './ShortTeam';
+import { ITeamShort, TeamShort } from './TeamShort';
 
 interface IBaseTeam {
   area: IArea;

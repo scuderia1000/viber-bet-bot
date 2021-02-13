@@ -8,20 +8,14 @@ interface UserProfile {
   language?: string;
 }
 
-// export interface Message {
-//   timestamp: string;
-//   token: string;
-//   trackingData: JSON;
-// }
-
 export interface ViberResponse {
   userProfile: UserProfile;
   send: (messages: Message | Message[]) => Promise<JSON>;
 }
 
-interface Dictionary<T> {
-  [key: string]: T;
-}
+// interface Dictionary<T> {
+//   [key: string]: T;
+// }
 
 export interface NgrokTunnel {
   proto: string;
@@ -31,37 +25,6 @@ export interface NgrokTunnel {
 
 export interface NgrokConfig {
   tunnels: NgrokTunnel[];
-}
-
-export enum KeyboardType {
-  KEYBOARD = 'keyboard',
-}
-
-/**
- * Customize the keyboard input field
- */
-export enum InputFieldState {
-  REGULAR = 'regular', // default
-  MINIMIZED = 'minimized',
-  HIDDEN = 'hidden',
-}
-
-export interface IKeyboardButton {
-  Columns: number;
-  Rows: number;
-  Text: string;
-  TextSize: string;
-  TextHAlign: string;
-  TextVAlign: string;
-  ActionType: string;
-  ActionBody: string;
-  BgColor: string;
-}
-
-export interface IKeyboard {
-  Type: KeyboardType;
-  InputFieldState?: InputFieldState;
-  Buttons: IKeyboardButton[];
 }
 
 export interface ICompetitionListeners {
@@ -86,4 +49,72 @@ export enum ButtonSize {
   L = 4,
   XL = 5,
   XXL = 6,
+}
+
+export enum ActionType {
+  REPLY = 'reply',
+  OPEN_URL = 'open-url',
+  LOCATION_PICKER = 'location-picker',
+  SHARE_PHONE = 'share-phone',
+  NONE = 'none',
+}
+
+export enum TextHAlign {
+  LEFT = 'left',
+  CENTER = 'center',
+  RIGHT = 'right',
+}
+
+export enum TextVAlign {
+  TOP = 'top',
+  CENTER = 'center',
+  BOTTOM = 'bottom',
+}
+
+export enum TextSize {
+  SMALL = 'small',
+  MEDIUM = 'medium',
+  LARGE = 'large',
+}
+
+export interface IButton {
+  ActionBody: string;
+  ActionType?: ActionType;
+  Columns?: number;
+  Rows?: number;
+  BgColor?: string;
+  BgMediaType?: string;
+  BgMedia?: string;
+  Text?: string;
+  TextSize?: TextSize;
+  TextHAlign?: TextHAlign;
+  TextVAlign?: TextVAlign;
+  Image?: string;
+  TextOpacity?: number;
+}
+
+/**
+ * Customize the keyboard input field
+ */
+export enum InputFieldState {
+  REGULAR = 'regular', // default
+  MINIMIZED = 'minimized',
+  HIDDEN = 'hidden',
+}
+
+export enum KeyboardType {
+  KEYBOARD = 'keyboard',
+}
+
+export interface IKeyboard {
+  Type: KeyboardType;
+  InputFieldState?: InputFieldState;
+  Buttons: IButton[];
+}
+
+export interface IRichMedia {
+  ButtonsGroupColumns: number;
+  ButtonsGroupRows: number;
+  BgColor: string;
+  Buttons?: IButton[];
 }

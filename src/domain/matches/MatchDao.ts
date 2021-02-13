@@ -3,6 +3,7 @@ import { ICommonDao } from '../common/ICommonDao';
 import { IMatch, Match } from './Match';
 import CRUDDao from '../common/CRUDDao';
 import { MatchStatus } from '../types/Base';
+import { TeamShort } from '../teams/TeamShort';
 
 export interface IMatchDao extends ICommonDao<IMatch> {
   getMatchesBySeasonId(seasonId?: number): Promise<Record<number, IMatch>>;
@@ -30,9 +31,46 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
 
   async getSeasonMatchesByStatus(seasonId: ObjectId, status: MatchStatus): Promise<IMatch[]> {
     const options = {
-      sort: { utcDate: -1 },
+      $sort: { utcDate: -1 },
     };
-    const cursor = this.collection.find({ 'season._id': seasonId, status }, options);
+    const cursor = this.collection.aggregate([
+      {
+        $match: {
+          'season._id': seasonId,
+          status,
+        },
+      },
+      options,
+      {
+        $lookup: {
+          from: 'teams',
+          let: { team_id: '$homeTeam.id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
+            { $project: { _id: 1, id: 1, name: 1, crestUrl: 1 } },
+          ],
+          as: 'homeTeam',
+        },
+      },
+      {
+        $unwind: '$homeTeam',
+      },
+      {
+        $lookup: {
+          from: 'teams',
+          let: { team_id: '$awayTeam.id' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
+            { $project: { _id: 1, id: 1, name: 1, crestUrl: 1 } },
+          ],
+          as: 'awayTeam',
+        },
+      },
+      {
+        $unwind: '$awayTeam',
+      },
+    ]);
+
     const matches: IMatch[] = [];
     await cursor.forEach((document) => {
       const match = this.toEntity(document);

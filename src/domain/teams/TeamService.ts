@@ -40,10 +40,10 @@ export class TeamService
     if (!competitionTeams || !competitionTeams.teams) return;
 
     const teams = competitionTeams.teams.map((competitionTeam) => {
-      return new Team(competitionTeam);
+      const team = new Team(competitionTeam);
+      team.crestUrl = '';
+      return team
     });
-    console.log('teams: ', teams);
-
     const existTeams = await this.getAllTeams();
     await this.updateEntities(existTeams, teams);
   }

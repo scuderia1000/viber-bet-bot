@@ -2,7 +2,7 @@ import { ISeason } from '../seasons/Season';
 import { DateTimeISOString, IId, IMongoId, MatchStatus, Winner } from '../types/Base';
 import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
-import { ITeamShort, TeamShort } from '../teams/ShortTeam';
+import { ITeamShort, TeamShort } from '../teams/TeamShort';
 import CommonObject from '../common/CommonObject';
 
 interface IScoreResult {

@@ -57,8 +57,12 @@ abstract class AbstractService<E extends IMongoId> implements IService<E> {
           newEntities.push((entity as unknown) as E);
         }
       });
-      if (updateEntities.length) await this.replaceMany(updateEntities);
-      if (newEntities.length) await this.insertMany(newEntities);
+      if (updateEntities.length) {
+        await this.replaceMany(updateEntities);
+      }
+      if (newEntities.length) {
+        await this.insertMany(newEntities);
+      }
     } else {
       await this.insertMany((apiEntities as unknown) as E[]);
     }

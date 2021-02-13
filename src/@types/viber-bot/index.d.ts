@@ -53,6 +53,74 @@ declare module 'viber-bot' {
     ): void;
   }
 
+  export enum ActionType {
+    REPLY = 'reply',
+    OPEN_URL = 'open-url',
+    LOCATION_PICKER = 'location-picker',
+    SHARE_PHONE = 'share-phone',
+    NONE = 'none',
+  }
+
+  export enum TextHAlign {
+    LEFT = 'left',
+    CENTER = 'center',
+    RIGHT = 'right',
+  }
+
+  export enum TextVAlign {
+    TOP = 'top',
+    CENTER = 'center',
+    BOTTOM = 'bottom',
+  }
+
+  export enum TextSize {
+    SMALL = 'small',
+    MEDIUM = 'medium',
+    LARGE = 'large',
+  }
+
+  export interface IButton {
+    ActionBody: string;
+    ActionType?: ActionType;
+    Columns?: number;
+    Rows?: number;
+    BgColor?: string;
+    BgMediaType?: string;
+    BgMedia?: string;
+    Text?: string;
+    TextSize?: TextSize;
+    TextHAlign?: TextHAlign;
+    TextVAlign?: TextVAlign;
+    Image?: string;
+    TextOpacity?: number;
+  }
+
+  /**
+   * Customize the keyboard input field
+   */
+  export enum InputFieldState {
+    REGULAR = 'regular', // default
+    MINIMIZED = 'minimized',
+    HIDDEN = 'hidden',
+  }
+
+  export enum KeyboardType {
+    KEYBOARD = 'keyboard',
+  }
+
+  export interface IKeyboard {
+    Type: KeyboardType;
+    InputFieldState?: InputFieldState;
+    Buttons: IButton[];
+  }
+
+  export interface IRichMedia {
+    ButtonsGroupColumns: number;
+    ButtonsGroupRows: number;
+    BgColor: string;
+    Buttons?: IButton[];
+  }
+
   export class Bot {
     constructor(loggerOrConfiguration: any, configuration: BotConfiguration);
 
@@ -88,10 +156,24 @@ declare module 'viber-bot' {
 
       constructor(
         text: string,
-        optionalKeyboard?: any,
-        optionalTrackingData?: any,
+        optionalKeyboard?: IKeyboard,
+        optionalTrackingData?: JSON,
         timestamp?: string,
         token?: string,
+        minApiVersion?: number,
+      );
+    }
+
+    export class RichMedia extends Message {
+      richMedia: IRichMedia;
+
+      constructor(
+        richMedia: IRichMedia,
+        optionalKeyboard?: IKeyboard,
+        optionalTrackingData?: JSON,
+        timestamp?: string,
+        token?: string,
+        optionalAltText?: string,
         minApiVersion?: number,
       );
     }
