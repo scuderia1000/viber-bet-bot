@@ -6,14 +6,16 @@ import {
   TextSize,
   TextVAlign,
   ButtonSize,
+  BgMediaScaleType,
 } from '../../../types/base';
 import { IMatch } from '../../../domain/matches/Match';
 import { BUTTON } from '../../../const';
+import COLORS from '../../../const/colors';
 
 export const fullScreenButton = (
   text: string,
   replayText: string,
-  bgColor = '#f7bb3f',
+  bgColor = COLORS.YELLOW,
 ): IButton => ({
   Columns: 6,
   Rows: 1,
@@ -26,7 +28,7 @@ export const fullScreenButton = (
   BgColor: bgColor,
 });
 
-export const matchButton = (text: string, replayText: string, bgColor = '#f7bb3f'): IButton => ({
+export const matchButton = (text: string, replayText: string, bgColor = COLORS.YELLOW): IButton => ({
   Columns: ButtonSize.M,
   Rows: 1,
   Text: text,
@@ -50,7 +52,7 @@ const getDateButton = (utcDate: Date): IButton => ({
 });
 
 const getVSTextButton = (): IButton => ({
-  Columns: ButtonSize.XS,
+  Columns: ButtonSize.S,
   Rows: 3,
   Text: `<font color=#e1e5e4><b><i>VS</i></b></font>`,
   TextSize: TextSize.LARGE,
@@ -66,13 +68,14 @@ const getTeamEmblemUrlButton = (url: string): IButton => ({
   ActionType: ActionType.NONE,
   ActionBody: 'none',
   Image: url,
+  ImageScaleType: BgMediaScaleType.FIT,
 });
 
 const getTeamsEmblemButtons = (match: IMatch): IButton[] => {
   return [
-    getTeamEmblemUrlButton(match.homeTeam.crestUrl),
+    getTeamEmblemUrlButton(match.homeTeam.crestImageUrl),
     getVSTextButton(),
-    getTeamEmblemUrlButton(match.awayTeam.crestUrl),
+    getTeamEmblemUrlButton(match.awayTeam.crestImageUrl),
   ];
 };
 
@@ -103,6 +106,9 @@ const getMakePredictionButton = (matchId: ObjectId): IButton => ({
   TextVAlign: TextVAlign.CENTER,
   ActionType: ActionType.REPLY,
   ActionBody: `matchPrediction_${matchId}`,
+  BgColor: COLORS.YELLOW,
+  // Image: 'https://viberbot.blob.core.windows.net/pictures/buttons_PNG68.png',
+  // ImageScaleType: BgMediaScaleType.FILL,
 });
 
 export const getMessageMatchButton = (match: IMatch): IButton[] => [

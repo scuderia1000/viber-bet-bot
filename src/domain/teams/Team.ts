@@ -69,6 +69,11 @@ export class Team extends TeamShort implements ITeam {
   }
 
   equals(team: ITeam): boolean {
-    return this.id === team.id && this.lastUpdated === team.lastUpdated;
+    return (
+      this.id === team.id &&
+      this.lastUpdated === team.lastUpdated &&
+      this.name === team.name &&
+      this.crestImageUrl === team.crestImageUrl
+    );
   }
 }

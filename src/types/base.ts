@@ -77,6 +77,12 @@ export enum TextSize {
   LARGE = 'large',
 }
 
+export enum BgMediaScaleType {
+  CROP = 'crop',
+  FILL = 'fill',
+  FIT = 'fit',
+}
+
 export interface IButton {
   ActionBody: string;
   ActionType?: ActionType;
@@ -91,6 +97,8 @@ export interface IButton {
   TextVAlign?: TextVAlign;
   Image?: string;
   TextOpacity?: number;
+  BgMediaScaleType?: BgMediaScaleType;
+  ImageScaleType?: BgMediaScaleType;
 }
 
 /**

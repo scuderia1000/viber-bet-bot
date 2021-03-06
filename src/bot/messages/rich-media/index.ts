@@ -1,11 +1,12 @@
 import { IButton, IRichMedia } from '../../../types/base';
 import { IMatch } from '../../../domain/matches/Match';
 import { getMessageMatchButton } from '../../keyboards/buttons';
+import COLORS from '../../../const/colors';
 
 const MessageBody: IRichMedia = {
   ButtonsGroupColumns: 6,
   ButtonsGroupRows: 6,
-  BgColor: '#FFFFFF',
+  BgColor: COLORS.WHITE,
   Buttons: [],
 };
 

@@ -12,7 +12,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   const bot = new ViberBot(logger, {
     authToken: token,
     name: 'Phoenix Bet Bot', // <--- Your bot name here
-    avatar: 'https://drive.google.com/file/d/1mIEk848MQRMjPd7lpaZEmjYCqmDKwpHv/view?usp=sharing', // It is recommended to be 720x720, and no more than 100kb.
+    avatar: 'https://viberbot.blob.core.windows.net/pictures/phoenix_007.jpg', // It is recommended to be 720x720, and no more than 100kb.
   });
 
   // const sendResponse = (response: ViberResponse, message: string): void => {
@@ -28,7 +28,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
         undefined,
         undefined,
         undefined,
-        4,
+        6,
       ),
     );
   });
@@ -50,7 +50,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
         undefined,
         undefined,
         undefined,
-        4,
+        6,
       ),
     );
   });

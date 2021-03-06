@@ -47,7 +47,7 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
           let: { team_id: '$homeTeam.id' },
           pipeline: [
             { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
-            { $project: { _id: 1, id: 1, name: 1, crestUrl: 1 } },
+            { $project: { _id: 1, id: 1, name: 1, crestImageUrl: 1 } },
           ],
           as: 'homeTeam',
         },
@@ -61,7 +61,7 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
           let: { team_id: '$awayTeam.id' },
           pipeline: [
             { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
-            { $project: { _id: 1, id: 1, name: 1, crestUrl: 1 } },
+            { $project: { _id: 1, id: 1, name: 1, crestImageUrl: 1 } },
           ],
           as: 'awayTeam',
         },
