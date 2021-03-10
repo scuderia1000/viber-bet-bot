@@ -126,3 +126,13 @@ export interface IRichMedia {
   BgColor: string;
   Buttons?: IButton[];
 }
+
+export enum MatchTeamType {
+  HOME_TEAM = 'HOME_TEAM',
+  AWAY_TEAM = 'AWAY_TEAM',
+}
+
+export const MatchTeamTypeMapper = {
+  [MatchTeamType.HOME_TEAM]: 'homeTeam',
+  [MatchTeamType.AWAY_TEAM]: 'awayTeam',
+};

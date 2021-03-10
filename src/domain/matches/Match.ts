@@ -64,9 +64,9 @@ export class Match extends ApiEntity implements IMatch {
 
   constructor(props: Omit<IMatch, 'equals'>) {
     super(props.id, props._id);
-    this.awayTeam = new TeamShort(props.awayTeam);
+    this.awayTeam = props.awayTeam;
     this.group = props.group;
-    this.homeTeam = new TeamShort(props.homeTeam);
+    this.homeTeam = props.homeTeam;
     this.lastUpdated = props.lastUpdated;
     this.matchday = props.matchday;
     this.score = props.score;

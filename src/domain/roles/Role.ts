@@ -8,7 +8,6 @@ export interface IRoleBase {
 }
 
 export type IRole = IRoleBase & IMongoId;
-// export type IRole = IRoleBase & IId<string> & Partial<IMongoId>;
 
 @Collection('roles')
 export class Role extends Entity implements IRole {

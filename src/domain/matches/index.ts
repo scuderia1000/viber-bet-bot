@@ -6,6 +6,8 @@ import { CompetitionDao } from '../competitions/CompetitionDao';
 import { CompetitionService } from '../competitions/CompetitionService';
 import { SeasonDao } from '../seasons/SeasonDao';
 import { SeasonService } from '../seasons/SeasonService';
+import { TeamDao } from '../teams/TeamDao';
+import { TeamService } from '../teams/TeamService';
 
 export type IMatchModule = IModule<MatchService, IMatchDao>;
 
@@ -15,7 +17,9 @@ const getMatchModule = (db: Db): IMatchModule => {
   const competitionService = new CompetitionService(competitionDao);
   const seasonDao = new SeasonDao(db);
   const seasonService = new SeasonService(seasonDao);
-  const service = new MatchService(dao, competitionService, seasonService);
+  const teamDao = new TeamDao(db);
+  const teamService = new TeamService(teamDao);
+  const service = new MatchService(dao, competitionService, seasonService, teamService);
 
   return {
     service,

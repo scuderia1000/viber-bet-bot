@@ -1,16 +1,20 @@
+import { ObjectId } from 'mongodb';
 import { IService } from '../common/IService';
 import { IMatch, Match } from './Match';
 import AbstractService from '../common/AbstractService';
-import { ICompetitionListeners } from '../../types/base';
+import { ICompetitionListeners, MatchTeamType, MatchTeamTypeMapper } from '../../types/base';
 import { IMatchDao } from './MatchDao';
 import { ICommonDao } from '../common/ICommonDao';
 import { ICompetition } from '../competitions/Competition';
 import { ICompetitionService } from '../competitions/CompetitionService';
 import { MatchStatus } from '../types/Base';
 import { ISeasonService } from '../seasons/SeasonService';
+import { ITeamShort, TeamShort } from '../teams/TeamShort';
+import { ITeamService } from '../teams/TeamService';
 
 export interface IMatchService extends IService<IMatch> {
   getScheduledMatches(competitionCode: string): Promise<IMatch[]>;
+  getMatchTeamByType(matchId: ObjectId, matchTeamType: MatchTeamType): Promise<ITeamShort | null>;
 }
 
 export class MatchService
@@ -22,15 +26,19 @@ export class MatchService
 
   private readonly seasonService: ISeasonService;
 
+  private readonly teamService: ITeamService;
+
   constructor(
     dao: IMatchDao,
     competitionService: ICompetitionService,
     seasonService: ISeasonService,
+    teamService: ITeamService,
   ) {
     super();
     this.dao = dao;
     this.competitionService = competitionService;
     this.seasonService = seasonService;
+    this.teamService = teamService;
   }
 
   getDao(): ICommonDao<IMatch> {
@@ -47,8 +55,17 @@ export class MatchService
 
     if (!currentSeason) return;
 
-    const matches = competitionWithMatches.matches.map(
-      (match) => new Match({ ...match, season: currentSeason }),
+    const allTeams = await this.teamService.getAllTeamsShort();
+    const matches = await Promise.all(
+      competitionWithMatches.matches.map(
+        async (match) =>
+          new Match({
+            ...match,
+            season: currentSeason,
+            homeTeam: allTeams[match.homeTeam.id] ?? new TeamShort(match.homeTeam),
+            awayTeam: allTeams[match.awayTeam.id] ?? new TeamShort(match.awayTeam),
+          }),
+      ),
     );
     const existMatches = await this.dao.getMatchesBySeasonId(currentSeason.id);
     await this.updateEntities(existMatches, matches);
@@ -63,5 +80,20 @@ export class MatchService
       MatchStatus.SCHEDULED,
     );
     return matches;
+  }
+
+  async getMatchTeamByType(
+    matchId: ObjectId,
+    matchTeamType: MatchTeamType,
+  ): Promise<ITeamShort | null> {
+    const matchTeamTypeProperty = MatchTeamTypeMapper[matchTeamType];
+    const teamShort = await this.dao.getMatchTeamByType(matchId, matchTeamTypeProperty);
+    let team = null;
+    // eslint-disable-next-line no-prototype-builtins
+    if (teamShort) {
+      team = await this.teamService.getByMongoId(teamShort._id);
+      console.log('getMatchTeamByType team', team);
+    }
+    return team;
   }
 }

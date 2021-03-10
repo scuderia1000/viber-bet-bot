@@ -16,6 +16,9 @@ export const BUTTON = {
     LABEL: 'Сделать прогноз',
     REPLAY_TEXT: 'makePrediction',
   },
+  TEAM: {
+    PREDICTION_LABEL: 'Сколько забьет',
+  },
 };
 
 export const API = {
@@ -29,3 +32,7 @@ export const API = {
     },
   },
 };
+
+export const VIBER_MIN_API_LEVEL = 6;
+
+export const PREDICT_SCORE_MAX_VALUE = 12;

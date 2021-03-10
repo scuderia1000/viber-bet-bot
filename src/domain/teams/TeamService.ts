@@ -8,8 +8,11 @@ import { ICommonDao } from '../common/ICommonDao';
 import { ICompetitionListeners } from '../../types/base';
 import { ICompetition } from '../competitions/Competition';
 import logger from '../../util/logger';
+import { ITeamShort } from './TeamShort';
 
-export type ITeamService = IService<ITeam>;
+export interface ITeamService extends IService<ITeam> {
+  getAllTeamsShort(): Promise<Record<number, ITeamShort>>;
+}
 
 export class TeamService
   extends AbstractService<ITeam>
@@ -119,5 +122,10 @@ export class TeamService
       );
     }
     return imageUrl;
+  }
+
+  async getAllTeamsShort(): Promise<Record<number, ITeamShort>> {
+    const teamsResult = await this.dao.getAllTeamsShort();
+    return teamsResult.reduce((acc, team) => ({ ...acc, [team.id]: team }), {});
   }
 }

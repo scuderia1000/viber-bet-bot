@@ -3,11 +3,12 @@ import { ICommonDao } from '../common/ICommonDao';
 import { IMatch, Match } from './Match';
 import CRUDDao from '../common/CRUDDao';
 import { MatchStatus } from '../types/Base';
-import { TeamShort } from '../teams/TeamShort';
+import { ITeamShort, TeamShort } from '../teams/TeamShort';
 
 export interface IMatchDao extends ICommonDao<IMatch> {
   getMatchesBySeasonId(seasonId?: number): Promise<Record<number, IMatch>>;
   getSeasonMatchesByStatus(seasonId: ObjectId, status: MatchStatus): Promise<IMatch[]>;
+  getMatchTeamByType(matchId: ObjectId, matchTeamType: string): Promise<ITeamShort | null>;
 }
 
 export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
@@ -31,7 +32,7 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
 
   async getSeasonMatchesByStatus(seasonId: ObjectId, status: MatchStatus): Promise<IMatch[]> {
     const options = {
-      $sort: { utcDate: -1 },
+      $sort: { utcDate: 1 },
     };
     const cursor = this.collection.aggregate([
       {
@@ -79,5 +80,22 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
       }
     });
     return matches;
+  }
+
+  async getMatchTeamByType(matchId: ObjectId, matchTeamType: string): Promise<ITeamShort | null> {
+    const query = { _id: matchId };
+    const options = {
+      projection: { [matchTeamType]: 1 },
+    };
+    const matchResult = await this.collection.findOne(query, options);
+    let team = null;
+    if (matchResult) {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      team = new TeamShort(matchResult[matchTeamType]);
+    }
+    console.log('matchResult', matchResult);
+    console.log('team', team);
+    return team;
   }
 }

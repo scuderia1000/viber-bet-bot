@@ -1,24 +1,27 @@
 import { ObjectId } from 'mongodb';
 import {
   ActionType,
+  BgMediaScaleType,
+  ButtonSize,
   IButton,
   TextHAlign,
   TextSize,
   TextVAlign,
-  ButtonSize,
-  BgMediaScaleType,
 } from '../../../types/base';
 import { IMatch } from '../../../domain/matches/Match';
 import { BUTTON } from '../../../const';
 import COLORS from '../../../const/colors';
+import { ITeamShort } from '../../../domain/teams/TeamShort';
 
-export const fullScreenButton = (
+export const button = (
   text: string,
   replayText: string,
   bgColor = COLORS.YELLOW,
+  columns = ButtonSize.XXL,
+  rows = 1,
 ): IButton => ({
-  Columns: 6,
-  Rows: 1,
+  Columns: columns,
+  Rows: rows,
   Text: text,
   TextSize: TextSize.MEDIUM,
   TextHAlign: TextHAlign.CENTER,
@@ -28,7 +31,11 @@ export const fullScreenButton = (
   BgColor: bgColor,
 });
 
-export const matchButton = (text: string, replayText: string, bgColor = COLORS.YELLOW): IButton => ({
+export const matchButton = (
+  text: string,
+  replayText: string,
+  bgColor = COLORS.YELLOW,
+): IButton => ({
   Columns: ButtonSize.M,
   Rows: 1,
   Text: text,
@@ -62,8 +69,8 @@ const getVSTextButton = (): IButton => ({
   ActionBody: 'none',
 });
 
-const getTeamEmblemUrlButton = (url: string): IButton => ({
-  Columns: ButtonSize.S,
+const getTeamEmblemButton = (url: string, buttonSize = ButtonSize.S): IButton => ({
+  Columns: buttonSize,
   Rows: 3,
   ActionType: ActionType.NONE,
   ActionBody: 'none',
@@ -73,14 +80,18 @@ const getTeamEmblemUrlButton = (url: string): IButton => ({
 
 const getTeamsEmblemButtons = (match: IMatch): IButton[] => {
   return [
-    getTeamEmblemUrlButton(match.homeTeam.crestImageUrl),
+    getTeamEmblemButton(match.homeTeam.crestImageUrl),
     getVSTextButton(),
-    getTeamEmblemUrlButton(match.awayTeam.crestImageUrl),
+    getTeamEmblemButton(match.awayTeam.crestImageUrl),
   ];
 };
 
-const getTeamNameButton = (name: string, textHAlign: TextHAlign): IButton => ({
-  Columns: ButtonSize.M,
+const getTeamNameButton = (
+  name: string,
+  textHAlign: TextHAlign,
+  buttonSize = ButtonSize.M,
+): IButton => ({
+  Columns: buttonSize,
   Rows: 1,
   Text: `<b>${name}</b>`,
   TextSize: TextSize.SMALL,
@@ -107,8 +118,6 @@ const getMakePredictionButton = (matchId: ObjectId): IButton => ({
   ActionType: ActionType.REPLY,
   ActionBody: `matchPrediction_${matchId}`,
   BgColor: COLORS.YELLOW,
-  // Image: 'https://viberbot.blob.core.windows.net/pictures/buttons_PNG68.png',
-  // ImageScaleType: BgMediaScaleType.FILL,
 });
 
 export const getMessageMatchButton = (match: IMatch): IButton[] => [
@@ -129,3 +138,20 @@ export const backButton = (text = 'Back', replayText = 'back', bgColor = '#f6f7f
   ActionBody: replayText,
   BgColor: bgColor,
 });
+
+const getTeamPredictionTitleButton = (): IButton => ({
+  Columns: ButtonSize.XXL,
+  Rows: 1,
+  Text: BUTTON.TEAM.PREDICTION_LABEL,
+  TextSize: TextSize.LARGE,
+  TextHAlign: TextHAlign.CENTER,
+  TextVAlign: TextVAlign.CENTER,
+  ActionType: ActionType.NONE,
+  ActionBody: 'none',
+});
+
+export const getTeamPredictionButton = (team: ITeamShort): IButton[] => [
+  getTeamPredictionTitleButton(),
+  getTeamEmblemButton(team.crestImageUrl, ButtonSize.XXL),
+  getTeamNameButton(team.name, TextHAlign.CENTER, ButtonSize.XXL),
+];

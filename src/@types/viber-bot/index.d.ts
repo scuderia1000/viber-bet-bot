@@ -12,6 +12,7 @@ declare module 'viber-bot' {
     timestamp: string;
     token: string;
     trackingData: JSON;
+    text?: string;
   }
 
   export interface ViberResponse {

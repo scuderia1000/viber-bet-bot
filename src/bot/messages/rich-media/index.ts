@@ -1,7 +1,8 @@
 import { IButton, IRichMedia } from '../../../types/base';
 import { IMatch } from '../../../domain/matches/Match';
-import { getMessageMatchButton } from '../../keyboards/buttons';
+import { getMessageMatchButton, getTeamPredictionButton } from '../../keyboards/buttons';
 import COLORS from '../../../const/colors';
+import { ITeamShort } from '../../../domain/teams/TeamShort';
 
 const MessageBody: IRichMedia = {
   ButtonsGroupColumns: 6,
@@ -10,13 +11,9 @@ const MessageBody: IRichMedia = {
   Buttons: [],
 };
 
-const getScheduledMatchesMessage = (scheduledMatches: IMatch[]): IRichMedia => {
+export const getScheduledMatchesMessage = (scheduledMatches: IMatch[]): IRichMedia => {
   const buttons: IButton[] = [];
   buttons.push(...getMessageMatchButton(scheduledMatches[0]));
-  console.log('buttons', buttons);
-  // scheduledMatches.forEach((match) => {
-  //   buttons.push(...getMessageMatchButton(match));
-  // });
 
   return {
     ...MessageBody,
@@ -24,4 +21,9 @@ const getScheduledMatchesMessage = (scheduledMatches: IMatch[]): IRichMedia => {
   };
 };
 
-export default getScheduledMatchesMessage;
+export const getMatchTeamPredictionMessage = (team: ITeamShort): IRichMedia => {
+  return {
+    ...MessageBody,
+    Buttons: getTeamPredictionButton(team),
+  };
+};

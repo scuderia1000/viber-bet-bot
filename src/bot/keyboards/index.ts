@@ -1,21 +1,9 @@
-import { backButton, fullScreenButton, matchButton } from './buttons';
-import { BUTTON } from '../../const';
-import { IMatch } from '../../domain/matches/Match';
-import { IButton, InputFieldState, KeyboardType } from '../../types/base';
+import { ObjectId } from 'mongodb';
+import { button } from './buttons';
+import { BUTTON, PREDICT_SCORE_MAX_VALUE } from '../../const';
+import { IButton, IKeyboard, InputFieldState, KeyboardType, MatchTeamType } from '../../types/base';
 
-const button = (number: number) => ({
-  Columns: 6,
-  Rows: 1,
-  Text: `<font color="#494E67">Number ${number}</font>`,
-  TextSize: 'medium',
-  TextHAlign: 'center',
-  TextVAlign: 'center',
-  ActionType: 'reply',
-  ActionBody: `Number ${number}`,
-  BgColor: '#f7bb3f',
-});
-
-export const hiddenInputKeyboard = (buttons: IButton[]) => {
+export const hiddenInputKeyboard = (buttons: IButton[]): IKeyboard => {
   return {
     Type: KeyboardType.KEYBOARD,
     InputFieldState: InputFieldState.HIDDEN,
@@ -26,18 +14,30 @@ export const hiddenInputKeyboard = (buttons: IButton[]) => {
 /**
  * Клавиатура "Сделать прогноз"
  */
-export const makePredictionKeyboard = () =>
-  hiddenInputKeyboard([
-    fullScreenButton(BUTTON.MAKE_PREDICTION.LABEL, BUTTON.MAKE_PREDICTION.REPLAY_TEXT),
+export const makePredictionKeyboard = (): IKeyboard =>
+  hiddenInputKeyboard([button(BUTTON.MAKE_PREDICTION.LABEL, BUTTON.MAKE_PREDICTION.REPLAY_TEXT)]);
+
+/**
+ * Клавиатура "Результат матча" с кнопками от 1 до 12
+ */
+export const predictTeamScoreKeyboard = (
+  matchId: ObjectId,
+  matchTeamType: MatchTeamType,
+): IKeyboard => {
+  const buttons = [];
+  // eslint-disable-next-line no-plusplus
+  for (let i = 1; i <= PREDICT_SCORE_MAX_VALUE; i++) {
+    buttons.push(
+      button(
+        `${i}`,
+        `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}`,
+        undefined,
+        1,
+      ),
+    );
+  }
+  return hiddenInputKeyboard([
+    ...buttons,
+    button(BUTTON.MAKE_PREDICTION.LABEL, BUTTON.MAKE_PREDICTION.REPLAY_TEXT),
   ]);
-
-// const getMatchText = (match: IMatch) => ()
-
-export const getScheduledMatchesKeyboard = (scheduledMatches: IMatch[]) => {
-  const buttons: IButton[] = [];
-  scheduledMatches.forEach((match) => {
-    buttons.push(matchButton(match.homeTeam.name, `${match.homeTeam.id}`));
-    buttons.push(matchButton(match.awayTeam.name, `${match.awayTeam.id}`));
-  });
-  return hiddenInputKeyboard([...buttons, backButton()]);
 };
