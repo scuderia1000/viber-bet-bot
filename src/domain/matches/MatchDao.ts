@@ -94,8 +94,6 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
       // @ts-ignore
       team = new TeamShort(matchResult[matchTeamType]);
     }
-    console.log('matchResult', matchResult);
-    console.log('team', team);
     return team;
   }
 }

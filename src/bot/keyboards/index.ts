@@ -18,7 +18,7 @@ export const makePredictionKeyboard = (): IKeyboard =>
   hiddenInputKeyboard([button(BUTTON.MAKE_PREDICTION.LABEL, BUTTON.MAKE_PREDICTION.REPLAY_TEXT)]);
 
 /**
- * Клавиатура "Результат матча" с кнопками от 1 до 12
+ * Клавиатура "Результат матча" с кнопками от 0 до 11
  */
 export const predictTeamScoreKeyboard = (
   matchId: ObjectId,
@@ -26,11 +26,11 @@ export const predictTeamScoreKeyboard = (
 ): IKeyboard => {
   const buttons = [];
   // eslint-disable-next-line no-plusplus
-  for (let i = 1; i <= PREDICT_SCORE_MAX_VALUE; i++) {
+  for (let i = 0; i < PREDICT_SCORE_MAX_VALUE; i++) {
     buttons.push(
       button(
         `${i}`,
-        `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}`,
+        `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}&score=${i}`,
         undefined,
         1,
       ),

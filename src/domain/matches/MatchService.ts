@@ -15,6 +15,7 @@ import { ITeamService } from '../teams/TeamService';
 export interface IMatchService extends IService<IMatch> {
   getScheduledMatches(competitionCode: string): Promise<IMatch[]>;
   getMatchTeamByType(matchId: ObjectId, matchTeamType: MatchTeamType): Promise<ITeamShort | null>;
+  isMatchBegan(matchId: ObjectId): Promise<boolean>;
 }
 
 export class MatchService
@@ -45,7 +46,6 @@ export class MatchService
     return this.dao;
   }
 
-  // TODO подумать, как изменить параметр, приходит не объект класса Competition, а просто объект с полями как в Competition
   async update(competitionWithMatches: ICompetition): Promise<void> {
     if (!competitionWithMatches || !competitionWithMatches.matches) return;
 
@@ -89,11 +89,17 @@ export class MatchService
     const matchTeamTypeProperty = MatchTeamTypeMapper[matchTeamType];
     const teamShort = await this.dao.getMatchTeamByType(matchId, matchTeamTypeProperty);
     let team = null;
-    // eslint-disable-next-line no-prototype-builtins
     if (teamShort) {
       team = await this.teamService.getByMongoId(teamShort._id);
-      console.log('getMatchTeamByType team', team);
     }
     return team;
+  }
+
+  async isMatchBegan(matchId: ObjectId): Promise<boolean> {
+    const match = await this.dao.getByMongoId(matchId);
+    if (!match) return true;
+    const nowDateMS = new Date().getTime();
+    const matchDateMS = new Date(match.utcDate).getTime();
+    return nowDateMS > matchDateMS;
   }
 }

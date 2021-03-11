@@ -27,7 +27,6 @@ export class TeamDao extends CRUDDao<ITeam> implements ITeamDao {
         teamsShort.push(team);
       }
     });
-    console.log('teamsShort[0]', teamsShort[0]);
     return teamsShort;
   }
 }

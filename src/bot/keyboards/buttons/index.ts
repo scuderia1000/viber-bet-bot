@@ -12,6 +12,7 @@ import { IMatch } from '../../../domain/matches/Match';
 import { BUTTON } from '../../../const';
 import COLORS from '../../../const/colors';
 import { ITeamShort } from '../../../domain/teams/TeamShort';
+import { IPrediction } from '../../../domain/predictions/Prediction';
 
 export const button = (
   text: string,
@@ -47,20 +48,29 @@ export const matchButton = (
   BgColor: bgColor,
 });
 
-const getDateButton = (utcDate: Date): IButton => ({
-  Columns: ButtonSize.XXL,
-  Rows: 1,
-  Text: `<b>${new Date(utcDate).toLocaleString('ru-RU')}</b>`,
-  TextSize: TextSize.MEDIUM,
-  TextHAlign: TextHAlign.CENTER,
-  TextVAlign: TextVAlign.CENTER,
+const getTextButton = (
+  text: string,
+  columns = 6,
+  rows = 1,
+  textHAlign = TextHAlign.CENTER,
+  textVAlign = TextVAlign.CENTER,
+  bgColor = COLORS.WHITE,
+  textSize = TextSize.MEDIUM,
+): IButton => ({
+  Columns: columns,
+  Rows: rows,
+  Text: text,
+  TextSize: textSize,
+  TextHAlign: textHAlign,
+  TextVAlign: textVAlign,
   ActionType: ActionType.NONE,
   ActionBody: 'none',
+  BgColor: bgColor,
 });
 
 const getVSTextButton = (): IButton => ({
   Columns: ButtonSize.S,
-  Rows: 3,
+  Rows: 2,
   Text: `<font color=#e1e5e4><b><i>VS</i></b></font>`,
   TextSize: TextSize.LARGE,
   TextHAlign: TextHAlign.CENTER,
@@ -69,9 +79,9 @@ const getVSTextButton = (): IButton => ({
   ActionBody: 'none',
 });
 
-const getTeamEmblemButton = (url: string, buttonSize = ButtonSize.S): IButton => ({
-  Columns: buttonSize,
-  Rows: 3,
+const getTeamEmblemButton = (url: string, columns = ButtonSize.S): IButton => ({
+  Columns: columns,
+  Rows: 2,
   ActionType: ActionType.NONE,
   ActionBody: 'none',
   Image: url,
@@ -120,10 +130,26 @@ const getMakePredictionButton = (matchId: ObjectId): IButton => ({
   BgColor: COLORS.YELLOW,
 });
 
-export const getMessageMatchButton = (match: IMatch): IButton[] => [
-  getDateButton(match.utcDate),
+const getUserPredictionButtons = (prediction?: IPrediction): IButton[] => {
+  const homeTeamPredictScore =
+    prediction?.prediction?.homeTeam !== undefined ? String(prediction.prediction.homeTeam) : '';
+  const awayTeamPredictScore =
+    prediction?.prediction?.awayTeam !== undefined ? String(prediction.prediction.awayTeam) : '';
+  const columns = 3;
+  return [
+    getTextButton(`<b>Прогноз</b>`, 6, undefined, undefined, undefined, undefined, TextSize.LARGE),
+    getTextButton(homeTeamPredictScore, columns),
+    getTextButton(awayTeamPredictScore, columns),
+  ];
+};
+
+export const getMessageMatchButton = (match: IMatch, prediction?: IPrediction): IButton[] => [
+  getTextButton(
+    `<b>${new Date(match.utcDate).toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' })} MSK</b>`,
+  ),
   ...getTeamsEmblemButtons(match),
   ...getTeamsNameButtons(match),
+  ...getUserPredictionButtons(prediction),
   getMakePredictionButton(match._id),
 ];
 
@@ -139,19 +165,16 @@ export const backButton = (text = 'Back', replayText = 'back', bgColor = '#f6f7f
   BgColor: bgColor,
 });
 
-const getTeamPredictionTitleButton = (): IButton => ({
-  Columns: ButtonSize.XXL,
-  Rows: 1,
-  Text: BUTTON.TEAM.PREDICTION_LABEL,
-  TextSize: TextSize.LARGE,
-  TextHAlign: TextHAlign.CENTER,
-  TextVAlign: TextVAlign.CENTER,
-  ActionType: ActionType.NONE,
-  ActionBody: 'none',
-});
-
-export const getTeamPredictionButton = (team: ITeamShort): IButton[] => [
-  getTeamPredictionTitleButton(),
-  getTeamEmblemButton(team.crestImageUrl, ButtonSize.XXL),
-  getTeamNameButton(team.name, TextHAlign.CENTER, ButtonSize.XXL),
+export const getTeamPredictionButton = (team: ITeamShort, columns = 6): IButton[] => [
+  getTextButton(
+    BUTTON.TEAM.PREDICTION_LABEL,
+    columns,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    TextSize.LARGE,
+  ),
+  getTeamEmblemButton(team.crestImageUrl, columns),
+  getTeamNameButton(team.name, TextHAlign.CENTER, columns),
 ];

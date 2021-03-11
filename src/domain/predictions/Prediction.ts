@@ -4,8 +4,8 @@ import Entity from '../common/Entity';
 import Collection from '../../annotation/Collection';
 
 export interface IUserPrediction {
-  homeTeam: number;
-  awayTeam: number;
+  homeTeam?: number;
+  awayTeam?: number;
 }
 
 export interface IBasePrediction {

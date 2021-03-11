@@ -3,6 +3,7 @@ import { IMatch } from '../../../domain/matches/Match';
 import { getMessageMatchButton, getTeamPredictionButton } from '../../keyboards/buttons';
 import COLORS from '../../../const/colors';
 import { ITeamShort } from '../../../domain/teams/TeamShort';
+import { IPrediction } from '../../../domain/predictions/Prediction';
 
 const MessageBody: IRichMedia = {
   ButtonsGroupColumns: 6,
@@ -11,19 +12,33 @@ const MessageBody: IRichMedia = {
   Buttons: [],
 };
 
-export const getScheduledMatchesMessage = (scheduledMatches: IMatch[]): IRichMedia => {
+const getMessageBody = (columns = 6, rows = 6): IRichMedia => ({
+  ButtonsGroupColumns: columns,
+  ButtonsGroupRows: rows,
+  BgColor: COLORS.WHITE,
+  Buttons: [],
+});
+
+export const getScheduledMatchesMessage = (
+  scheduledMatches: IMatch[],
+  predictions: Record<string, IPrediction>,
+): IRichMedia => {
   const buttons: IButton[] = [];
-  buttons.push(...getMessageMatchButton(scheduledMatches[0]));
+  scheduledMatches.forEach((match) => {
+    const prediction = predictions[match._id.toHexString()];
+    buttons.push(...getMessageMatchButton(match, prediction));
+  });
 
   return {
-    ...MessageBody,
+    ...getMessageBody(6, 7),
     Buttons: buttons,
   };
 };
 
 export const getMatchTeamPredictionMessage = (team: ITeamShort): IRichMedia => {
+  const columns = 4;
   return {
-    ...MessageBody,
-    Buttons: getTeamPredictionButton(team),
+    ...getMessageBody(columns, 4),
+    Buttons: getTeamPredictionButton(team, columns),
   };
 };

@@ -36,3 +36,5 @@ export const API = {
 export const VIBER_MIN_API_LEVEL = 6;
 
 export const PREDICT_SCORE_MAX_VALUE = 12;
+
+export const MATCH_BEGAN_TEXT = 'Упс..., матч уже начался, ставки больше не принимаются';
