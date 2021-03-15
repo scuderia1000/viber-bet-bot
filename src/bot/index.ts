@@ -27,12 +27,6 @@ const initializeBot = (token: string, modules: IModules): Bot => {
       VIBER_MIN_API_LEVEL,
     );
 
-  const bot = new ViberBot(logger, {
-    authToken: token,
-    name: 'Phoenix Bet Bot', // <--- Your bot name here
-    avatar: 'https://viberbot.blob.core.windows.net/pictures/phoenix_007.jpg', // It is recommended to be 720x720, and no more than 100kb.
-  });
-
   const sendMatchBeganResponse = (response: ViberResponse): void => {
     response.send(
       new TextMessage(
@@ -46,6 +40,13 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     );
   };
 
+  const bot = new ViberBot(logger, {
+    authToken: token,
+    name: 'Phoenix Bet Bot', // <--- Your bot name here
+    avatar: 'https://viberbot.blob.core.windows.net/pictures/phoenix_007.jpg', // It is recommended to be 720x720, and no more than 100kb.
+  });
+
+  // Перешли по ссылке
   bot.onConversationStarted(async (userProfile, isSubscribed, context, onFinish) => {
     await modules.userModule.service.saveViberUser(userProfile);
     onFinish(
@@ -73,7 +74,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   });
 
   // Нажали на кнопку Сделать прогноз в сообщении о матчах, возвращаем вопрос с
-  // логотипом домашней команды и клавиатурой с кнопками от 0 до 12
+  // логотипом домашней команды и клавиатурой с кнопками от 0 до 11
   bot.onTextMessage(/^matchPrediction_.*$/i, async (message, response) => {
     const messageText = message.text ?? '';
 
@@ -107,8 +108,8 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     );
   });
 
-  // Сделали прогноз, сколько забьет домашняя команда.
-  // Нажали на кнопками с цифрами 1 до 12
+  // Сделали прогноз, сколько забьет домашняя команда или гости.
+  // Нажали на кнопками с цифрами 0 до 11
   bot.onTextMessage(/^matchTeamScore?.*$/i, async (message, response) => {
     const messageArray = message.text?.split('?') ?? ['', ''];
     const messageText = messageArray[1];

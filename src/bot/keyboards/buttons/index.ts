@@ -9,12 +9,12 @@ import {
   TextVAlign,
 } from '../../../types/base';
 import { IMatch } from '../../../domain/matches/Match';
-import { BUTTON } from '../../../const';
 import COLORS from '../../../const/colors';
 import { ITeamShort } from '../../../domain/teams/TeamShort';
 import { IPrediction } from '../../../domain/predictions/Prediction';
+import { MAKE_PREDICTION, TEAM } from '../../../const/buttons';
 
-export const button = (
+export const actionButton = (
   text: string,
   replayText: string,
   bgColor = COLORS.YELLOW,
@@ -23,22 +23,6 @@ export const button = (
 ): IButton => ({
   Columns: columns,
   Rows: rows,
-  Text: text,
-  TextSize: TextSize.MEDIUM,
-  TextHAlign: TextHAlign.CENTER,
-  TextVAlign: TextVAlign.CENTER,
-  ActionType: ActionType.REPLY,
-  ActionBody: replayText,
-  BgColor: bgColor,
-});
-
-export const matchButton = (
-  text: string,
-  replayText: string,
-  bgColor = COLORS.YELLOW,
-): IButton => ({
-  Columns: ButtonSize.M,
-  Rows: 1,
   Text: text,
   TextSize: TextSize.MEDIUM,
   TextHAlign: TextHAlign.CENTER,
@@ -69,14 +53,15 @@ const getTextButton = (
 });
 
 const getVSTextButton = (): IButton => ({
-  Columns: ButtonSize.S,
-  Rows: 2,
-  Text: `<font color=#e1e5e4><b><i>VS</i></b></font>`,
-  TextSize: TextSize.LARGE,
-  TextHAlign: TextHAlign.CENTER,
-  TextVAlign: TextVAlign.CENTER,
-  ActionType: ActionType.NONE,
-  ActionBody: 'none',
+  ...getTextButton(
+    `<font color=#e1e5e4><b><i>VS</i></b></font>`,
+    2,
+    2,
+    undefined,
+    undefined,
+    undefined,
+    TextSize.LARGE,
+  ),
 });
 
 const getTeamEmblemButton = (url: string, columns = ButtonSize.S): IButton => ({
@@ -96,32 +81,33 @@ const getTeamsEmblemButtons = (match: IMatch): IButton[] => {
   ];
 };
 
-const getTeamNameButton = (
-  name: string,
-  textHAlign: TextHAlign,
-  buttonSize = ButtonSize.M,
-): IButton => ({
-  Columns: buttonSize,
-  Rows: 1,
-  Text: `<b>${name}</b>`,
-  TextSize: TextSize.SMALL,
-  TextHAlign: textHAlign,
-  TextVAlign: TextVAlign.CENTER,
-  ActionType: ActionType.NONE,
-  ActionBody: 'none',
-});
-
 const getTeamsNameButtons = (match: IMatch): IButton[] => {
   return [
-    getTeamNameButton(match.homeTeam.name, TextHAlign.LEFT),
-    getTeamNameButton(match.awayTeam.name, TextHAlign.RIGHT),
+    getTextButton(
+      `<b>${match.homeTeam.name}</b>`,
+      3,
+      1,
+      TextHAlign.LEFT,
+      undefined,
+      undefined,
+      TextSize.SMALL,
+    ),
+    getTextButton(
+      `<b>${match.awayTeam.name}</b>`,
+      3,
+      1,
+      TextHAlign.RIGHT,
+      undefined,
+      undefined,
+      TextSize.SMALL,
+    ),
   ];
 };
 
 const getMakePredictionButton = (matchId: ObjectId): IButton => ({
   Columns: ButtonSize.XXL,
   Rows: 1,
-  Text: BUTTON.MAKE_PREDICTION.LABEL,
+  Text: MAKE_PREDICTION.LABEL,
   TextSize: TextSize.LARGE,
   TextHAlign: TextHAlign.CENTER,
   TextVAlign: TextVAlign.CENTER,
@@ -167,7 +153,7 @@ export const backButton = (text = 'Back', replayText = 'back', bgColor = '#f6f7f
 
 export const getTeamPredictionButton = (team: ITeamShort, columns = 6): IButton[] => [
   getTextButton(
-    BUTTON.TEAM.PREDICTION_LABEL,
+    TEAM.PREDICTION_LABEL,
     columns,
     undefined,
     undefined,
@@ -176,5 +162,13 @@ export const getTeamPredictionButton = (team: ITeamShort, columns = 6): IButton[
     TextSize.LARGE,
   ),
   getTeamEmblemButton(team.crestImageUrl, columns),
-  getTeamNameButton(team.name, TextHAlign.CENTER, columns),
+  getTextButton(
+    `<b>${team.name}</b>`,
+    columns,
+    1,
+    TextHAlign.CENTER,
+    undefined,
+    undefined,
+    TextSize.SMALL,
+  ),
 ];

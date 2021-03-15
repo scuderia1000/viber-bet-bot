@@ -5,13 +5,6 @@ import COLORS from '../../../const/colors';
 import { ITeamShort } from '../../../domain/teams/TeamShort';
 import { IPrediction } from '../../../domain/predictions/Prediction';
 
-const MessageBody: IRichMedia = {
-  ButtonsGroupColumns: 6,
-  ButtonsGroupRows: 6,
-  BgColor: COLORS.WHITE,
-  Buttons: [],
-};
-
 const getMessageBody = (columns = 6, rows = 6): IRichMedia => ({
   ButtonsGroupColumns: columns,
   ButtonsGroupRows: rows,
