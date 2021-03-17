@@ -1,10 +1,13 @@
 import { Bot, Bot as ViberBot, Message } from 'viber-bot';
 import { ObjectId } from 'mongodb';
 import { makePredictionKeyboard, predictTeamScoreKeyboard } from './keyboards';
-import { API, conversationStartedText, MATCH_BEGAN_TEXT, VIBER_MIN_API_LEVEL } from '../const';
+import { API, conversationStartedText, MATCH_BEGAN_TEXT, predictNotFoundMessage, VIBER_MIN_API_LEVEL } from '../const';
 import { IModules } from '../domain';
 import logger from '../util/logger';
-import { getMatchTeamPredictionMessage, getScheduledMatchesMessage } from './messages/rich-media';
+import {
+  getMatchTeamPredictionMessage,
+  matchesWithPredictionsMessage,
+} from './messages/rich-media';
 import { MatchTeamType, ViberResponse } from '../types/base';
 import { IMatch } from '../domain/matches/Match';
 import { IPrediction } from '../domain/predictions/Prediction';
@@ -13,12 +16,12 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   const TextMessage = Message.Text;
   const RichMediaMessage = Message.RichMedia;
 
-  const getScheduledMatchesRichMessage = (
+  const matchesRichMessage = (
     scheduledMatches: IMatch[],
     predictions: Record<string, IPrediction>,
   ) =>
     new RichMediaMessage(
-      getScheduledMatchesMessage(scheduledMatches, predictions),
+      matchesWithPredictionsMessage(scheduledMatches, predictions),
       makePredictionKeyboard(),
       undefined,
       undefined,
@@ -70,7 +73,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
       response.userProfile.id,
     );
 
-    response.send(getScheduledMatchesRichMessage(scheduledMatches, userPredictions));
+    response.send(matchesRichMessage(scheduledMatches, userPredictions));
   });
 
   // Нажали на кнопку Сделать прогноз в сообщении о матчах, возвращаем вопрос с
@@ -160,8 +163,46 @@ const initializeBot = (token: string, modules: IModules): Bot => {
       const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
         response.userProfile.id,
       );
-      response.send(getScheduledMatchesRichMessage(scheduledMatches, userPredictions));
+      response.send(matchesRichMessage(scheduledMatches, userPredictions));
     }
+  });
+
+  // Нажали на кнопку Мои прогнозы
+  bot.onTextMessage(/^myPredictions.*$/i, async (message, response) => {
+    const competition = await modules.competitionModule.service.getCompetitionByCode();
+    const currentMatchday = competition?.currentSeason.currentMatchday;
+    const messageArray = message.text?.split('?') ?? [];
+    const matchDayTextParam =
+      messageArray.length > 1 ? messageArray[1] : `currentMatchday=${currentMatchday}`;
+    const searchParams = new URLSearchParams(matchDayTextParam);
+    const matchDay = Number(searchParams.get('currentMatchday'));
+    // достать из competitions текущий сезон,
+    // из сезона достать currentMatchday: number,
+    // из API.FOOTBALL_DATA_ORG.CHAMPIONS_LEAGUE.AVAILABLE_STAGES достать по индексу (currentMatchday) текущий этап,
+    // из matches достать все _id матчей с этапом из AVAILABLE_STAGES,
+    const stageMatchesIds = await modules.matchModule.service.getMatchesIdsByMatchday(matchDay);
+    // из predictions достать все прогнозы юзера с _id матчей, полученных на пред. шаге
+    const userPredictions = await modules.predictionModule.service.getPredictionsByMatchesIds(
+      response.userProfile.id,
+      stageMatchesIds,
+    );
+    if (!userPredictions) {
+      response.send(
+        new TextMessage(
+          predictNotFoundMessage(matchDay),
+          makePredictionKeyboard(),
+          undefined,
+          undefined,
+          undefined,
+          VIBER_MIN_API_LEVEL,
+        ),
+      );
+      return;
+    }
+    const predictMatchesIds = Object.keys(userPredictions).map((matchId) => new ObjectId(matchId));
+    const userPredictionsMatches = await modules.matchModule.service.getAllByIds(predictMatchesIds);
+
+    response.send(matchesRichMessage(userPredictionsMatches, userPredictions));
   });
 
   // TODO пока переход сразу на Сделать прогноз, добавить историю и переходить на предыдущий шаг

@@ -12,7 +12,7 @@ const getMessageBody = (columns = 6, rows = 6): IRichMedia => ({
   Buttons: [],
 });
 
-export const getScheduledMatchesMessage = (
+export const matchesWithPredictionsMessage = (
   scheduledMatches: IMatch[],
   predictions: Record<string, IPrediction>,
 ): IRichMedia => {

@@ -67,6 +67,10 @@ abstract class AbstractService<E extends IMongoId> implements IService<E> {
       await this.insertMany((apiEntities as unknown) as E[]);
     }
   }
+
+  getAllByIds(mongoIds: ObjectId[]): Promise<E[]> {
+    return this.getDao().getAllByIds(mongoIds);
+  }
 }
 
 export default AbstractService;

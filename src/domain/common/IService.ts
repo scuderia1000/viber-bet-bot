@@ -14,4 +14,5 @@ export interface IService<E extends IMongoId> {
     existEntities: Record<number, E>,
     apiEntities: D[],
   ): Promise<void>;
+  getAllByIds(mongoIds: ObjectId[]): Promise<E[]>;
 }

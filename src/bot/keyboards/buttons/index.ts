@@ -8,11 +8,12 @@ import {
   TextSize,
   TextVAlign,
 } from '../../../types/base';
-import { IMatch } from '../../../domain/matches/Match';
+import { IMatch, IScore, IScoreResult } from '../../../domain/matches/Match';
 import COLORS from '../../../const/colors';
 import { ITeamShort } from '../../../domain/teams/TeamShort';
 import { IPrediction } from '../../../domain/predictions/Prediction';
 import { MAKE_PREDICTION, TEAM } from '../../../const/buttons';
+import { MatchStatus } from '../../../domain/types/Base';
 
 export const actionButton = (
   text: string,
@@ -76,7 +77,13 @@ const getTeamEmblemButton = (url: string, columns = ButtonSize.S): IButton => ({
 const getTeamsEmblemButtons = (match: IMatch): IButton[] => {
   return [
     getTeamEmblemButton(match.homeTeam.crestImageUrl),
-    getVSTextButton(),
+    match.status === MatchStatus.FINISHED
+      ? getTextButton(
+          `<b>${match.score.fullTime.homeTeam} - ${match.score.fullTime.awayTeam}</b>`,
+          2,
+          2,
+        )
+      : getVSTextButton(),
     getTeamEmblemButton(match.awayTeam.crestImageUrl),
   ];
 };
@@ -136,7 +143,9 @@ export const getMessageMatchButton = (match: IMatch, prediction?: IPrediction): 
   ...getTeamsEmblemButtons(match),
   ...getTeamsNameButtons(match),
   ...getUserPredictionButtons(prediction),
-  getMakePredictionButton(match._id),
+  match.status === MatchStatus.SCHEDULED
+    ? getMakePredictionButton(match._id)
+    : getTextButton(`<b>Матч завершен</b>`),
 ];
 
 export const backButton = (text = 'Back', replayText = 'back', bgColor = '#f6f7f9'): IButton => ({

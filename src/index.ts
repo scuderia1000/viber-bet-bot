@@ -4,7 +4,6 @@ import ngrok from './util/get-public-url';
 import initializeBot from './bot';
 import logger from './util/logger';
 import connectDb from './domain/db';
-import { DB } from './const';
 import getModules from './domain';
 import configSchedulers from './configSchedulers';
 

@@ -1,13 +1,13 @@
 import { ICompetition } from './Competition';
-import { IError } from '../types/Base';
 import { ICompetitionDao } from './CompetitionDao';
 import { ICompetitionListeners } from '../../types/base';
 import AbstractService from '../common/AbstractService';
 import { ICommonDao } from '../common/ICommonDao';
 import { IService } from '../common/IService';
+import { API } from '../../const';
 
 export interface ICompetitionService extends IService<ICompetition> {
-  getCompetitionByCode(code: string): Promise<ICompetition | null>;
+  getCompetitionByCode(code?: string): Promise<ICompetition | null>;
 }
 
 export class CompetitionService
@@ -19,14 +19,6 @@ export class CompetitionService
     super();
     this.dao = competitionDao;
   }
-
-  // async getScheduledMatches(competitionId: number): Promise<ICompetition | IError> {
-  //   const competition = await this.dao.getCompetitionWithScheduledMatches(competitionId);
-  //   if (!competition) {
-  //     return new Error(`Соревнование с id: ${competitionId} не найдено`);
-  //   }
-  //   return competition;
-  // }
 
   async update(competition: ICompetition): Promise<void> {
     if (!competition.id) return;
@@ -43,7 +35,9 @@ export class CompetitionService
     return this.dao;
   }
 
-  getCompetitionByCode(code: string): Promise<ICompetition | null> {
+  getCompetitionByCode(
+    code = API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS,
+  ): Promise<ICompetition | null> {
     return this.dao.getCompetitionByCode(code);
   }
 }

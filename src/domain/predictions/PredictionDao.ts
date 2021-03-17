@@ -6,6 +6,7 @@ import CRUDDao from '../common/CRUDDao';
 export interface IPredictionDao extends ICommonDao<IPrediction> {
   getPredictionsByUser(userViberId: string): Promise<Record<string, IPrediction>>;
   getUserMatchPrediction(userViberId: string, matchId: ObjectId): Promise<IPrediction | null>;
+  getPredictionsByMatchesIds(userViberId: string, matchesIds: ObjectId[]): Promise<Record<string, IPrediction>>;
 }
 
 export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDao {
@@ -35,8 +36,25 @@ export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDa
     let result = null;
     const prediction = await this.collection.findOne(query);
     if (prediction) {
-      result = new Prediction(prediction);
+      result = this.toEntity(prediction);
     }
+    return result;
+  }
+
+  async getPredictionsByMatchesIds(
+    userViberId: string,
+    matchesIds: ObjectId[],
+  ): Promise<Record<string, IPrediction>> {
+    const query = { userViberId, matchId: { $in: matchesIds } };
+    const cursor = this.collection.find(query);
+    const result: Record<string, IPrediction> = {};
+
+    await cursor.forEach((document) => {
+      const prediction = this.toEntity(document);
+      if (prediction) {
+        result[prediction.matchId.toHexString()] = prediction;
+      }
+    });
     return result;
   }
 }

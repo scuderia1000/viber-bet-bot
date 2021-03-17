@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import {
   BulkWriteOperation,
-  Collection,
+  Collection, Cursor,
   Db,
   FilterQuery,
   ObjectId,
@@ -85,6 +85,30 @@ class CRUDDao<E extends IMongoId> implements ICommonDao<E> {
     });
     const result = await this.collection.bulkWrite(operations, { ordered: true });
     logger.debug('replaceMany result: %s', JSON.stringify(result));
+  }
+
+  async getAllByIds(mongoIds: ObjectId[]): Promise<E[]> {
+    const query = { _id: { $in: mongoIds } } as FilterQuery<E>;
+    const cursor = this.collection.find(query);
+    const result: E[] = [];
+    await cursor.forEach((document) => {
+      const entity = this.toEntity(document);
+      if (entity) {
+        result.push(entity);
+      }
+    });
+    return result;
+  }
+
+  async toEntityArray(cursor: Cursor<E>): Promise<E[]> {
+    const result: E[] = [];
+    await cursor.forEach((document) => {
+      const entity = this.toEntity(document);
+      if (entity) {
+        result.push(entity);
+      }
+    });
+    return result;
   }
 }
 

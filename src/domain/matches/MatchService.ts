@@ -11,11 +11,15 @@ import { MatchStatus } from '../types/Base';
 import { ISeasonService } from '../seasons/SeasonService';
 import { ITeamShort, TeamShort } from '../teams/TeamShort';
 import { ITeamService } from '../teams/TeamService';
+import { API } from '../../const';
 
 export interface IMatchService extends IService<IMatch> {
   getScheduledMatches(competitionCode: string): Promise<IMatch[]>;
   getMatchTeamByType(matchId: ObjectId, matchTeamType: MatchTeamType): Promise<ITeamShort | null>;
   isMatchBegan(matchId: ObjectId): Promise<boolean>;
+  getMatchesByIds(matchIds: ObjectId[]): Promise<IMatch[]>;
+  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]>;
+  getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]>;
 }
 
 export class MatchService
@@ -101,5 +105,23 @@ export class MatchService
     const nowDateMS = new Date().getTime();
     const matchDateMS = new Date(match.utcDate).getTime();
     return nowDateMS > matchDateMS;
+  }
+
+  getMatchesByIds(matchIds: ObjectId[]): Promise<IMatch[]> {
+    return this.getAllByIds(matchIds);
+  }
+
+  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]> {
+    return this.dao.getMatchesBySeasonAndStage(seasonMongoId, stage);
+  }
+
+  async getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]> {
+    const competition = await this.competitionService.getCompetitionByCode(competitionCode);
+    if (!competition) return Promise.reject();
+
+    const stage = API.FOOTBALL_DATA_ORG.CHAMPIONS_LEAGUE.AVAILABLE_STAGES[matchday];
+    const currentSeasonId = competition.currentSeason._id;
+    const matches = await this.getMatchesBySeasonAndStage(currentSeasonId, stage);
+    return matches.map((match) => match._id);
   }
 }

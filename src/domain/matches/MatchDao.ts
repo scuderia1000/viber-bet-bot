@@ -9,6 +9,7 @@ export interface IMatchDao extends ICommonDao<IMatch> {
   getMatchesBySeasonId(seasonId?: number): Promise<Record<number, IMatch>>;
   getSeasonMatchesByStatus(seasonId: ObjectId, status: MatchStatus): Promise<IMatch[]>;
   getMatchTeamByType(matchId: ObjectId, matchTeamType: string): Promise<ITeamShort | null>;
+  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]>;
 }
 
 export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
@@ -72,13 +73,7 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
       },
     ]);
 
-    const matches: IMatch[] = [];
-    await cursor.forEach((document) => {
-      const match = this.toEntity(document);
-      if (match) {
-        matches.push(match);
-      }
-    });
+    const matches = await this.toEntityArray(cursor);
     return matches;
   }
 
@@ -95,5 +90,12 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
       team = new TeamShort(matchResult[matchTeamType]);
     }
     return team;
+  }
+
+  async getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]> {
+    const query = { 'season._id': seasonMongoId, stage };
+    const cursor = this.collection.find(query);
+    const matches = await this.toEntityArray(cursor);
+    return matches;
   }
 }

@@ -2,15 +2,15 @@ import { ISeason } from '../seasons/Season';
 import { DateTimeISOString, IId, IMongoId, MatchStatus, Winner } from '../types/Base';
 import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
-import { ITeamShort, TeamShort } from '../teams/TeamShort';
+import { ITeamShort } from '../teams/TeamShort';
 import CommonObject from '../common/CommonObject';
 
-interface IScoreResult {
+export interface IScoreResult {
   homeTeam: number | null;
   awayTeam: number | null;
 }
 
-interface IScore {
+export interface IScore {
   winner: Winner;
   duration: string;
   fullTime: IScoreResult;

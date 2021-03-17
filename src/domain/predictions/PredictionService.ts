@@ -14,6 +14,10 @@ export interface IPredictionService extends IService<IPrediction> {
     matchTeamType: MatchTeamType,
     score: number,
   ): Promise<void>;
+  getPredictionsByMatchesIds(
+    userViberId: string,
+    matchesIds: ObjectId[],
+  ): Promise<Record<string, IPrediction>>;
 }
 
 export class PredictionService extends AbstractService<IPrediction> implements IPredictionService {
@@ -66,5 +70,12 @@ export class PredictionService extends AbstractService<IPrediction> implements I
         }),
       );
     }
+  }
+
+  getPredictionsByMatchesIds(
+    userViberId: string,
+    matchesIds: ObjectId[],
+  ): Promise<Record<string, IPrediction>> {
+    return this.dao.getPredictionsByMatchesIds(userViberId, matchesIds);
   }
 }
