@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { IMongoId } from '../types/Base';
 
 export interface IPermission extends IMongoId {
@@ -5,7 +6,8 @@ export interface IPermission extends IMongoId {
   description: string;
 }
 
-export const Permission = (name: string, description: string): IPermission => ({
+export const Permission = (_id: ObjectId, name: string, description: string): IPermission => ({
+  _id,
   name,
   description,
 });

@@ -64,11 +64,11 @@ export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const me = this;
     let { timer } = me;
-    timer = setTimeout(async function callback() {
+    timer = (setTimeout(async function callback() {
       await cb();
       // eslint-disable-next-line no-unused-vars
-      timer = setTimeout(callback, delayInMs);
-    }, delayInMs);
+      timer = (setTimeout(callback, delayInMs) as unknown) as number;
+    }, delayInMs) as unknown) as number;
   }
 
   // eslint-disable-next-line class-methods-use-this
