@@ -1,7 +1,9 @@
 const COLORS = {
-  YELLOW: '#f7bb3f',
+  YELLOW: '#F7BB3F',
   WHITE: '#FFFFFF',
-  PINK: '#ef9494',
+  PINK: '#EF9494',
+  DISABLED_BACKGROUND: '#CCCCCC',
+  DISABLED_TEXT: '#666666',
 };
 
 export default COLORS;

@@ -63,9 +63,27 @@ export class PredictionService extends AbstractService<IPrediction> implements I
           _id: new ObjectId(),
           userViberId,
           matchId,
-          prediction: {
-            homeTeam: matchTeamType === MatchTeamType.HOME_TEAM ? score : undefined,
-            awayTeam: matchTeamType === MatchTeamType.AWAY_TEAM ? score : undefined,
+          score: {
+            regularTime: {
+              homeTeam: matchTeamType === MatchTeamType.HOME_TEAM ? score : null,
+              awayTeam: matchTeamType === MatchTeamType.AWAY_TEAM ? score : null,
+            },
+            fullTime: {
+              homeTeam: matchTeamType === MatchTeamType.HOME_TEAM ? score : null,
+              awayTeam: matchTeamType === MatchTeamType.AWAY_TEAM ? score : null,
+            },
+            halfTime: {
+              homeTeam: null,
+              awayTeam: null,
+            },
+            extraTime: {
+              homeTeam: null,
+              awayTeam: null,
+            },
+            penalties: {
+              homeTeam: null,
+              awayTeam: null,
+            },
           },
         }),
       );

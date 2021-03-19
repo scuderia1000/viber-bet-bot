@@ -8,12 +8,13 @@ import {
   TextSize,
   TextVAlign,
 } from '../../../types/base';
-import { IMatch, IScore, IScoreResult } from '../../../domain/matches/Match';
+import { IMatch } from '../../../domain/matches/Match';
 import COLORS from '../../../const/colors';
 import { ITeamShort } from '../../../domain/teams/TeamShort';
 import { IPrediction } from '../../../domain/predictions/Prediction';
 import { MAKE_PREDICTION, TEAM } from '../../../const/buttons';
 import { MatchStatus } from '../../../domain/types/Base';
+import { ChampionsLeagueStages, LeagueCodes, Stages } from '../../../const';
 
 export const actionButton = (
   text: string,
@@ -111,7 +112,11 @@ const getTeamsNameButtons = (match: IMatch): IButton[] => {
   ];
 };
 
-const getMakePredictionButton = (matchId: ObjectId): IButton => ({
+const getMakePredictionButton = (
+  matchId: ObjectId,
+  stage: Stages,
+  leagueCode: LeagueCodes,
+): IButton => ({
   Columns: ButtonSize.XXL,
   Rows: 1,
   Text: MAKE_PREDICTION.LABEL,
@@ -119,15 +124,19 @@ const getMakePredictionButton = (matchId: ObjectId): IButton => ({
   TextHAlign: TextHAlign.CENTER,
   TextVAlign: TextVAlign.CENTER,
   ActionType: ActionType.REPLY,
-  ActionBody: `matchPrediction_${matchId}`,
+  ActionBody: `matchPrediction?matchId=${matchId}&stage=${stage}&leagueCode=${leagueCode}`,
   BgColor: COLORS.YELLOW,
 });
 
 const getUserPredictionButtons = (prediction?: IPrediction): IButton[] => {
   const homeTeamPredictScore =
-    prediction?.prediction?.homeTeam !== undefined ? String(prediction.prediction.homeTeam) : '';
+    prediction?.score?.fullTime.homeTeam !== null
+      ? String(prediction?.score.fullTime.homeTeam)
+      : '';
   const awayTeamPredictScore =
-    prediction?.prediction?.awayTeam !== undefined ? String(prediction.prediction.awayTeam) : '';
+    prediction?.score?.fullTime.awayTeam !== null
+      ? String(prediction?.score.fullTime.awayTeam)
+      : '';
   const columns = 3;
   return [
     getTextButton(`<b>Прогноз</b>`, 6, undefined, undefined, undefined, undefined, TextSize.LARGE),
@@ -144,7 +153,7 @@ export const getMessageMatchButton = (match: IMatch, prediction?: IPrediction): 
   ...getTeamsNameButtons(match),
   ...getUserPredictionButtons(prediction),
   match.status === MatchStatus.SCHEDULED
-    ? getMakePredictionButton(match._id)
+    ? getMakePredictionButton(match._id, match.stage as ChampionsLeagueStages, LeagueCodes.CL)
     : getTextButton(`<b>Матч завершен</b>`),
 ];
 

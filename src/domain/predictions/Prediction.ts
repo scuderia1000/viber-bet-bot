@@ -4,14 +4,29 @@ import Entity from '../common/Entity';
 import Collection from '../../annotation/Collection';
 
 export interface IUserPrediction {
-  homeTeam?: number;
-  awayTeam?: number;
+  homeTeam: number | null;
+  awayTeam: number | null;
+}
+
+interface IUserPredictScore {
+  /**
+   * Общий счет матча
+   * regularTime + halfTime + extraTime + penalties
+   */
+  fullTime: IUserPrediction;
+  /**
+   * Основное время
+   */
+  regularTime: IUserPrediction;
+  halfTime?: IUserPrediction;
+  extraTime?: IUserPrediction;
+  penalties?: IUserPrediction;
 }
 
 export interface IBasePrediction {
   userViberId: string;
   matchId: ObjectId;
-  prediction: IUserPrediction;
+  score: IUserPredictScore;
 }
 
 export type IPrediction = IBasePrediction & IMongoId;
@@ -20,14 +35,14 @@ export type IPrediction = IBasePrediction & IMongoId;
 export class Prediction extends Entity implements IPrediction {
   matchId: ObjectId;
 
-  prediction: IUserPrediction;
-
   userViberId: string;
+
+  score: IUserPredictScore;
 
   constructor(props: IPrediction) {
     super(props._id);
     this.matchId = props.matchId;
-    this.prediction = props.prediction;
     this.userViberId = props.userViberId;
+    this.score = props.score;
   }
 }

@@ -1,5 +1,7 @@
 export const conversationStartedText = (userName: string): string =>
-  `Привет ${userName}! Я чат-бот Вася! Я принимаю ставки на Лигу Чемпионов 2020 - 2021, делайте ваши ставки господа!`;
+  `Привет ${userName}! Я чат-бот Вася! Я принимаю ставки на футбол, выбери чемпионат, на которую хочешь поставить.`;
+
+export const SELECT_LEAGUE_TEXT_MESSAGE = 'Выбери чемпионат';
 
 export const DB = {
   DEFAULT_NAME: 'viber-bet-bot',
@@ -24,6 +26,21 @@ export enum ChampionsLeagueStages {
   'FINAL' = 'FINAL',
 }
 
+export enum LeagueCodes {
+  /**
+   * Лига чемпионов
+   */
+  CL = 'CL',
+  /**
+   * Чемпионат европы
+   */
+  EC = 'EC',
+  /**
+   * Чемпионат мира
+   */
+  WC = 'WC',
+}
+
 export const API = {
   FOOTBALL_DATA_ORG: {
     PREFIX: 'v2',
@@ -31,7 +48,7 @@ export const API = {
     MATCHES: 'matches',
     TEAMS: 'teams',
     LEAGUE_CODE: {
-      CHAMPIONS: 'CL',
+      CHAMPIONS: LeagueCodes.CL,
     },
     CHAMPIONS_LEAGUE: {
       AVAILABLE_STAGES: [
@@ -56,6 +73,29 @@ export const VIBER_MIN_API_LEVEL = 6;
 export const PREDICT_SCORE_MAX_VALUE = 12;
 
 export const MATCH_BEGAN_TEXT = 'Упс..., матч уже начался, ставки больше не принимаются';
+
+export const EMPTY_SCHEDULED_MATCHES = 'Упс..., пока нет запланированных матчей';
+
+export type Stages = ChampionsLeagueStages;
+
+export type LeagueCodesStage = Record<string, Stages>;
+
+export const LeagueCodesStageMapper = {
+  [LeagueCodes.CL]: ChampionsLeagueStages,
+  // TODO добавить этапы для EC и WC
+  [LeagueCodes.EC]: ChampionsLeagueStages,
+  [LeagueCodes.WC]: ChampionsLeagueStages,
+};
+
+const LeagueFinalPartMapper = {
+  [LeagueCodes.CL]: ChampionsLeagueStages.ROUND_OF_16,
+  // TODO добавить этапы для EC и WC
+  [LeagueCodes.EC]: ChampionsLeagueStages.ROUND_OF_16,
+  [LeagueCodes.WC]: ChampionsLeagueStages.ROUND_OF_16,
+};
+
+export const getFinalPartOfLeagueIndex = (code: LeagueCodes): number =>
+  Object.values(LeagueCodesStageMapper[code]).indexOf(LeagueFinalPartMapper[code]);
 
 const championsLeagueStagesToRuTextMapper = {
   [ChampionsLeagueStages.NONE]: '',
