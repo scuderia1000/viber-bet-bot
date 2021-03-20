@@ -1,9 +1,14 @@
 import { Bot, Bot as ViberBot, Message } from 'viber-bot';
 import { ObjectId } from 'mongodb';
-import { makePredictionKeyboard, predictTeamScoreKeyboard, selectLeagueKeyboard } from './keyboards';
+import {
+  makePredictionKeyboard,
+  predictTeamScoreKeyboard,
+  selectLeagueKeyboard,
+} from './keyboards';
 import {
   API,
-  conversationStartedText, EMPTY_SCHEDULED_MATCHES,
+  conversationStartedText,
+  EMPTY_SCHEDULED_MATCHES,
   getFinalPartOfLeagueIndex,
   LeagueCodes,
   LeagueCodesStageMapper,
@@ -21,6 +26,7 @@ import {
 import { MatchTeamType, ViberResponse } from '../types/base';
 import { IMatch } from '../domain/matches/Match';
 import { IPrediction } from '../domain/predictions/Prediction';
+import getParams from '../util/parse-message-params';
 
 const initializeBot = (token: string, modules: IModules): Bot => {
   const TextMessage = Message.Text;
@@ -29,9 +35,10 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   const matchesRichMessage = (
     scheduledMatches: IMatch[],
     predictions: Record<string, IPrediction>,
+    fromIndex?: number,
   ) =>
     new RichMediaMessage(
-      matchesWithPredictionsMessage(scheduledMatches, predictions),
+      matchesWithPredictionsMessage(scheduledMatches, predictions, fromIndex),
       makePredictionKeyboard(),
       undefined,
       undefined,
@@ -90,9 +97,13 @@ const initializeBot = (token: string, modules: IModules): Bot => {
 
   // Выбрали чемпионат
   bot.onTextMessage(/^setLeague?.*$/i, async (message, response) => {
-    const scheduledMatches = await modules.matchModule.service.getScheduledMatches(
-      API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS,
-    );
+    const searchParams = getParams(message.text);
+    const leagueCode = searchParams.get('code') as LeagueCodes;
+    if (!leagueCode) return;
+
+    await modules.userModule.service.setLeague(response.userProfile.id, leagueCode);
+
+    const scheduledMatches = await modules.matchModule.service.getScheduledMatches(leagueCode);
     const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
       response.userProfile.id,
     );
@@ -115,8 +126,11 @@ const initializeBot = (token: string, modules: IModules): Bot => {
 
   // Нажали на кнопку Сделать прогноз
   bot.onTextMessage(/^makePrediction$/i, async (message, response) => {
+    const user = await modules.userModule.service.getById(response.userProfile.id);
+    if (!user) return;
+
     const scheduledMatches = await modules.matchModule.service.getScheduledMatches(
-      API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS,
+      user.selectedLeagueCode,
     );
     const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
       response.userProfile.id,
@@ -141,9 +155,10 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   // Нажали на кнопку Сделать прогноз в сообщении о матчах, возвращаем вопрос с
   // логотипом домашней команды и клавиатурой с кнопками от 0 до 11
   bot.onTextMessage(/^matchPrediction?.*$/i, async (message, response) => {
-    const messageArray = message.text?.split('?') ?? ['', ''];
-    const messageText = messageArray[1];
-    const searchParams = new URLSearchParams(messageText);
+    const user = await modules.userModule.service.getById(response.userProfile.id);
+    if (!user) return;
+
+    const searchParams = getParams(message.text);
     const matchIdText = searchParams.get('matchId') ?? '';
     const matchId = new ObjectId(matchIdText);
     // const leagueCode = (searchParams.get('leagueCode') ?? '') as LeagueCodes;
@@ -182,9 +197,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   // Сделали прогноз, сколько забьет домашняя команда или гости.
   // Нажали на кнопками с цифрами 0 до 11
   bot.onTextMessage(/^matchTeamScore?.*$/i, async (message, response) => {
-    const messageArray = message.text?.split('?') ?? ['', ''];
-    const messageText = messageArray[1];
-    const searchParams = new URLSearchParams(messageText);
+    const searchParams = getParams(message.text);
     const matchIdText = searchParams.get('matchId') ?? '';
     const matchId = new ObjectId(matchIdText);
     const matchTeamType: MatchTeamType = (searchParams.get('matchTeamType') ??
@@ -237,7 +250,12 @@ const initializeBot = (token: string, modules: IModules): Bot => {
 
   // Нажали на кнопку Мои прогнозы
   bot.onTextMessage(/^myPredictions.*$/i, async (message, response) => {
-    const competition = await modules.competitionModule.service.getCompetitionByCode();
+    const user = await modules.userModule.service.getById(response.userProfile.id);
+    if (!user) return;
+
+    const competition = await modules.competitionModule.service.getCompetitionByCode(
+      user.selectedLeagueCode,
+    );
     const currentMatchday = competition?.currentSeason.currentMatchday;
     const messageArray = message.text?.split('?') ?? [];
     const matchDayTextParam =

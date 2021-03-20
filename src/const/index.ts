@@ -114,3 +114,5 @@ export const predictNotFoundMessage = (matchDay: number): string =>
   `Ты не делал прогноз на матчи ${
     Object.values(championsLeagueStagesToRuTextMapper)[matchDay]
   } этапа`;
+
+export const REACH_MESSAGES_MAX_COUNT = 6;

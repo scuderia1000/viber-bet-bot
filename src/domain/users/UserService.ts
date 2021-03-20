@@ -6,10 +6,11 @@ import { IRoleService } from '../roles/RoleService';
 import { IService } from '../common/IService';
 import AbstractService from '../common/AbstractService';
 import { ICommonDao } from '../common/ICommonDao';
-import { ROLES } from '../../const';
+import { LeagueCodes, ROLES } from '../../const';
 
 export interface IUserService extends IService<IUser> {
   saveViberUser(user: UserProfile): Promise<void>;
+  setLeague(userViberId: string, leagueCode: LeagueCodes): Promise<void>;
 }
 
 export class UserService extends AbstractService<IUser> implements IUserService {
@@ -45,5 +46,15 @@ export class UserService extends AbstractService<IUser> implements IUserService 
 
   getDao(): ICommonDao<IUser> {
     return this.dao;
+  }
+
+  async setLeague(userViberId: string, leagueCode: LeagueCodes): Promise<void> {
+    const user = await this.dao.getById(userViberId);
+    if (!user) return;
+
+    if (user.selectedLeagueCode !== leagueCode) {
+      user.selectedLeagueCode = leagueCode;
+      await this.dao.update(user);
+    }
   }
 }

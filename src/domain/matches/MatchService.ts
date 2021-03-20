@@ -11,10 +11,10 @@ import { MatchStatus } from '../types/Base';
 import { ISeasonService } from '../seasons/SeasonService';
 import { ITeamShort, TeamShort } from '../teams/TeamShort';
 import { ITeamService } from '../teams/TeamService';
-import { API } from '../../const';
+import { API, LeagueCodes } from '../../const';
 
 export interface IMatchService extends IService<IMatch> {
-  getScheduledMatches(competitionCode: string): Promise<IMatch[]>;
+  getScheduledMatches(competitionCode: LeagueCodes): Promise<IMatch[]>;
   getMatchTeamByType(matchId: ObjectId, matchTeamType: MatchTeamType): Promise<ITeamShort | null>;
   isMatchBegan(matchId: ObjectId): Promise<boolean>;
   getMatchesByIds(matchIds: ObjectId[]): Promise<IMatch[]>;
@@ -75,7 +75,7 @@ export class MatchService
     await this.updateEntities(existMatches, matches);
   }
 
-  async getScheduledMatches(competitionCode: string): Promise<IMatch[]> {
+  async getScheduledMatches(competitionCode = LeagueCodes.CL): Promise<IMatch[]> {
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
     if (!competition || !competition.currentSeason._id) return Promise.resolve([]);
 
