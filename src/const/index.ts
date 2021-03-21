@@ -115,4 +115,4 @@ export const predictNotFoundMessage = (matchDay: number): string =>
     Object.values(championsLeagueStagesToRuTextMapper)[matchDay]
   } этапа`;
 
-export const REACH_MESSAGES_MAX_COUNT = 6;
+export const MAX_MATCH_COUNT_PER_PAGE = 6;

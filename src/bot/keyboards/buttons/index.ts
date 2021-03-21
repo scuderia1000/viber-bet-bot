@@ -34,6 +34,23 @@ export const actionButton = (
   BgColor: bgColor,
 });
 
+export const disabledActionButton = (
+  text: string,
+  replayText: string,
+  columns = ButtonSize.XXL,
+  rows = 1,
+): IButton => ({
+  Columns: columns,
+  Rows: rows,
+  Text: `<font color=”${COLORS.DISABLED_TEXT}”><i>${text}</i></font>`,
+  TextSize: TextSize.MEDIUM,
+  TextHAlign: TextHAlign.CENTER,
+  TextVAlign: TextVAlign.CENTER,
+  ActionType: ActionType.REPLY,
+  ActionBody: replayText,
+  BgColor: COLORS.DISABLED_BACKGROUND,
+});
+
 const getTextButton = (
   text: string,
   columns = 6,

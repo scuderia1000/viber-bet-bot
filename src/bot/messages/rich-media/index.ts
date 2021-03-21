@@ -4,7 +4,6 @@ import { getMessageMatchButton, getTeamPredictionButton } from '../../keyboards/
 import COLORS from '../../../const/colors';
 import { ITeamShort } from '../../../domain/teams/TeamShort';
 import { IPrediction } from '../../../domain/predictions/Prediction';
-import { REACH_MESSAGES_MAX_COUNT } from '../../../const';
 
 const getMessageBody = (columns = 6, rows = 6): IRichMedia => ({
   ButtonsGroupColumns: columns,
@@ -16,15 +15,12 @@ const getMessageBody = (columns = 6, rows = 6): IRichMedia => ({
 export const matchesWithPredictionsMessage = (
   scheduledMatches: IMatch[],
   predictions: Record<string, IPrediction>,
-  fromIndex = 0,
 ): IRichMedia => {
   const buttons: IButton[] = [];
-  // eslint-disable-next-line no-plusplus
-  for (let i = fromIndex; i < REACH_MESSAGES_MAX_COUNT + fromIndex; i++) {
-    const match = scheduledMatches[i];
+  scheduledMatches.forEach((match) => {
     const prediction = predictions[match._id.toHexString()];
     buttons.push(...getMessageMatchButton(match, prediction));
-  }
+  });
 
   return {
     ...getMessageBody(6, 7),

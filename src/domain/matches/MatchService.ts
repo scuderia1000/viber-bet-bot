@@ -13,6 +13,8 @@ import { ITeamShort, TeamShort } from '../teams/TeamShort';
 import { ITeamService } from '../teams/TeamService';
 import { API, LeagueCodes } from '../../const';
 
+type PagedMatches = { matches: IMatch[]; totalMatchesCount: number };
+
 export interface IMatchService extends IService<IMatch> {
   getScheduledMatches(competitionCode: LeagueCodes): Promise<IMatch[]>;
   getMatchTeamByType(matchId: ObjectId, matchTeamType: MatchTeamType): Promise<ITeamShort | null>;
@@ -20,6 +22,10 @@ export interface IMatchService extends IService<IMatch> {
   getMatchesByIds(matchIds: ObjectId[]): Promise<IMatch[]>;
   getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]>;
   getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]>;
+  getPagedScheduledMatches(
+    competitionCode: LeagueCodes,
+    pageNumber: number,
+  ): Promise<PagedMatches>;
 }
 
 export class MatchService
@@ -71,7 +77,7 @@ export class MatchService
           }),
       ),
     );
-    const existMatches = await this.dao.getMatchesBySeasonId(currentSeason.id);
+    const existMatches = await this.dao.matchesBySeasonId(currentSeason.id);
     await this.updateEntities(existMatches, matches);
   }
 
@@ -79,11 +85,39 @@ export class MatchService
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
     if (!competition || !competition.currentSeason._id) return Promise.resolve([]);
 
-    const matches = await this.dao.getSeasonMatchesByStatus(
+    const matches = await this.dao.seasonMatchesByStatus(
       competition.currentSeason._id,
       MatchStatus.SCHEDULED,
     );
     return matches;
+  }
+
+  async getPagedScheduledMatches(
+    competitionCode = LeagueCodes.CL,
+    pageNumber = 0,
+  ): Promise<PagedMatches> {
+    const emptyResult = {
+      matches: [],
+      totalMatchesCount: 0,
+    };
+    const competition = await this.competitionService.getCompetitionByCode(competitionCode);
+    if (!competition || !competition.currentSeason._id) return emptyResult;
+
+    const allScheduledMatchesCount = await this.dao.seasonMatchesByStatusCount(
+      competition.currentSeason._id,
+      MatchStatus.SCHEDULED,
+    );
+
+    const matches = await this.dao.seasonMatchesByStatusPaged(
+      competition.currentSeason._id,
+      MatchStatus.SCHEDULED,
+      pageNumber,
+    );
+
+    return {
+      matches,
+      totalMatchesCount: allScheduledMatchesCount,
+    };
   }
 
   async getMatchTeamByType(
@@ -91,7 +125,7 @@ export class MatchService
     matchTeamType: MatchTeamType,
   ): Promise<ITeamShort | null> {
     const matchTeamTypeProperty = MatchTeamTypeMapper[matchTeamType];
-    const teamShort = await this.dao.getMatchTeamByType(matchId, matchTeamTypeProperty);
+    const teamShort = await this.dao.matchTeamByType(matchId, matchTeamTypeProperty);
     let team = null;
     if (teamShort) {
       team = await this.teamService.getByMongoId(teamShort._id);
@@ -112,7 +146,7 @@ export class MatchService
   }
 
   getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]> {
-    return this.dao.getMatchesBySeasonAndStage(seasonMongoId, stage);
+    return this.dao.matchesBySeasonAndStage(seasonMongoId, stage);
   }
 
   async getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]> {

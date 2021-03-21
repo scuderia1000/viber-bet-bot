@@ -1,10 +1,12 @@
 import { ObjectId } from 'mongodb';
-import { actionButton } from './buttons';
-import { PREDICT_SCORE_MAX_VALUE } from '../../const';
+import { actionButton, disabledActionButton } from './buttons';
+import { MAX_MATCH_COUNT_PER_PAGE, PREDICT_SCORE_MAX_VALUE } from '../../const';
 import {
   DISABLED_TEXT,
   LEAGUES,
   MAKE_PREDICTION,
+  NEXT_PAGE,
+  PREVIOUS_PAGE,
   SELECT_LEAGUE,
   USER_PREDICTIONS,
   USERS_RESULTS,
@@ -56,6 +58,39 @@ export const makePredictionKeyboard = (): IKeyboard =>
           `<font color=”${COLORS.DISABLED_TEXT}”><i>${USERS_RESULTS.LABEL} ${DISABLED_TEXT}</i></font>`,
           USERS_RESULTS.REPLAY_DISABLED,
           COLORS.DISABLED_BACKGROUND,
+          2,
+        )
+      : actionButton(USERS_RESULTS.LABEL, USERS_RESULTS.REPLAY_TEXT, undefined, 2),
+    actionButton(SELECT_LEAGUE.LABEL, SELECT_LEAGUE.REPLAY_TEXT, undefined, 2),
+  ]);
+
+/**
+ * Клавиатура "Сделать прогноз" с кнопками Вперед, Назад
+ */
+export const makePredictionKeyboardPaged = (pageNumber: number, allCount: number): IKeyboard =>
+  hiddenInputKeyboard([
+    pageNumber > 0
+      ? actionButton(
+          PREVIOUS_PAGE.LABEL,
+          `${PREVIOUS_PAGE.REPLAY_TEXT}page=${pageNumber - 1}`,
+          undefined,
+          3,
+        )
+      : disabledActionButton(PREVIOUS_PAGE.LABEL, '', 3),
+    (pageNumber + 1) * MAX_MATCH_COUNT_PER_PAGE < allCount
+      ? actionButton(
+          NEXT_PAGE.LABEL,
+          `${NEXT_PAGE.REPLAY_TEXT}page=${pageNumber + 1}`,
+          undefined,
+          3,
+        )
+      : disabledActionButton(NEXT_PAGE.LABEL, '', 3),
+    actionButton(MAKE_PREDICTION.LABEL, MAKE_PREDICTION.REPLAY_TEXT),
+    actionButton(USER_PREDICTIONS.LABEL, USER_PREDICTIONS.REPLAY_TEXT, undefined, 2),
+    USERS_RESULTS.DISABLED
+      ? disabledActionButton(
+          `${USERS_RESULTS.LABEL} ${DISABLED_TEXT}`,
+          USERS_RESULTS.REPLAY_DISABLED,
           2,
         )
       : actionButton(USERS_RESULTS.LABEL, USERS_RESULTS.REPLAY_TEXT, undefined, 2),

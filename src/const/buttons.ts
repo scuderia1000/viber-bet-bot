@@ -1,6 +1,7 @@
 import { LeagueCodes } from './index';
 
 const DISABLED_TEXT = 'в разработке';
+const MAKE_PREDICTION_REPLAY_TEXT = 'makePrediction?';
 
 const LEAGUES = {
   CHAMPIONS: {
@@ -23,7 +24,7 @@ const LEAGUES = {
 
 const MAKE_PREDICTION = {
   LABEL: 'Сделать прогноз',
-  REPLAY_TEXT: 'makePrediction',
+  REPLAY_TEXT: MAKE_PREDICTION_REPLAY_TEXT,
 };
 
 const TEAM = {
@@ -47,6 +48,16 @@ const SELECT_LEAGUE = {
   REPLAY_TEXT: 'selectLeague',
 };
 
+const NEXT_PAGE = {
+  LABEL: 'Вперед',
+  REPLAY_TEXT: MAKE_PREDICTION_REPLAY_TEXT,
+};
+
+const PREVIOUS_PAGE = {
+  LABEL: 'Назад',
+  REPLAY_TEXT: MAKE_PREDICTION_REPLAY_TEXT,
+};
+
 export {
   MAKE_PREDICTION,
   TEAM,
@@ -55,4 +66,6 @@ export {
   LEAGUES,
   DISABLED_TEXT,
   SELECT_LEAGUE,
+  NEXT_PAGE,
+  PREVIOUS_PAGE,
 };

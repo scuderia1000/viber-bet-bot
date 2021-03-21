@@ -1,7 +1,7 @@
 import { Bot, Bot as ViberBot, Message } from 'viber-bot';
 import { ObjectId } from 'mongodb';
 import {
-  makePredictionKeyboard,
+  makePredictionKeyboard, makePredictionKeyboardPaged,
   predictTeamScoreKeyboard,
   selectLeagueKeyboard,
 } from './keyboards';
@@ -23,7 +23,7 @@ import {
   getMatchTeamPredictionMessage,
   matchesWithPredictionsMessage,
 } from './messages/rich-media';
-import { MatchTeamType, ViberResponse } from '../types/base';
+import { IKeyboard, MatchTeamType, ViberResponse } from '../types/base';
 import { IMatch } from '../domain/matches/Match';
 import { IPrediction } from '../domain/predictions/Prediction';
 import getParams from '../util/parse-message-params';
@@ -35,11 +35,11 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   const matchesRichMessage = (
     scheduledMatches: IMatch[],
     predictions: Record<string, IPrediction>,
-    fromIndex?: number,
+    keyboard?: IKeyboard,
   ) =>
     new RichMediaMessage(
-      matchesWithPredictionsMessage(scheduledMatches, predictions, fromIndex),
-      makePredictionKeyboard(),
+      matchesWithPredictionsMessage(scheduledMatches, predictions),
+      keyboard ?? makePredictionKeyboard(),
       undefined,
       undefined,
       undefined,
@@ -124,20 +124,29 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     );
   });
 
-  // Нажали на кнопку Сделать прогноз
-  bot.onTextMessage(/^makePrediction$/i, async (message, response) => {
+  // Нажали на кнопку Сделать прогноз в клавиатуре, возвращаем карусель с матчами,
+  // в клавиатуре показываем кнопки Вперед, Назад, т.к. стоит ограничение на к-во сообщений в 1 ответе = 6
+  bot.onTextMessage(/^makePrediction?.*$/i, async (message, response) => {
     const user = await modules.userModule.service.getById(response.userProfile.id);
     if (!user) return;
 
-    const scheduledMatches = await modules.matchModule.service.getScheduledMatches(
+    const searchParams = getParams(message.text);
+    const page = Number(searchParams.get('page') ?? '0');
+
+    const scheduledMatchesPaged = await modules.matchModule.service.getPagedScheduledMatches(
       user.selectedLeagueCode,
+      page,
     );
+    const allCount = scheduledMatchesPaged.totalMatchesCount;
+    const scheduledMatches = scheduledMatchesPaged.matches;
+
     const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
       response.userProfile.id,
     );
 
     if (scheduledMatches.length) {
-      response.send(matchesRichMessage(scheduledMatches, userPredictions));
+      const keyboard = makePredictionKeyboardPaged(page, allCount);
+      response.send(matchesRichMessage(scheduledMatches, userPredictions, keyboard));
       return;
     }
     response.send(

@@ -4,20 +4,67 @@ import { IMatch, Match } from './Match';
 import CRUDDao from '../common/CRUDDao';
 import { MatchStatus } from '../types/Base';
 import { ITeamShort, TeamShort } from '../teams/TeamShort';
+import { MAX_MATCH_COUNT_PER_PAGE } from '../../const';
 
 export interface IMatchDao extends ICommonDao<IMatch> {
-  getMatchesBySeasonId(seasonId?: number): Promise<Record<number, IMatch>>;
-  getSeasonMatchesByStatus(seasonId: ObjectId, status: MatchStatus): Promise<IMatch[]>;
-  getMatchTeamByType(matchId: ObjectId, matchTeamType: string): Promise<ITeamShort | null>;
-  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]>;
+  matchesBySeasonId(seasonId?: number): Promise<Record<number, IMatch>>;
+  seasonMatchesByStatus(seasonId: ObjectId, status: MatchStatus): Promise<IMatch[]>;
+  matchTeamByType(matchId: ObjectId, matchTeamType: string): Promise<ITeamShort | null>;
+  matchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]>;
+  seasonMatchesByStatusPaged(
+    seasonId: ObjectId,
+    status: MatchStatus,
+    pageNumber: number,
+  ): Promise<IMatch[]>;
+  seasonMatchesByStatusCount(seasonId: ObjectId, status: MatchStatus): Promise<number>;
 }
+
+const getScheduledMatchesAggregateQuery = (seasonId: ObjectId, status: MatchStatus) => [
+  {
+    $match: {
+      'season._id': seasonId,
+      status,
+    },
+  },
+  {
+    $sort: { utcDate: 1 },
+  },
+  {
+    $lookup: {
+      from: 'teams',
+      let: { team_id: '$homeTeam.id' },
+      pipeline: [
+        { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
+        { $project: { _id: 1, id: 1, name: 1, crestImageUrl: 1 } },
+      ],
+      as: 'homeTeam',
+    },
+  },
+  {
+    $unwind: '$homeTeam',
+  },
+  {
+    $lookup: {
+      from: 'teams',
+      let: { team_id: '$awayTeam.id' },
+      pipeline: [
+        { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
+        { $project: { _id: 1, id: 1, name: 1, crestImageUrl: 1 } },
+      ],
+      as: 'awayTeam',
+    },
+  },
+  {
+    $unwind: '$awayTeam',
+  },
+];
 
 export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
   constructor(db: Db) {
     super(db, Match);
   }
 
-  async getMatchesBySeasonId(seasonId?: number): Promise<Record<number, IMatch>> {
+  async matchesBySeasonId(seasonId?: number): Promise<Record<number, IMatch>> {
     const cursor = this.collection.find({
       'season.id': seasonId,
     });
@@ -31,53 +78,28 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
     return result;
   }
 
-  async getSeasonMatchesByStatus(seasonId: ObjectId, status: MatchStatus): Promise<IMatch[]> {
-    const options = {
-      $sort: { utcDate: 1 },
-    };
-    const cursor = this.collection.aggregate([
-      {
-        $match: {
-          'season._id': seasonId,
-          status,
-        },
-      },
-      options,
-      {
-        $lookup: {
-          from: 'teams',
-          let: { team_id: '$homeTeam.id' },
-          pipeline: [
-            { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
-            { $project: { _id: 1, id: 1, name: 1, crestImageUrl: 1 } },
-          ],
-          as: 'homeTeam',
-        },
-      },
-      {
-        $unwind: '$homeTeam',
-      },
-      {
-        $lookup: {
-          from: 'teams',
-          let: { team_id: '$awayTeam.id' },
-          pipeline: [
-            { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
-            { $project: { _id: 1, id: 1, name: 1, crestImageUrl: 1 } },
-          ],
-          as: 'awayTeam',
-        },
-      },
-      {
-        $unwind: '$awayTeam',
-      },
-    ]);
-
+  async seasonMatchesByStatus(seasonId: ObjectId, status: MatchStatus): Promise<IMatch[]> {
+    const cursor = this.collection.aggregate(getScheduledMatchesAggregateQuery(seasonId, status));
     const matches = await this.toEntityArray(cursor);
     return matches;
   }
 
-  async getMatchTeamByType(matchId: ObjectId, matchTeamType: string): Promise<ITeamShort | null> {
+  async seasonMatchesByStatusPaged(
+    seasonId: ObjectId,
+    status: MatchStatus,
+    pageNumber: number,
+  ): Promise<IMatch[]> {
+    const query = [
+      ...getScheduledMatchesAggregateQuery(seasonId, status),
+      { $skip: pageNumber > 0 ? (pageNumber - 1) * MAX_MATCH_COUNT_PER_PAGE : 0 },
+      { $limit: MAX_MATCH_COUNT_PER_PAGE },
+    ];
+    const cursor = this.collection.aggregate(query);
+    const matches = await this.toEntityArray(cursor);
+    return matches;
+  }
+
+  async matchTeamByType(matchId: ObjectId, matchTeamType: string): Promise<ITeamShort | null> {
     const query = { _id: matchId };
     const options = {
       projection: { [matchTeamType]: 1 },
@@ -92,10 +114,16 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
     return team;
   }
 
-  async getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]> {
+  async matchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]> {
     const query = { 'season._id': seasonMongoId, stage };
     const cursor = this.collection.find(query);
     const matches = await this.toEntityArray(cursor);
     return matches;
+  }
+
+  async seasonMatchesByStatusCount(seasonId: ObjectId, status: MatchStatus): Promise<number> {
+    const query = { 'season._id': seasonId, status };
+    const count = await this.collection.countDocuments(query);
+    return count;
   }
 }
