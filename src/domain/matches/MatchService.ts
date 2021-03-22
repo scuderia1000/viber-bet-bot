@@ -113,6 +113,8 @@ export class MatchService
       MatchStatus.SCHEDULED,
       pageNumber,
     );
+    console.log('matches', matches);
+    console.log('pageNumber', pageNumber);
 
     return {
       matches,

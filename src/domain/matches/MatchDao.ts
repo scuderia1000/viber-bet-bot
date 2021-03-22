@@ -91,7 +91,7 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
   ): Promise<IMatch[]> {
     const query = [
       ...getScheduledMatchesAggregateQuery(seasonId, status),
-      { $skip: pageNumber > 0 ? (pageNumber - 1) * MAX_MATCH_COUNT_PER_PAGE : 0 },
+      { $skip: pageNumber * MAX_MATCH_COUNT_PER_PAGE },
       { $limit: MAX_MATCH_COUNT_PER_PAGE },
     ];
     const cursor = this.collection.aggregate(query);

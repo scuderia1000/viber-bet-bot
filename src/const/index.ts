@@ -14,16 +14,24 @@ export enum ROLES {
 }
 
 export enum ChampionsLeagueStages {
-  'NONE' = 'NONE',
+  NONE = 'NONE',
   '1ST_QUALIFYING_ROUND' = '1ST_QUALIFYING_ROUND',
   '2ND_QUALIFYING_ROUND' = '2ND_QUALIFYING_ROUND',
   '3RD_QUALIFYING_ROUND' = '3RD_QUALIFYING_ROUND',
-  'PLAY_OFF_ROUND' = 'PLAY_OFF_ROUND',
-  'GROUP_STAGE' = 'GROUP_STAGE',
-  'ROUND_OF_16' = 'ROUND_OF_16',
-  'QUARTER_FINALS' = 'QUARTER_FINALS',
-  'SEMI_FINALS' = 'SEMI_FINALS',
-  'FINAL' = 'FINAL',
+  PLAY_OFF_ROUND = 'PLAY_OFF_ROUND',
+  GROUP_STAGE = 'GROUP_STAGE',
+  ROUND_OF_16 = 'ROUND_OF_16',
+  QUARTER_FINALS = 'QUARTER_FINALS',
+  SEMI_FINALS = 'SEMI_FINALS',
+  FINAL = 'FINAL',
+}
+
+export enum EuroCupStages {
+  NONE = 'NONE',
+}
+
+export enum WorldCupStages {
+  NONE = 'NONE',
 }
 
 export enum LeagueCodes {
@@ -76,22 +84,22 @@ export const MATCH_BEGAN_TEXT = 'Упс..., матч уже начался, ст
 
 export const EMPTY_SCHEDULED_MATCHES = 'Упс..., пока нет запланированных матчей';
 
-export type Stages = ChampionsLeagueStages;
+export type Stages = ChampionsLeagueStages | EuroCupStages | WorldCupStages;
 
 export type LeagueCodesStage = Record<string, Stages>;
 
 export const LeagueCodesStageMapper = {
   [LeagueCodes.CL]: ChampionsLeagueStages,
   // TODO добавить этапы для EC и WC
-  [LeagueCodes.EC]: ChampionsLeagueStages,
-  [LeagueCodes.WC]: ChampionsLeagueStages,
+  [LeagueCodes.EC]: EuroCupStages,
+  [LeagueCodes.WC]: WorldCupStages,
 };
 
-const LeagueFinalPartMapper = {
+export const LeagueFinalPartMapper = {
   [LeagueCodes.CL]: ChampionsLeagueStages.ROUND_OF_16,
   // TODO добавить этапы для EC и WC
-  [LeagueCodes.EC]: ChampionsLeagueStages.ROUND_OF_16,
-  [LeagueCodes.WC]: ChampionsLeagueStages.ROUND_OF_16,
+  [LeagueCodes.EC]: EuroCupStages.NONE,
+  [LeagueCodes.WC]: WorldCupStages.NONE,
 };
 
 export const getFinalPartOfLeagueIndex = (code: LeagueCodes): number =>
@@ -116,3 +124,9 @@ export const predictNotFoundMessage = (matchDay: number): string =>
   } этапа`;
 
 export const MAX_MATCH_COUNT_PER_PAGE = 6;
+
+export enum FinalPartPredictionStages {
+  REGULAR_TIME = 'regularTime',
+  EXTRA_TIME = 'extraTime',
+  PENALTIES = 'penalties',
+}

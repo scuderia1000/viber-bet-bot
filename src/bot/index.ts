@@ -1,17 +1,19 @@
 import { Bot, Bot as ViberBot, Message } from 'viber-bot';
 import { ObjectId } from 'mongodb';
 import {
-  makePredictionKeyboard, makePredictionKeyboardPaged,
+  makePredictionKeyboard,
+  makePredictionKeyboardPaged,
   predictTeamScoreKeyboard,
   selectLeagueKeyboard,
 } from './keyboards';
 import {
   API,
   conversationStartedText,
-  EMPTY_SCHEDULED_MATCHES,
+  EMPTY_SCHEDULED_MATCHES, FinalPartPredictionStages,
   getFinalPartOfLeagueIndex,
   LeagueCodes,
   LeagueCodesStageMapper,
+  LeagueFinalPartMapper,
   MATCH_BEGAN_TEXT,
   predictNotFoundMessage,
   SELECT_LEAGUE_TEXT_MESSAGE,
@@ -20,6 +22,7 @@ import {
 import { IModules } from '../domain';
 import logger from '../util/logger';
 import {
+  getFinalPartMatchTeamPredictionMessage,
   getMatchTeamPredictionMessage,
   matchesWithPredictionsMessage,
 } from './messages/rich-media';
@@ -58,6 +61,38 @@ const initializeBot = (token: string, modules: IModules): Bot => {
         VIBER_MIN_API_LEVEL,
       ),
     );
+  };
+
+  const sendScheduledMatchesPagedResponse = async (
+    message: Message,
+    response: ViberResponse,
+  ): Promise<boolean> => {
+    const user = await modules.userModule.service.getById(response.userProfile.id);
+    if (!user) {
+      await modules.userModule.service.saveViberUser(response.userProfile);
+    }
+
+    const searchParams = getParams(message.text);
+    const page = Number(searchParams.get('page') ?? '0');
+
+    const scheduledMatchesPaged = await modules.matchModule.service.getPagedScheduledMatches(
+      user?.selectedLeagueCode,
+      page,
+    );
+    const allCount = scheduledMatchesPaged.totalMatchesCount;
+    const scheduledMatches = scheduledMatchesPaged.matches;
+
+    const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
+      response.userProfile.id,
+    );
+
+    if (scheduledMatches.length) {
+      const keyboard = makePredictionKeyboardPaged(page, allCount);
+      response.send(matchesRichMessage(scheduledMatches, userPredictions, keyboard));
+      return true;
+    }
+
+    return false;
   };
 
   const bot = new ViberBot(logger, {
@@ -103,62 +138,43 @@ const initializeBot = (token: string, modules: IModules): Bot => {
 
     await modules.userModule.service.setLeague(response.userProfile.id, leagueCode);
 
-    const scheduledMatches = await modules.matchModule.service.getScheduledMatches(leagueCode);
-    const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
-      response.userProfile.id,
+    const isScheduledMatchesResponseSent = await sendScheduledMatchesPagedResponse(
+      message,
+      response,
     );
-
-    if (scheduledMatches.length) {
-      response.send(matchesRichMessage(scheduledMatches, userPredictions));
-      return;
+    if (!isScheduledMatchesResponseSent) {
+      response.send(
+        new TextMessage(
+          EMPTY_SCHEDULED_MATCHES,
+          makePredictionKeyboard(),
+          undefined,
+          undefined,
+          undefined,
+          VIBER_MIN_API_LEVEL,
+        ),
+      );
     }
-    response.send(
-      new TextMessage(
-        EMPTY_SCHEDULED_MATCHES,
-        makePredictionKeyboard(),
-        undefined,
-        undefined,
-        undefined,
-        VIBER_MIN_API_LEVEL,
-      ),
-    );
   });
 
   // Нажали на кнопку Сделать прогноз в клавиатуре, возвращаем карусель с матчами,
   // в клавиатуре показываем кнопки Вперед, Назад, т.к. стоит ограничение на к-во сообщений в 1 ответе = 6
   bot.onTextMessage(/^makePrediction?.*$/i, async (message, response) => {
-    const user = await modules.userModule.service.getById(response.userProfile.id);
-    if (!user) return;
-
-    const searchParams = getParams(message.text);
-    const page = Number(searchParams.get('page') ?? '0');
-
-    const scheduledMatchesPaged = await modules.matchModule.service.getPagedScheduledMatches(
-      user.selectedLeagueCode,
-      page,
+    const isScheduledMatchesResponseSent = await sendScheduledMatchesPagedResponse(
+      message,
+      response,
     );
-    const allCount = scheduledMatchesPaged.totalMatchesCount;
-    const scheduledMatches = scheduledMatchesPaged.matches;
-
-    const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
-      response.userProfile.id,
-    );
-
-    if (scheduledMatches.length) {
-      const keyboard = makePredictionKeyboardPaged(page, allCount);
-      response.send(matchesRichMessage(scheduledMatches, userPredictions, keyboard));
-      return;
+    if (!isScheduledMatchesResponseSent) {
+      response.send(
+        new TextMessage(
+          EMPTY_SCHEDULED_MATCHES,
+          makePredictionKeyboard(),
+          undefined,
+          undefined,
+          undefined,
+          VIBER_MIN_API_LEVEL,
+        ),
+      );
     }
-    response.send(
-      new TextMessage(
-        EMPTY_SCHEDULED_MATCHES,
-        makePredictionKeyboard(),
-        undefined,
-        undefined,
-        undefined,
-        VIBER_MIN_API_LEVEL,
-      ),
-    );
   });
 
   // Нажали на кнопку Сделать прогноз в сообщении о матчах, возвращаем вопрос с
@@ -170,12 +186,13 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     const searchParams = getParams(message.text);
     const matchIdText = searchParams.get('matchId') ?? '';
     const matchId = new ObjectId(matchIdText);
-    // const leagueCode = (searchParams.get('leagueCode') ?? '') as LeagueCodes;
-    // const stageText = searchParams.get('stage') ?? '';
-    // const leagueStages = LeagueCodesStageMapper[leagueCode];
-    // const isFinalPart = Object.values(LeagueCodesStageMapper[leagueCode])[
-    //   getFinalPartOfLeagueIndex(leagueCode)
-    // ] === stageText;
+
+    const leagueCode = user.selectedLeagueCode ?? LeagueCodes.CL;
+    const stageText = searchParams.get('stage') ?? '';
+    const leagueStages = LeagueCodesStageMapper[leagueCode];
+    const stageIndex = Object.values(leagueStages).indexOf(stageText);
+    const leagueFinalPartIndex = getFinalPartOfLeagueIndex(leagueCode);
+    const isFinalPart = stageIndex >= leagueFinalPartIndex;
 
     // проверяем, что матч еще не начался
     const isMatchBegan = await modules.matchModule.service.isMatchBegan(matchId);
@@ -189,6 +206,21 @@ const initializeBot = (token: string, modules: IModules): Bot => {
       MatchTeamType.HOME_TEAM,
     );
     if (!homeTeam) return;
+
+    if (isFinalPart) {
+      response.send(
+        new RichMediaMessage(
+          getFinalPartMatchTeamPredictionMessage(homeTeam, FinalPartPredictionStages.REGULAR_TIME),
+          predictTeamScoreKeyboard(matchId, MatchTeamType.HOME_TEAM),
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          VIBER_MIN_API_LEVEL,
+        ),
+      );
+      return;
+    }
 
     response.send(
       new RichMediaMessage(

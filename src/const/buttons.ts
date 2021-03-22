@@ -29,6 +29,9 @@ const MAKE_PREDICTION = {
 
 const TEAM = {
   PREDICTION_LABEL: 'Сколько забьет',
+  REGULAR_TIME_LABEL: 'в основное время',
+  EXTRA_TIME_LABEL: 'в дополнительное время',
+  PENALTIES_LABEL: 'в серии пенальти',
 };
 
 const USER_PREDICTIONS = {

@@ -14,7 +14,7 @@ import { ITeamShort } from '../../../domain/teams/TeamShort';
 import { IPrediction } from '../../../domain/predictions/Prediction';
 import { MAKE_PREDICTION, TEAM } from '../../../const/buttons';
 import { MatchStatus } from '../../../domain/types/Base';
-import { ChampionsLeagueStages, LeagueCodes, Stages } from '../../../const';
+import { ChampionsLeagueStages, FinalPartPredictionStages, LeagueCodes, Stages } from '../../../const';
 
 export const actionButton = (
   text: string,
@@ -203,5 +203,46 @@ export const getTeamPredictionButton = (team: ITeamShort, columns = 6): IButton[
     undefined,
     undefined,
     TextSize.SMALL,
+  ),
+];
+
+const predictStagesLabelMapper = {
+  [FinalPartPredictionStages.REGULAR_TIME]: TEAM.REGULAR_TIME_LABEL,
+  [FinalPartPredictionStages.EXTRA_TIME]: TEAM.EXTRA_TIME_LABEL,
+  [FinalPartPredictionStages.PENALTIES]: TEAM.PENALTIES_LABEL,
+};
+
+export const getFinalStageTeamPredictButton = (
+  team: ITeamShort,
+  columns = 6,
+  predictStage: FinalPartPredictionStages,
+): IButton[] => [
+  getTextButton(
+    TEAM.PREDICTION_LABEL,
+    columns,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    TextSize.LARGE,
+  ),
+  getTeamEmblemButton(team.crestImageUrl, columns),
+  getTextButton(
+    `<b>${team.name}</b>`,
+    columns,
+    1,
+    TextHAlign.CENTER,
+    undefined,
+    undefined,
+    TextSize.SMALL,
+  ),
+  getTextButton(
+    predictStagesLabelMapper[predictStage],
+    columns,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    TextSize.LARGE,
   ),
 ];
