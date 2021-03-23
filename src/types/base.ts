@@ -10,7 +10,7 @@ interface UserProfile {
 
 export interface ViberResponse {
   userProfile: UserProfile;
-  send: (messages: Message | Message[]) => Promise<JSON>;
+  send(messages: Message | Message[]): Promise<JSON>;
 }
 
 // interface Dictionary<T> {
@@ -128,11 +128,6 @@ export interface IRichMedia {
 }
 
 export enum MatchTeamType {
-  HOME_TEAM = 'HOME_TEAM',
-  AWAY_TEAM = 'AWAY_TEAM',
+  HOME_TEAM = 'homeTeam',
+  AWAY_TEAM = 'awayTeam',
 }
-
-export const MatchTeamTypeMapper = {
-  [MatchTeamType.HOME_TEAM]: 'homeTeam',
-  [MatchTeamType.AWAY_TEAM]: 'awayTeam',
-};

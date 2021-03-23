@@ -8,7 +8,7 @@ export interface IUserPrediction {
   awayTeam: number | null;
 }
 
-interface IUserPredictScore {
+export interface IUserPredictScore {
   /**
    * Общий счет матча
    * regularTime + halfTime + extraTime + penalties
@@ -19,8 +19,8 @@ interface IUserPredictScore {
    */
   regularTime: IUserPrediction;
   halfTime?: IUserPrediction;
-  extraTime?: IUserPrediction;
-  penalties?: IUserPrediction;
+  extraTime: IUserPrediction;
+  penalties: IUserPrediction;
 }
 
 export interface IBasePrediction {

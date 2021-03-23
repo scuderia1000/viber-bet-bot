@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import { IService } from '../common/IService';
 import { IMatch, Match } from './Match';
 import AbstractService from '../common/AbstractService';
-import { ICompetitionListeners, MatchTeamType, MatchTeamTypeMapper } from '../../types/base';
+import { ICompetitionListeners, MatchTeamType } from '../../types/base';
 import { IMatchDao } from './MatchDao';
 import { ICommonDao } from '../common/ICommonDao';
 import { ICompetition } from '../competitions/Competition';
@@ -22,10 +22,7 @@ export interface IMatchService extends IService<IMatch> {
   getMatchesByIds(matchIds: ObjectId[]): Promise<IMatch[]>;
   getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]>;
   getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]>;
-  getPagedScheduledMatches(
-    competitionCode: LeagueCodes,
-    pageNumber: number,
-  ): Promise<PagedMatches>;
+  getPagedScheduledMatches(competitionCode: LeagueCodes, pageNumber: number): Promise<PagedMatches>;
 }
 
 export class MatchService
@@ -124,8 +121,7 @@ export class MatchService
     matchId: ObjectId,
     matchTeamType: MatchTeamType,
   ): Promise<ITeamShort | null> {
-    const matchTeamTypeProperty = MatchTeamTypeMapper[matchTeamType];
-    const teamShort = await this.dao.matchTeamByType(matchId, matchTeamTypeProperty);
+    const teamShort = await this.dao.matchTeamByType(matchId, matchTeamType);
     let team = null;
     if (teamShort) {
       team = await this.teamService.getByMongoId(teamShort._id);

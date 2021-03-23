@@ -7,13 +7,12 @@ import {
   selectLeagueKeyboard,
 } from './keyboards';
 import {
-  API,
   conversationStartedText,
-  EMPTY_SCHEDULED_MATCHES, FinalPartPredictionStages,
+  EMPTY_SCHEDULED_MATCHES,
+  FinalPartPredictionStages,
   getFinalPartOfLeagueIndex,
   LeagueCodes,
   LeagueCodesStageMapper,
-  LeagueFinalPartMapper,
   MATCH_BEGAN_TEXT,
   predictNotFoundMessage,
   SELECT_LEAGUE_TEXT_MESSAGE,
@@ -26,7 +25,7 @@ import {
   getMatchTeamPredictionMessage,
   matchesWithPredictionsMessage,
 } from './messages/rich-media';
-import { IKeyboard, MatchTeamType, ViberResponse } from '../types/base';
+import { IKeyboard, IRichMedia, MatchTeamType, ViberResponse } from '../types/base';
 import { IMatch } from '../domain/matches/Match';
 import { IPrediction } from '../domain/predictions/Prediction';
 import getParams from '../util/parse-message-params';
@@ -49,19 +48,6 @@ const initializeBot = (token: string, modules: IModules): Bot => {
       undefined,
       VIBER_MIN_API_LEVEL,
     );
-
-  const sendMatchBeganResponse = (response: ViberResponse): void => {
-    response.send(
-      new TextMessage(
-        MATCH_BEGAN_TEXT,
-        makePredictionKeyboard(),
-        undefined,
-        undefined,
-        undefined,
-        VIBER_MIN_API_LEVEL,
-      ),
-    );
-  };
 
   const sendScheduledMatchesPagedResponse = async (
     message: Message,
@@ -95,6 +81,36 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     return false;
   };
 
+  const sendResponse = (response: ViberResponse, message: Message): void => {
+    response.send(message);
+  };
+
+  const sendTextMessage = (response: ViberResponse, text: string, keyboard: IKeyboard): void => {
+    sendResponse(
+      response,
+      new TextMessage(text, keyboard, undefined, undefined, undefined, VIBER_MIN_API_LEVEL),
+    );
+  };
+
+  const sendRichMediaMessage = (
+    response: ViberResponse,
+    richMedia: IRichMedia,
+    keyboard: IKeyboard,
+  ): void => {
+    sendResponse(
+      response,
+      new RichMediaMessage(
+        richMedia,
+        keyboard,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        VIBER_MIN_API_LEVEL,
+      ),
+    );
+  };
+
   const bot = new ViberBot(logger, {
     authToken: token,
     name: 'Phoenix Bet Bot', // <--- Your bot name here
@@ -118,16 +134,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
 
   // Нажали Выбрать чемпионат
   bot.onTextMessage(/^selectLeague$/i, async (message, response) => {
-    response.send(
-      new TextMessage(
-        SELECT_LEAGUE_TEXT_MESSAGE,
-        selectLeagueKeyboard(),
-        undefined,
-        undefined,
-        undefined,
-        VIBER_MIN_API_LEVEL,
-      ),
-    );
+    sendTextMessage(response, SELECT_LEAGUE_TEXT_MESSAGE, selectLeagueKeyboard());
   });
 
   // Выбрали чемпионат
@@ -143,16 +150,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
       response,
     );
     if (!isScheduledMatchesResponseSent) {
-      response.send(
-        new TextMessage(
-          EMPTY_SCHEDULED_MATCHES,
-          makePredictionKeyboard(),
-          undefined,
-          undefined,
-          undefined,
-          VIBER_MIN_API_LEVEL,
-        ),
-      );
+      sendTextMessage(response, EMPTY_SCHEDULED_MATCHES, makePredictionKeyboard());
     }
   });
 
@@ -164,16 +162,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
       response,
     );
     if (!isScheduledMatchesResponseSent) {
-      response.send(
-        new TextMessage(
-          EMPTY_SCHEDULED_MATCHES,
-          makePredictionKeyboard(),
-          undefined,
-          undefined,
-          undefined,
-          VIBER_MIN_API_LEVEL,
-        ),
-      );
+      sendTextMessage(response, EMPTY_SCHEDULED_MATCHES, makePredictionKeyboard());
     }
   });
 
@@ -197,7 +186,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     // проверяем, что матч еще не начался
     const isMatchBegan = await modules.matchModule.service.isMatchBegan(matchId);
     if (isMatchBegan) {
-      sendMatchBeganResponse(response);
+      sendTextMessage(response, MATCH_BEGAN_TEXT, makePredictionKeyboard());
       return;
     }
 
@@ -208,30 +197,22 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     if (!homeTeam) return;
 
     if (isFinalPart) {
-      response.send(
-        new RichMediaMessage(
-          getFinalPartMatchTeamPredictionMessage(homeTeam, FinalPartPredictionStages.REGULAR_TIME),
-          predictTeamScoreKeyboard(matchId, MatchTeamType.HOME_TEAM),
-          undefined,
-          undefined,
-          undefined,
-          undefined,
-          VIBER_MIN_API_LEVEL,
+      sendRichMediaMessage(
+        response,
+        getFinalPartMatchTeamPredictionMessage(homeTeam, FinalPartPredictionStages.REGULAR_TIME),
+        predictTeamScoreKeyboard(
+          matchId,
+          MatchTeamType.HOME_TEAM,
+          FinalPartPredictionStages.REGULAR_TIME,
         ),
       );
       return;
     }
 
-    response.send(
-      new RichMediaMessage(
-        getMatchTeamPredictionMessage(homeTeam),
-        predictTeamScoreKeyboard(matchId, MatchTeamType.HOME_TEAM),
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        VIBER_MIN_API_LEVEL,
-      ),
+    sendRichMediaMessage(
+      response,
+      getMatchTeamPredictionMessage(homeTeam),
+      predictTeamScoreKeyboard(matchId, MatchTeamType.HOME_TEAM),
     );
   });
 
@@ -241,51 +222,74 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     const searchParams = getParams(message.text);
     const matchIdText = searchParams.get('matchId') ?? '';
     const matchId = new ObjectId(matchIdText);
-    const matchTeamType: MatchTeamType = (searchParams.get('matchTeamType') ??
-      MatchTeamType.HOME_TEAM) as MatchTeamType;
-    const score = searchParams.get('score') ?? '';
     // проверяем, что матч еще не начался
     const isMatchBegan = await modules.matchModule.service.isMatchBegan(matchId);
     if (isMatchBegan) {
-      sendMatchBeganResponse(response);
+      sendTextMessage(response, MATCH_BEGAN_TEXT, makePredictionKeyboard());
       return;
     }
-    // записать данные о счете
+    // на какой этап матча сделан прогноз (основное время, дополнительное или серия пенальти)
+    const stage = searchParams.get('stage')
+      ? (searchParams.get('stage') as FinalPartPredictionStages)
+      : undefined;
+    // на какую команду (хозяева или гости)
+    const matchTeamType: MatchTeamType = (searchParams.get('matchTeamType') ??
+      MatchTeamType.HOME_TEAM) as MatchTeamType;
+    // записываем данные о счете
+    const score = searchParams.get('score') ?? '';
     await modules.predictionModule.service.saveUserPredictScore(
       response.userProfile.id,
       matchId,
       matchTeamType,
       +score,
+      stage,
     );
 
+    if (stage) {
+      // определили, что прогноз на финальную часть чемпионата
+      const stageValues = Object.values(FinalPartPredictionStages);
+      const stageIndex = stageValues.indexOf(stage);
+      const nextStageIndex = stageIndex + 1;
+      if (nextStageIndex < stageValues.length) {
+        const team = await modules.matchModule.service.getMatchTeamByType(matchId, matchTeamType);
+        if (!team) return;
+        // отправляем сообщение для прогноза на следующий этап матча
+        sendRichMediaMessage(
+          response,
+          getFinalPartMatchTeamPredictionMessage(team, stageValues[nextStageIndex]),
+          predictTeamScoreKeyboard(matchId, matchTeamType, stageValues[nextStageIndex]),
+        );
+        return;
+      }
+    }
+    // этапы матча для домашней команды закончились, переключаем вопросы на гостевую команду
     if (matchTeamType === MatchTeamType.HOME_TEAM) {
       // вернуть кнопки для прогноза AWAY_TEAM
       const team = await modules.matchModule.service.getMatchTeamByType(
         matchId,
         MatchTeamType.AWAY_TEAM,
       );
-      if (team) {
-        response.send(
-          new RichMediaMessage(
-            getMatchTeamPredictionMessage(team),
-            predictTeamScoreKeyboard(matchId, MatchTeamType.AWAY_TEAM),
-            undefined,
-            undefined,
-            undefined,
-            undefined,
-            VIBER_MIN_API_LEVEL,
-          ),
-        );
-      }
-    } else {
-      // вернуть запланированные матчи со сделанным прогнозом
-      const scheduledMatches = await modules.matchModule.service.getScheduledMatches(
-        API.FOOTBALL_DATA_ORG.LEAGUE_CODE.CHAMPIONS,
+      if (!team) return;
+
+      const initialStage = stage ? FinalPartPredictionStages.REGULAR_TIME : undefined;
+      const richMedia = initialStage
+        ? getFinalPartMatchTeamPredictionMessage(team, initialStage)
+        : getMatchTeamPredictionMessage(team);
+      sendRichMediaMessage(
+        response,
+        richMedia,
+        predictTeamScoreKeyboard(matchId, MatchTeamType.AWAY_TEAM, initialStage),
       );
-      const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
-        response.userProfile.id,
-      );
-      response.send(matchesRichMessage(scheduledMatches, userPredictions));
+      return;
+    }
+
+    // все прогнозы сделаны, отправляем запланированные матчи со сделанными прогнозами
+    const isScheduledMatchesResponseSent = await sendScheduledMatchesPagedResponse(
+      message,
+      response,
+    );
+    if (!isScheduledMatchesResponseSent) {
+      sendTextMessage(response, EMPTY_SCHEDULED_MATCHES, makePredictionKeyboard());
     }
   });
 

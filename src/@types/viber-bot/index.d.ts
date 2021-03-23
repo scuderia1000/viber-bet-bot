@@ -17,7 +17,7 @@ declare module 'viber-bot' {
 
   export interface ViberResponse {
     userProfile: UserProfile;
-    send: (messages: Message | Message[]) => Promise<JSON>;
+    send(messages: Message | Message[]): Promise<JSON>;
   }
 
   interface BotConfiguration {

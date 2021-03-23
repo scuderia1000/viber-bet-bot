@@ -4,7 +4,8 @@ import AbstractService from '../common/AbstractService';
 import { IPredictionDao } from './PredictionDao';
 import { ICommonDao } from '../common/ICommonDao';
 import { IService } from '../common/IService';
-import { MatchTeamType, MatchTeamTypeMapper } from '../../types/base';
+import { MatchTeamType } from '../../types/base';
+import { FinalPartPredictionStages } from '../../const';
 
 export interface IPredictionService extends IService<IPrediction> {
   getPredictionsByUser(userViberId: string): Promise<Record<string, IPrediction>>;
@@ -13,6 +14,7 @@ export interface IPredictionService extends IService<IPrediction> {
     matchId: ObjectId,
     matchTeamType: MatchTeamType,
     score: number,
+    predictStage?: FinalPartPredictionStages,
   ): Promise<void>;
   getPredictionsByMatchesIds(
     userViberId: string,
@@ -42,21 +44,26 @@ export class PredictionService extends AbstractService<IPrediction> implements I
     matchId: ObjectId,
     matchTeamType: MatchTeamType,
     score: number,
+    predictStage?: FinalPartPredictionStages,
   ): Promise<void> {
     if (!(userViberId || matchId || matchTeamType || score)) return;
 
-    const matchTeamTypeProperty = MatchTeamTypeMapper[matchTeamType];
     const existPrediction = await this.dao.getUserMatchPrediction(userViberId, matchId);
 
     if (existPrediction) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      if (existPrediction.prediction[matchTeamTypeProperty] !== score) {
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        existPrediction.prediction[matchTeamTypeProperty] = score;
-        await this.dao.update(existPrediction);
+      if (!predictStage) {
+        existPrediction.score.regularTime[matchTeamType] = score;
+        existPrediction.score.fullTime[matchTeamType] = score;
+      } else {
+        const existStageScore = existPrediction.score[predictStage];
+        existStageScore[matchTeamType] = score;
+
+        existPrediction.score.fullTime[matchTeamType] =
+          Number(existPrediction.score.regularTime[matchTeamType]) +
+          Number(existPrediction.score.extraTime[matchTeamType]) +
+          Number(existPrediction.score.penalties[matchTeamType]);
       }
+      await this.dao.update(existPrediction);
     } else {
       await this.dao.save(
         new Prediction({

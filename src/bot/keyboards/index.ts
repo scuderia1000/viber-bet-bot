@@ -1,6 +1,10 @@
 import { ObjectId } from 'mongodb';
 import { actionButton, disabledActionButton } from './buttons';
-import { MAX_MATCH_COUNT_PER_PAGE, PREDICT_SCORE_MAX_VALUE } from '../../const';
+import {
+  FinalPartPredictionStages,
+  MAX_MATCH_COUNT_PER_PAGE,
+  PREDICT_SCORE_MAX_VALUE,
+} from '../../const';
 import {
   DISABLED_TEXT,
   LEAGUES,
@@ -103,18 +107,15 @@ export const makePredictionKeyboardPaged = (pageNumber: number, allCount: number
 export const predictTeamScoreKeyboard = (
   matchId: ObjectId,
   matchTeamType: MatchTeamType,
+  predictStage?: FinalPartPredictionStages,
 ): IKeyboard => {
   const buttons = [];
+  const replayText = predictStage
+    ? `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}&stage=${predictStage}`
+    : `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}`;
   // eslint-disable-next-line no-plusplus
   for (let i = 0; i < PREDICT_SCORE_MAX_VALUE; i++) {
-    buttons.push(
-      actionButton(
-        `${i}`,
-        `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}&score=${i}`,
-        undefined,
-        1,
-      ),
-    );
+    buttons.push(actionButton(`${i}`, `${replayText}&score=${i}`, undefined, 1));
   }
   return hiddenInputKeyboard([
     ...buttons,
