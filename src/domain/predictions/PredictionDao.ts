@@ -6,7 +6,10 @@ import CRUDDao from '../common/CRUDDao';
 export interface IPredictionDao extends ICommonDao<IPrediction> {
   getPredictionsByUser(userViberId: string): Promise<Record<string, IPrediction>>;
   getUserMatchPrediction(userViberId: string, matchId: ObjectId): Promise<IPrediction | null>;
-  getPredictionsByMatchesIds(userViberId: string, matchesIds: ObjectId[]): Promise<Record<string, IPrediction>>;
+  getPredictionsByMatchesIds(
+    userViberId: string,
+    matchesIds: ObjectId[],
+  ): Promise<Record<string, IPrediction>>;
 }
 
 export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDao {

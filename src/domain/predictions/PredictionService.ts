@@ -4,14 +4,16 @@ import AbstractService from '../common/AbstractService';
 import { IPredictionDao } from './PredictionDao';
 import { ICommonDao } from '../common/ICommonDao';
 import { IService } from '../common/IService';
-import { MatchTeamType } from '../../types/base';
+import { ICompetitionListeners, MatchTeamType } from '../../types/base';
 import { FinalPartPredictionStages } from '../../const';
+import { IMatch } from '../matches/Match';
+import { ICompetition } from '../competitions/Competition';
 
 export interface IPredictionService extends IService<IPrediction> {
   getPredictionsByUser(userViberId: string): Promise<Record<string, IPrediction>>;
   saveUserPredictScore(
     userViberId: string,
-    matchId: ObjectId,
+    match: IMatch,
     matchTeamType: MatchTeamType,
     score: number,
     predictStage?: FinalPartPredictionStages,
@@ -22,7 +24,9 @@ export interface IPredictionService extends IService<IPrediction> {
   ): Promise<Record<string, IPrediction>>;
 }
 
-export class PredictionService extends AbstractService<IPrediction> implements IPredictionService {
+export class PredictionService
+  extends AbstractService<IPrediction>
+  implements IPredictionService, ICompetitionListeners {
   private readonly dao: IPredictionDao;
 
   constructor(dao: IPredictionDao) {
@@ -41,14 +45,14 @@ export class PredictionService extends AbstractService<IPrediction> implements I
 
   async saveUserPredictScore(
     userViberId: string,
-    matchId: ObjectId,
+    match: IMatch,
     matchTeamType: MatchTeamType,
     score: number,
     predictStage?: FinalPartPredictionStages,
   ): Promise<void> {
-    if (!(userViberId || matchId || matchTeamType || score)) return;
+    if (!(userViberId || match || matchTeamType || score)) return;
 
-    const existPrediction = await this.dao.getUserMatchPrediction(userViberId, matchId);
+    const existPrediction = await this.dao.getUserMatchPrediction(userViberId, match._id);
 
     if (existPrediction) {
       if (!predictStage) {
@@ -69,7 +73,7 @@ export class PredictionService extends AbstractService<IPrediction> implements I
         new Prediction({
           _id: new ObjectId(),
           userViberId,
-          matchId,
+          matchId: match._id,
           score: {
             regularTime: {
               homeTeam: matchTeamType === MatchTeamType.HOME_TEAM ? score : null,
@@ -92,6 +96,9 @@ export class PredictionService extends AbstractService<IPrediction> implements I
               awayTeam: null,
             },
           },
+          matchStage: match.stage,
+          matchStatus: match.status,
+          userPredictScore: null,
         }),
       );
     }
@@ -102,5 +109,11 @@ export class PredictionService extends AbstractService<IPrediction> implements I
     matchesIds: ObjectId[],
   ): Promise<Record<string, IPrediction>> {
     return this.dao.getPredictionsByMatchesIds(userViberId, matchesIds);
+  }
+
+  async update(competitionWithMatches: ICompetition): Promise<void> {
+    if (!competitionWithMatches || !competitionWithMatches.matches) return;
+
+    // const predictions
   }
 }

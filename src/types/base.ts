@@ -36,6 +36,7 @@ export enum EventType {
   GET_SEASON = 'get_season',
   GET_MATCHES = 'get_matches',
   GET_TEAMS = 'get_teams',
+  UPDATE_USER_PREDICTION = 'update_user_prediction',
 }
 
 export interface IScheduler {

@@ -86,8 +86,6 @@ export const EMPTY_SCHEDULED_MATCHES = 'Упс..., пока нет заплан�
 
 export type Stages = ChampionsLeagueStages | EuroCupStages | WorldCupStages;
 
-export type LeagueCodesStage = Record<string, Stages>;
-
 export const LeagueCodesStageMapper = {
   [LeagueCodes.CL]: ChampionsLeagueStages,
   // TODO добавить этапы для EC и WC

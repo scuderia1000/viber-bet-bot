@@ -4,6 +4,7 @@ import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
 import { ITeamShort } from '../teams/TeamShort';
 import CommonObject from '../common/CommonObject';
+import { Stages } from '../../const';
 
 export interface IScoreResult {
   homeTeam: number | null;
@@ -27,10 +28,7 @@ interface IBaseMatch {
   utcDate: Date;
   status: MatchStatus;
   matchday: string | null;
-  // TODO как узнать какие есть этапы?
-  //  можно по завершению турнира 2021-05-29 достать из матчей все уникальные stage
-  //  и запихать в enum
-  stage: string;
+  stage: Stages;
   group: string | null; // TODO тоже самое
   lastUpdated: DateTimeISOString;
   score: IScore;
@@ -56,7 +54,7 @@ export class Match extends ApiEntity implements IMatch {
 
   season: ISeason;
 
-  stage: string;
+  stage: Stages;
 
   status: MatchStatus;
 

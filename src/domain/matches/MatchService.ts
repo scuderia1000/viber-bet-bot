@@ -11,7 +11,7 @@ import { MatchStatus } from '../types/Base';
 import { ISeasonService } from '../seasons/SeasonService';
 import { ITeamShort, TeamShort } from '../teams/TeamShort';
 import { ITeamService } from '../teams/TeamService';
-import { API, LeagueCodes } from '../../const';
+import { API, LeagueCodes, Stages } from '../../const';
 
 type PagedMatches = { matches: IMatch[]; totalMatchesCount: number };
 
@@ -20,7 +20,7 @@ export interface IMatchService extends IService<IMatch> {
   getMatchTeamByType(matchId: ObjectId, matchTeamType: MatchTeamType): Promise<ITeamShort | null>;
   isMatchBegan(matchId: ObjectId): Promise<boolean>;
   getMatchesByIds(matchIds: ObjectId[]): Promise<IMatch[]>;
-  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]>;
+  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: Stages): Promise<IMatch[]>;
   getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]>;
   getPagedScheduledMatches(competitionCode: LeagueCodes, pageNumber: number): Promise<PagedMatches>;
 }
@@ -59,7 +59,6 @@ export class MatchService
     const currentSeason = await this.seasonService.getById(
       competitionWithMatches.matches[0].season.id,
     );
-
     if (!currentSeason) return;
 
     const allTeams = await this.teamService.getAllTeamsShort();
@@ -141,7 +140,7 @@ export class MatchService
     return this.getAllByIds(matchIds);
   }
 
-  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]> {
+  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: Stages): Promise<IMatch[]> {
     return this.dao.matchesBySeasonAndStage(seasonMongoId, stage);
   }
 

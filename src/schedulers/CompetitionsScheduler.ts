@@ -104,6 +104,7 @@ export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler
       if (!competitionWithMatches || !competitionWithMatches.matches) return;
 
       events.notify(EventType.GET_MATCHES, competitionWithMatches);
+      events.notify(EventType.UPDATE_USER_PREDICTION, competitionWithMatches);
     };
   }
 

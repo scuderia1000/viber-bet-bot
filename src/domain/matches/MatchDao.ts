@@ -4,13 +4,13 @@ import { IMatch, Match } from './Match';
 import CRUDDao from '../common/CRUDDao';
 import { MatchStatus } from '../types/Base';
 import { ITeamShort, TeamShort } from '../teams/TeamShort';
-import { MAX_MATCH_COUNT_PER_PAGE } from '../../const';
+import { MAX_MATCH_COUNT_PER_PAGE, Stages } from '../../const';
 
 export interface IMatchDao extends ICommonDao<IMatch> {
   matchesBySeasonId(seasonId?: number): Promise<Record<number, IMatch>>;
   seasonMatchesByStatus(seasonId: ObjectId, status: MatchStatus): Promise<IMatch[]>;
   matchTeamByType(matchId: ObjectId, matchTeamType: string): Promise<ITeamShort | null>;
-  matchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]>;
+  matchesBySeasonAndStage(seasonMongoId: ObjectId, stage: Stages): Promise<IMatch[]>;
   seasonMatchesByStatusPaged(
     seasonId: ObjectId,
     status: MatchStatus,
@@ -114,7 +114,7 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
     return team;
   }
 
-  async matchesBySeasonAndStage(seasonMongoId: ObjectId, stage: string): Promise<IMatch[]> {
+  async matchesBySeasonAndStage(seasonMongoId: ObjectId, stage: Stages): Promise<IMatch[]> {
     const query = { 'season._id': seasonMongoId, stage };
     const cursor = this.collection.find(query);
     const matches = await this.toEntityArray(cursor);

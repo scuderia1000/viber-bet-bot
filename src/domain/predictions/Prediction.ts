@@ -1,7 +1,8 @@
 import { ObjectId } from 'mongodb';
-import { IMongoId } from '../types/Base';
+import { IMongoId, MatchStatus } from '../types/Base';
 import Entity from '../common/Entity';
 import Collection from '../../annotation/Collection';
+import { Stages } from '../../const';
 
 export interface IUserPrediction {
   homeTeam: number | null;
@@ -27,6 +28,9 @@ export interface IBasePrediction {
   userViberId: string;
   matchId: ObjectId;
   score: IUserPredictScore;
+  matchStatus: MatchStatus;
+  matchStage: Stages;
+  userPredictScore: number | null;
 }
 
 export type IPrediction = IBasePrediction & IMongoId;
@@ -39,10 +43,19 @@ export class Prediction extends Entity implements IPrediction {
 
   score: IUserPredictScore;
 
+  matchStage: Stages;
+
+  matchStatus: MatchStatus;
+
+  userPredictScore: number | null;
+
   constructor(props: IPrediction) {
     super(props._id);
     this.matchId = props.matchId;
     this.userViberId = props.userViberId;
     this.score = props.score;
+    this.matchStage = props.matchStage;
+    this.matchStatus = props.matchStatus;
+    this.userPredictScore = props.userPredictScore;
   }
 }

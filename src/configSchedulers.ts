@@ -13,11 +13,13 @@ const configSchedulers = (modules: IModules): void => {
   const { service: seasonService } = modules.seasonsModule;
   const { service: matchService } = modules.matchModule;
   const { service: teamService } = modules.teamModule;
+  const { service: predictionService } = modules.predictionModule;
   const competitionScheduler = new CompetitionsScheduler(eventManager, championsLeague);
   competitionScheduler.events.subscribe(EventType.GET_COMPETITION, competitionService);
   competitionScheduler.events.subscribe(EventType.GET_SEASON, seasonService);
   competitionScheduler.events.subscribe(EventType.GET_MATCHES, matchService);
   competitionScheduler.events.subscribe(EventType.GET_TEAMS, teamService);
+  competitionScheduler.events.subscribe(EventType.UPDATE_USER_PREDICTION, predictionService);
 
   competitionScheduler.run();
 };

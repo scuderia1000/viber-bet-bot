@@ -235,11 +235,14 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     // на какую команду (хозяева или гости)
     const matchTeamType: MatchTeamType = (searchParams.get('matchTeamType') ??
       MatchTeamType.HOME_TEAM) as MatchTeamType;
+
+    const match = await modules.matchModule.service.getByMongoId(matchId);
+    if (!match) return;
     // записываем данные о счете
     const score = searchParams.get('score') ?? '';
     await modules.predictionModule.service.saveUserPredictScore(
       response.userProfile.id,
-      matchId,
+      match,
       matchTeamType,
       +score,
       stage,
