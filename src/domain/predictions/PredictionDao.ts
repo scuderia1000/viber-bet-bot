@@ -1,15 +1,16 @@
-import { Db, ObjectId } from 'mongodb';
+import { Cursor, Db, ObjectId } from 'mongodb';
 import { ICommonDao } from '../common/ICommonDao';
 import { IPrediction, Prediction } from './Prediction';
 import CRUDDao from '../common/CRUDDao';
 
 export interface IPredictionDao extends ICommonDao<IPrediction> {
-  getPredictionsByUser(userViberId: string): Promise<Record<string, IPrediction>>;
-  getUserMatchPrediction(userViberId: string, matchId: ObjectId): Promise<IPrediction | null>;
-  getPredictionsByMatchesIds(
+  predictionsByUser(userViberId: string): Promise<Record<string, IPrediction>>;
+  userMatchPrediction(userViberId: string, matchId: ObjectId): Promise<IPrediction | null>;
+  predictionsByMatchesIds(
     userViberId: string,
     matchesIds: ObjectId[],
   ): Promise<Record<string, IPrediction>>;
+  emptyUsersPredictionsScore(): Promise<Record<string, IPrediction>>;
 }
 
 export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDao {
@@ -17,7 +18,7 @@ export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDa
     super(db, Prediction);
   }
 
-  async getPredictionsByUser(userViberId: string): Promise<Record<string, IPrediction>> {
+  async predictionsByUser(userViberId: string): Promise<Record<string, IPrediction>> {
     const query = { userViberId };
     const cursor = this.collection.find(query);
     const result: Record<string, IPrediction> = {};
@@ -31,10 +32,7 @@ export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDa
     return result;
   }
 
-  async getUserMatchPrediction(
-    userViberId: string,
-    matchId: ObjectId,
-  ): Promise<IPrediction | null> {
+  async userMatchPrediction(userViberId: string, matchId: ObjectId): Promise<IPrediction | null> {
     const query = { userViberId, matchId };
     let result = null;
     const prediction = await this.collection.findOne(query);
@@ -44,12 +42,26 @@ export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDa
     return result;
   }
 
-  async getPredictionsByMatchesIds(
+  async predictionsByMatchesIds(
     userViberId: string,
     matchesIds: ObjectId[],
   ): Promise<Record<string, IPrediction>> {
     const query = { userViberId, matchId: { $in: matchesIds } };
     const cursor = this.collection.find(query);
+    const result = await this.getPredictionsMap(cursor);
+
+    return result;
+  }
+
+  async emptyUsersPredictionsScore(): Promise<Record<string, IPrediction>> {
+    const query = { userPredictScore: null };
+    const cursor = this.collection.find(query);
+    const result = await this.getPredictionsMap(cursor);
+
+    return result;
+  }
+
+  async getPredictionsMap(cursor: Cursor): Promise<Record<string, IPrediction>> {
     const result: Record<string, IPrediction> = {};
 
     await cursor.forEach((document) => {

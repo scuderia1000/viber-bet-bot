@@ -15,7 +15,7 @@ import {
   LeagueCodesStageMapper,
   MATCH_BEGAN_TEXT,
   predictNotFoundMessage,
-  SELECT_LEAGUE_TEXT_MESSAGE,
+  SELECT_LEAGUE_TEXT_MESSAGE, Stages,
   VIBER_MIN_API_LEVEL,
 } from '../const';
 import { IModules } from '../domain';
@@ -178,10 +178,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
 
     const leagueCode = user.selectedLeagueCode ?? LeagueCodes.CL;
     const stageText = searchParams.get('stage') ?? '';
-    const leagueStages = LeagueCodesStageMapper[leagueCode];
-    const stageIndex = Object.values(leagueStages).indexOf(stageText);
-    const leagueFinalPartIndex = getFinalPartOfLeagueIndex(leagueCode);
-    const isFinalPart = stageIndex >= leagueFinalPartIndex;
+    const isFinalPart = modules.matchModule.service.isFinalPart(leagueCode, stageText as Stages);
 
     // проверяем, что матч еще не начался
     const isMatchBegan = await modules.matchModule.service.isMatchBegan(matchId);

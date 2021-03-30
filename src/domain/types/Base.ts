@@ -45,7 +45,3 @@ export enum PlayerRole {
   PLAYER = 'PLAYER',
   COACH = 'COACH',
 }
-
-export interface ICollectionName {
-  collectionName: string;
-}

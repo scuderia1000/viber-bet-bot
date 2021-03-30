@@ -8,6 +8,10 @@ import getMatchModule, { IMatchModule } from './matches';
 import getPlayerModule, { IPlayerModule } from './players';
 import getRoleModule, { IRoleModule } from './roles';
 import getPredictionModule, { IPredictionModule } from './predictions';
+import { CompetitionService } from './competitions/CompetitionService';
+import { SeasonService } from './seasons/SeasonService';
+import { TeamService } from './teams/TeamService';
+import { PredictionService } from './predictions/PredictionService';
 
 export interface IModules {
   userModule: IUserModule;
@@ -21,16 +25,31 @@ export interface IModules {
   predictionModule: IPredictionModule;
 }
 
-const getModules = (db: Db): IModules => ({
-  userModule: getUserModule(db),
-  competitionModule: getCompetitionModule(db),
-  seasonsModule: getSeasonModule(db),
-  areaModule: getAreaModule(db),
-  teamModule: getTeamModule(db),
-  matchModule: getMatchModule(db),
-  playerModule: getPlayerModule(db),
-  roleModule: getRoleModule(db),
-  predictionModule: getPredictionModule(db),
-});
+const getModules = (db: Db): IModules => {
+  const roleModule = getRoleModule(db);
+  const userModule = getUserModule(db, roleModule.service);
+  const competitionModule = getCompetitionModule(db);
+  const seasonsModule = getSeasonModule(db);
+  const teamModule = getTeamModule(db);
+
+  const matchModule = getMatchModule(db, {
+    competitionService: competitionModule.service,
+    seasonService: seasonsModule.service,
+    teamService: teamModule.service,
+  });
+  const predictionModule = getPredictionModule(db, matchModule.service);
+
+  return {
+    userModule,
+    competitionModule,
+    seasonsModule,
+    areaModule: getAreaModule(db),
+    teamModule,
+    matchModule,
+    playerModule: getPlayerModule(db),
+    roleModule,
+    predictionModule,
+  };
+};
 
 export default getModules;

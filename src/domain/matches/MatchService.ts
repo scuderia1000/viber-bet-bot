@@ -11,7 +11,7 @@ import { MatchStatus } from '../types/Base';
 import { ISeasonService } from '../seasons/SeasonService';
 import { ITeamShort, TeamShort } from '../teams/TeamShort';
 import { ITeamService } from '../teams/TeamService';
-import { API, LeagueCodes, Stages } from '../../const';
+import { API, getFinalPartOfLeagueIndex, LeagueCodes, LeagueCodesStageMapper, Stages } from '../../const';
 
 type PagedMatches = { matches: IMatch[]; totalMatchesCount: number };
 
@@ -23,6 +23,7 @@ export interface IMatchService extends IService<IMatch> {
   getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: Stages): Promise<IMatch[]>;
   getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]>;
   getPagedScheduledMatches(competitionCode: LeagueCodes, pageNumber: number): Promise<PagedMatches>;
+  isFinalPart(leagueCode: LeagueCodes, matchStage: Stages): boolean;
 }
 
 export class MatchService
@@ -62,16 +63,14 @@ export class MatchService
     if (!currentSeason) return;
 
     const allTeams = await this.teamService.getAllTeamsShort();
-    const matches = await Promise.all(
-      competitionWithMatches.matches.map(
-        async (match) =>
-          new Match({
-            ...match,
-            season: currentSeason,
-            homeTeam: allTeams[match.homeTeam.id] ?? new TeamShort(match.homeTeam),
-            awayTeam: allTeams[match.awayTeam.id] ?? new TeamShort(match.awayTeam),
-          }),
-      ),
+    const matches = competitionWithMatches.matches.map(
+      (match) =>
+        new Match({
+          ...match,
+          season: currentSeason,
+          homeTeam: allTeams[match.homeTeam.id] ?? new TeamShort(match.homeTeam),
+          awayTeam: allTeams[match.awayTeam.id] ?? new TeamShort(match.awayTeam),
+        }),
     );
     const existMatches = await this.dao.matchesBySeasonId(currentSeason.id);
     await this.updateEntities(existMatches, matches);
@@ -152,5 +151,13 @@ export class MatchService
     const currentSeasonId = competition.currentSeason._id;
     const matches = await this.getMatchesBySeasonAndStage(currentSeasonId, stage);
     return matches.map((match) => match._id);
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  isFinalPart(leagueCode: LeagueCodes, matchStage: Stages): boolean {
+    const leagueStages = LeagueCodesStageMapper[leagueCode];
+    const stageIndex = Object.values(leagueStages).indexOf(matchStage);
+    const leagueFinalPartIndex = getFinalPartOfLeagueIndex(leagueCode);
+    return stageIndex >= leagueFinalPartIndex;
   }
 }
