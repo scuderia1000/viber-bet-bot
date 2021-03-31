@@ -4,6 +4,7 @@ import logger from '../../util/logger';
 import { API } from '../../const';
 import { ICompetition } from '../../domain/competitions/Competition';
 import { ITeam } from '../../domain/teams/Team';
+import { IMatch } from '../../domain/matches/Match';
 
 const prefix = API.FOOTBALL_DATA_ORG.PREFIX;
 // List one particular competition.
@@ -53,9 +54,14 @@ const request = (options: RequestOptions): Promise<any> => {
   });
 };
 
+export interface ICompetitionWithMatches {
+  competition: Pick<ICompetition, 'id' | 'area' | 'name' | 'code'>;
+  matches: IMatch[];
+}
+
 export interface IFootballDataOrgApi {
   getCompetition(code: string): Promise<ICompetition>;
-  getCompetitionMatches(code: string): Promise<ICompetition>;
+  getCompetitionMatches(code: string): Promise<ICompetitionWithMatches>;
   getCompetitionTeams(code: string): Promise<ITeam>;
 }
 
@@ -76,7 +82,7 @@ const getApiFootballDataOrg = (): IFootballDataOrgApi => {
     return responseData;
   };
 
-  const getCompetitionMatches = async (code: string): Promise<ICompetition> => {
+  const getCompetitionMatches = async (code: string): Promise<ICompetitionWithMatches> => {
     const responseData = await getRequest(`/${prefix}/${competitions}/${code}/${matches}/`);
     return responseData;
   };

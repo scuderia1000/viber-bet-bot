@@ -10,7 +10,7 @@ export interface IPredictionDao extends ICommonDao<IPrediction> {
     userViberId: string,
     matchesIds: ObjectId[],
   ): Promise<Record<string, IPrediction>>;
-  emptyUsersPredictionsScore(): Promise<Record<string, IPrediction>>;
+  emptyUsersPredictionsScore(): Promise<IPrediction[]>;
 }
 
 export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDao {
@@ -53,10 +53,10 @@ export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDa
     return result;
   }
 
-  async emptyUsersPredictionsScore(): Promise<Record<string, IPrediction>> {
+  async emptyUsersPredictionsScore(): Promise<IPrediction[]> {
     const query = { userPredictScore: null };
     const cursor = this.collection.find(query);
-    const result = await this.getPredictionsMap(cursor);
+    const result = await cursor.toArray();
 
     return result;
   }

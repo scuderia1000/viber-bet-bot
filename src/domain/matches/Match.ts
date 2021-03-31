@@ -12,8 +12,8 @@ export interface IScoreResult {
 }
 
 export interface IScore {
-  winner: Winner;
-  duration: string;
+  winner?: Winner;
+  duration?: string;
   fullTime: IScoreResult;
   halfTime: IScoreResult;
   extraTime: IScoreResult;

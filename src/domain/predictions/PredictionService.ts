@@ -5,11 +5,11 @@ import { IPredictionDao } from './PredictionDao';
 import { ICommonDao } from '../common/ICommonDao';
 import { IService } from '../common/IService';
 import { ICompetitionListeners, MatchTeamType } from '../../types/base';
-import { FinalPartPredictionStages, LeagueCodes } from '../../const';
-import { IMatch } from '../matches/Match';
-import { ICompetition } from '../competitions/Competition';
+import { FinalPartPredictionStages, LeagueCodes, TeamType } from '../../const';
+import { IMatch, IScore } from '../matches/Match';
 import { IMatchService } from '../matches/MatchService';
 import { MatchStatus } from '../types/Base';
+import { ICompetitionWithMatches } from '../../api/football-data-org';
 
 export interface IPredictionService extends IService<IPrediction> {
   getPredictionsByUser(userViberId: string): Promise<Record<string, IPrediction>>;
@@ -24,6 +24,22 @@ export interface IPredictionService extends IService<IPrediction> {
     userViberId: string,
     matchesIds: ObjectId[],
   ): Promise<Record<string, IPrediction>>;
+}
+
+interface MatchStageScore {
+  [TeamType.HOME_TEAM]: number;
+  [TeamType.AWAY_TEAM]: number;
+}
+
+interface IPredictMatchResult {
+  regularTime: MatchStageScore;
+  isDrawRegularTime: boolean;
+  extraTime?: MatchStageScore;
+  penalties?: MatchStageScore;
+  isDrawExtraTime?: boolean;
+  whoWonRegularTime?: TeamType;
+  whoWonExtraTime?: TeamType;
+  whoWonPenalties?: TeamType;
 }
 
 export class PredictionService
@@ -116,17 +132,21 @@ export class PredictionService
     return this.dao.predictionsByMatchesIds(userViberId, matchesIds);
   }
 
-  async update(competitionWithMatches: ICompetition): Promise<void> {
+  async update(competitionWithMatches: ICompetitionWithMatches): Promise<void> {
     if (!competitionWithMatches || !competitionWithMatches.matches) return;
 
     // 0) достаем прогнозы с userPredictScore = null
     const predictions = await this.dao.emptyUsersPredictionsScore();
-    const predictMatchesIds = Object.keys(predictions).map((matchId) => new ObjectId(matchId));
+    // уникальные id матчей из прогнозов
+    const predictMatchesIds = new Set<ObjectId>();
+    predictions.forEach((prediction) => predictMatchesIds.add(prediction.matchId));
     // 1) достаем матчи из 0), чтобы получить viberId,
     // т.к. в матчах из api нет id из нашей базы, которые в predictMatchesIds,
     // поэтому будем сравнивать матчи по viberId
-    const predictMatches = await this.matchService.getMatchesByIds(predictMatchesIds);
-    const matchesViberIdMap: Record<number, IMatch> = predictMatches.reduce((acc, match) => {
+    const predictMatches = await this.matchService.getMatchesByIds(
+      Array.from(predictMatchesIds.values()),
+    );
+    const predictMatchesViberIdMap: Record<number, IMatch> = predictMatches.reduce((acc, match) => {
       if (!acc[match.id]) {
         return {
           ...acc,
@@ -140,7 +160,7 @@ export class PredictionService
       number,
       IMatch
     > = competitionWithMatches.matches.reduce((acc, match) => {
-      if (matchesViberIdMap[match.id] && match.status === MatchStatus.FINISHED) {
+      if (predictMatchesViberIdMap[match.id] && match.status === MatchStatus.FINISHED) {
         return {
           ...acc,
           [match.id]: match,
@@ -148,59 +168,167 @@ export class PredictionService
       }
       return { ...acc };
     }, {});
-    // 3) сравниваем матч из 1) с матчем из 2) по статусу
-    // если статус у 1) отличается от 2), берем счет матча
-    predictMatches.forEach((match) => {
+    // считаем результаты прогнозов на матчи
+    const predictMatchesMap: Record<string, IMatch> = predictMatches.reduce(
+      (acc, match) => ({
+        ...acc,
+        [match._id.toHexString()]: match,
+      }),
+      {} as Record<number, IMatch>,
+    );
+    predictions.forEach((predict) => {
+      const matchToPredict = predictMatchesMap[predict.matchId.toHexString()];
       const isFinalPartOfCompetition = this.matchService.isFinalPart(
-        competitionWithMatches.code as LeagueCodes,
-        match.stage,
+        competitionWithMatches.competition.code as LeagueCodes,
+        predict.matchStage,
       );
-      let userPredictScore = 0;
-      // если финальная часть турнира, то считаем по сложному
-      if (isFinalPartOfCompetition) {
-        const updatedMatch = competitionFinishedMatchesByPrediction[match.id];
-        const updatedMatchScore = updatedMatch.score;
-        // считаем счет основного времени для homeTeam и awayTeam
-        const matchRegularTime = {
-          homeTeam:
-            Number(updatedMatchScore.fullTime.homeTeam) -
-            (Number(updatedMatchScore.extraTime.homeTeam) +
-              Number(updatedMatchScore.penalties.homeTeam)),
-          awayTeam:
-            Number(updatedMatchScore.fullTime.awayTeam) -
-            (Number(updatedMatchScore.extraTime.awayTeam) +
-              Number(updatedMatchScore.penalties.awayTeam)),
-        };
-        const matchPredictScore = predictions[match._id.toHexString()].score;
-        if (
-          Number(matchPredictScore.regularTime.homeTeam) === matchRegularTime.homeTeam &&
-          Number(matchPredictScore.regularTime.awayTeam) === matchRegularTime.awayTeam
-        ) {
-          userPredictScore += 6;
-        } else {
-          const isDrawRegularTime = matchRegularTime.homeTeam === matchRegularTime.awayTeam;
-          const whoWonRegularTime =
-            !isDrawRegularTime && matchRegularTime.homeTeam > matchRegularTime.awayTeam
-              ? 'homeTeam'
-              : 'awayTeam';
-          const isPredictDrawRegularTime =
-            matchPredictScore.regularTime.homeTeam === matchPredictScore.regularTime.awayTeam;
-          const predictWhoWonRegularTime =
-            !isPredictDrawRegularTime &&
-            Number(matchPredictScore.regularTime.homeTeam) >
-              Number(matchPredictScore.regularTime.awayTeam)
-              ? 'homeTeam'
-              : 'awayTeam';
-          if (
-            (isDrawRegularTime && isPredictDrawRegularTime) ||
-            whoWonRegularTime === predictWhoWonRegularTime
-          ) {
-            userPredictScore += 2;
-          }
-        }
-      } else {
-        // иначе по простому
+      const updatedMatch = competitionFinishedMatchesByPrediction[matchToPredict.id];
+      if (updatedMatch) {
+        // eslint-disable-next-line no-param-reassign
+        predict.userPredictScore = this.getUserScore(
+          updatedMatch.score,
+          predict.score as IScore,
+          isFinalPartOfCompetition,
+        );
       }
     });
+    await this.dao.replaceMany(predictions);
+  }
+
+  getUserScore(
+    matchScore: IScore,
+    predictScore: IScore,
+    isFinalPartOfCompetition: boolean,
+  ): number {
+    let userPredictScore = 0;
+    const matchResult = this.getMatchResults(matchScore);
+    const predictMatchResult = this.getMatchResults(predictScore);
+    // если финальная часть турнира, то считаем по сложному
+    if (isFinalPartOfCompetition) {
+      // считаем счет основного времени для homeTeam и awayTeam
+      // Основное время
+      if (
+        predictMatchResult.regularTime.homeTeam === matchResult.regularTime.homeTeam &&
+        predictMatchResult.regularTime.awayTeam === matchResult.regularTime.awayTeam
+      ) {
+        // угадан счет
+        userPredictScore += 6;
+      } else if (
+        (predictMatchResult.isDrawRegularTime && matchResult.isDrawRegularTime) ||
+        predictMatchResult.whoWonRegularTime === matchResult.whoWonRegularTime
+      ) {
+        // угадан исход
+        userPredictScore += 2;
+      }
+      // Дополнительное время
+      if (predictMatchResult.extraTime && matchResult.extraTime) {
+        if (
+          predictMatchResult.extraTime.homeTeam === matchResult.extraTime.homeTeam &&
+          predictMatchResult.extraTime.awayTeam === matchResult.extraTime.awayTeam
+        ) {
+          // угадан счет
+          userPredictScore += 3;
+        } else if (
+          (predictMatchResult.isDrawExtraTime && matchResult.isDrawExtraTime) ||
+          predictMatchResult.whoWonExtraTime === matchResult.whoWonExtraTime
+        ) {
+          // угадан исход
+          userPredictScore += 1;
+        }
+      }
+      // Серия пенальти
+      if (predictMatchResult.penalties && matchResult.penalties) {
+        if (
+          predictMatchResult.penalties.homeTeam === matchResult.penalties.homeTeam &&
+          predictMatchResult.penalties.awayTeam === matchResult.penalties.awayTeam
+        ) {
+          // угадан счет
+          userPredictScore += 3;
+        } else if (predictMatchResult.whoWonPenalties === matchResult.whoWonPenalties) {
+          // угадан исход
+          userPredictScore += 1;
+        }
+      }
+    }
+    // иначе по простому
+    // Основное время
+    else if (
+      predictMatchResult.regularTime.homeTeam === matchResult.regularTime.homeTeam &&
+      predictMatchResult.regularTime.awayTeam === matchResult.regularTime.awayTeam
+    ) {
+      // угадан счет
+      userPredictScore += 3;
+    } else if (
+      (predictMatchResult.isDrawRegularTime && matchResult.isDrawRegularTime) ||
+      predictMatchResult.whoWonRegularTime === matchResult.whoWonRegularTime
+    ) {
+      // угадан исход
+      userPredictScore += 1;
+    }
+    return userPredictScore;
+  }
+
+  // eslint-disable-next-line class-methods-use-this
+  getMatchResults(score: IScore): IPredictMatchResult {
+    const regularTimeScore = {
+      homeTeam:
+        Number(score.fullTime.homeTeam) -
+        (Number(score.extraTime.homeTeam) + Number(score.penalties.homeTeam)),
+      awayTeam:
+        Number(score.fullTime.awayTeam) -
+        (Number(score.extraTime.awayTeam) + Number(score.penalties.awayTeam)),
+    };
+    let extraTimeScore;
+    let penaltiesScore;
+    let whoWonRegularTime;
+    let whoWonExtraTime;
+    let whoWonPenalties;
+    let isDrawRegularTime = false;
+    let isDrawExtraTime;
+    // Основное время
+    if (regularTimeScore.homeTeam > regularTimeScore.awayTeam) {
+      whoWonRegularTime = TeamType.HOME_TEAM;
+    } else if (regularTimeScore.homeTeam < regularTimeScore.awayTeam) {
+      whoWonRegularTime = TeamType.AWAY_TEAM;
+    } else {
+      isDrawRegularTime = true;
+    }
+    // Дополнительное время
+    if (score.extraTime.homeTeam !== null) {
+      extraTimeScore = {
+        homeTeam: Number(score.extraTime.homeTeam),
+        awayTeam: Number(score.extraTime.awayTeam),
+      };
+      if (Number(score.extraTime.homeTeam) > Number(score.extraTime.awayTeam)) {
+        whoWonExtraTime = TeamType.HOME_TEAM;
+      } else if (Number(score.extraTime.homeTeam) < Number(score.extraTime.awayTeam)) {
+        whoWonExtraTime = TeamType.AWAY_TEAM;
+      } else {
+        isDrawExtraTime = true;
+      }
+    }
+    // Серия пенальти
+    if (score.penalties.homeTeam !== null) {
+      penaltiesScore = {
+        homeTeam: Number(score.penalties.homeTeam),
+        awayTeam: Number(score.penalties.awayTeam),
+      };
+      if (Number(score.penalties.homeTeam) > Number(score.penalties.awayTeam)) {
+        whoWonPenalties = TeamType.HOME_TEAM;
+      } else if (Number(score.penalties.homeTeam) < Number(score.penalties.awayTeam)) {
+        whoWonPenalties = TeamType.AWAY_TEAM;
+      }
+    }
+
+    return {
+      regularTime: regularTimeScore,
+      extraTime: extraTimeScore,
+      penalties: penaltiesScore,
+      isDrawRegularTime,
+      isDrawExtraTime,
+      whoWonRegularTime,
+      whoWonExtraTime,
+      whoWonPenalties,
+    };
   }
 }

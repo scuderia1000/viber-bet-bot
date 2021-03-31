@@ -128,3 +128,8 @@ export enum FinalPartPredictionStages {
   EXTRA_TIME = 'extraTime',
   PENALTIES = 'penalties',
 }
+
+export enum TeamType {
+  HOME_TEAM = 'homeTeam',
+  AWAY_TEAM = 'awayTeam',
+}
