@@ -146,15 +146,13 @@ export class PredictionService
     const predictMatches = await this.matchService.getMatchesByIds(
       Array.from(predictMatchesIds.values()),
     );
-    const predictMatchesViberIdMap: Record<number, IMatch> = predictMatches.reduce((acc, match) => {
-      if (!acc[match.id]) {
-        return {
-          ...acc,
-          [match.id]: match,
-        };
-      }
-      return { ...acc };
-    }, {} as Record<number, IMatch>);
+    const predictMatchesViberIdMap: Record<number, IMatch> = predictMatches.reduce(
+      (acc, match) => ({
+        ...acc,
+        [match.id]: match,
+      }),
+      {},
+    );
     // 2) фильтруем матчи из competitionWithMatches по статусу MatchStatus.FINISHED и по viberId из predictions
     const competitionFinishedMatchesByPrediction: Record<
       number,
