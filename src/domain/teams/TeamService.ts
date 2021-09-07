@@ -1,5 +1,7 @@
 import svg2img from 'svg2img';
-import { BlobServiceClient } from '@azure/storage-blob';
+import common = require('oci-common');
+// eslint-disable-next-line import/no-extraneous-dependencies
+import { ObjectStorageClient, UploadManager } from 'oci-objectstorage';
 import { IService } from '../common/IService';
 import { ITeam, Team } from './Team';
 import AbstractService from '../common/AbstractService';
@@ -17,24 +19,23 @@ export interface ITeamService extends IService<ITeam> {
 export class TeamService
   extends AbstractService<ITeam>
   implements ITeamService, ICompetitionListeners {
-  private AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_STORAGE_CONNECTION_STRING || '';
+  private OCI_BUCKET_NAME = process.env.OCI_BUCKET_NAME || '';
 
-  private AZURE_STORAGE_CONTAINER_NAME = process.env.AZURE_STORAGE_CONTAINER_NAME || '';
+  private OCI_BUCKET_NAMESPACE = process.env.OCI_BUCKET_NAMESPACE || '';
 
-  private AZURE_STORAGE_CONTAINER_PREFIX = process.env.AZURE_STORAGE_CONTAINER_PREFIX || '';
+  private OCI_BUCKET_PREFIX = process.env.OCI_BUCKET_PREFIX || '';
 
-  // Get a reference to a container
-  private containerClient;
+  // Oracle Cloud Infrastructure
+  private uploadManager: UploadManager;
 
   private readonly dao: ITeamDao;
 
   constructor(dao: ITeamDao) {
     super();
     this.dao = dao;
-    const blobServiceClient = BlobServiceClient.fromConnectionString(
-      this.AZURE_STORAGE_CONNECTION_STRING,
-    );
-    this.containerClient = blobServiceClient.getContainerClient(this.AZURE_STORAGE_CONTAINER_NAME);
+    const provider: common.ConfigFileAuthenticationDetailsProvider = new common.ConfigFileAuthenticationDetailsProvider();
+    const client = new ObjectStorageClient({ authenticationDetailsProvider: provider });
+    this.uploadManager = new UploadManager(client, { enforceMD5: true });
   }
 
   getDao(): ICommonDao<ITeam> {
@@ -67,12 +68,6 @@ export class TeamService
         if (currentExistTeam?.crestImageUrl) {
           team.crestImageUrl = currentExistTeam.crestImageUrl;
         } else if (team.crestUrl) {
-          if (
-            team.crestUrl ===
-            'https://upload.wikimedia.org/wikipedia/commons/b/b5/Legia_Warszawa.svg'
-          ) {
-            team.crestUrl = 'https://upload.wikimedia.org/wikipedia/de/b/b5/Legia_Warszawa.svg';
-          }
           const imageName = `${team.crestUrl.substring(
             team.crestUrl.lastIndexOf('/') + 1,
             team.crestUrl.lastIndexOf('.'),
@@ -94,7 +89,7 @@ export class TeamService
     await this.updateEntities(existTeams, teams);
   }
 
-  private convertSvg(svgUrl: string): Promise<ArrayBufferView> {
+  private convertSvg(svgUrl: string): Promise<Uint8Array> {
     return new Promise((resolve, reject) => {
       svg2img(svgUrl, (error, buffer) => {
         if (error) {
@@ -105,15 +100,29 @@ export class TeamService
     });
   }
 
-  private async uploadImage(imageName: string, data: ArrayBufferView): Promise<string | undefined> {
-    const blockBlobClient = this.containerClient.getBlockBlobClient(imageName);
+  // Oracle upload
+  private async uploadImage(imageName: string, data: Uint8Array): Promise<string | undefined> {
     let imageUrl = '';
     try {
-      const uploadBlobResponse = await blockBlobClient.uploadData(data);
-      logger.debug('Blob was uploaded successfully. requestId: %s', uploadBlobResponse.requestId);
+      const callback = (res: any) => {
+        logger.debug('Blob was uploaded successfully. Response: %s', res);
 
-      imageUrl = `${this.AZURE_STORAGE_CONTAINER_PREFIX}/${this.AZURE_STORAGE_CONTAINER_NAME}/${imageName}`;
-    } catch (err) {
+        imageUrl = `${this.OCI_BUCKET_PREFIX}${imageName}`;
+      };
+      await this.uploadManager.upload(
+        {
+          content: {
+            stream: data,
+          },
+          requestDetails: {
+            namespaceName: this.OCI_BUCKET_NAMESPACE,
+            bucketName: this.OCI_BUCKET_NAME,
+            objectName: imageName,
+          },
+        },
+        callback,
+      );
+    } catch (err: any) {
       logger.error(
         'uploadFile failed, requestId - %s, statusCode - %n, errorCode - %n',
         err.details.requestId,
