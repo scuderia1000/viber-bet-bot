@@ -29,7 +29,7 @@ const getModules = (db: Db): IModules => {
   const roleModule = getRoleModule(db);
   const userModule = getUserModule(db, roleModule.service);
   const competitionModule = getCompetitionModule(db);
-  const seasonsModule = getSeasonModule(db);
+  const seasonsModule = getSeasonModule(db, competitionModule.service);
   const teamModule = getTeamModule(db);
 
   const matchModule = getMatchModule(db, {

@@ -190,7 +190,9 @@ export class PredictionService
         );
       }
     });
-    await this.dao.replaceMany(predictions);
+    if (predictions.length) {
+      await this.dao.replaceMany(predictions);
+    }
   }
 
   getUserScore(

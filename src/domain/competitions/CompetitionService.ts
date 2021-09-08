@@ -27,6 +27,9 @@ export class CompetitionService
     if (!existCompetition) {
       await this.save(competition);
     } else if (!competition.equals(existCompetition)) {
+      // заменяем существующую запись, т.к. меняется только сезон, а соревнование остается старым
+      // eslint-disable-next-line no-param-reassign
+      competition._id = existCompetition._id;
       await this.updateEntity(competition);
     }
   }

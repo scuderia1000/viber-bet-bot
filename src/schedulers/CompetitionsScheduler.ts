@@ -6,9 +6,8 @@ import getApiFootballDataOrg, { IFootballDataOrgApi } from '../api/football-data
 import { Season } from '../domain/seasons/Season';
 
 const competitionUpdateInterval = 24 * 60 * 60 * 1000; // 1 день
-const matchesUpdateInterval = 20 * 1000; // 10 сек
-const teamUpdateInterval = 10 * 1000; // 15 сек
-// const matchesUpdateInterval = 60 * 60 * 1000; // 1 час
+const matchesUpdateInterval = 10 * 1000; // 1 час
+const teamUpdateInterval = 60 * 60 * 1000; // 1 час
 
 export interface ICompetitionsScheduler {
   getCompetition(
@@ -81,7 +80,6 @@ export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler
     return async function () {
       const result = await api.getCompetition(competitionCode);
       if (!result) return;
-
       const currentSeason = new Season(result.currentSeason);
       const competition = new Competition({ ...result, currentSeason });
       if (competition.seasons) {
