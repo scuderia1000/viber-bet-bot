@@ -1,6 +1,5 @@
 import svg2img from 'svg2img';
-import common = require('oci-common');
-// eslint-disable-next-line import/no-extraneous-dependencies
+import { ConfigFileAuthenticationDetailsProvider } from 'oci-common';
 import { ObjectStorageClient, UploadManager } from 'oci-objectstorage';
 import { IService } from '../common/IService';
 import { ITeam, Team } from './Team';
@@ -11,6 +10,7 @@ import { ICompetitionListeners } from '../../types/base';
 import { ICompetition } from '../competitions/Competition';
 import logger from '../../util/logger';
 import { ITeamShort } from './TeamShort';
+import legiaSvg from '../../const/svg';
 
 export interface ITeamService extends IService<ITeam> {
   getAllTeamsShort(): Promise<Record<number, ITeamShort>>;
@@ -33,7 +33,7 @@ export class TeamService
   constructor(dao: ITeamDao) {
     super();
     this.dao = dao;
-    const provider: common.ConfigFileAuthenticationDetailsProvider = new common.ConfigFileAuthenticationDetailsProvider();
+    const provider: ConfigFileAuthenticationDetailsProvider = new ConfigFileAuthenticationDetailsProvider();
     const client = new ObjectStorageClient({ authenticationDetailsProvider: provider });
     this.uploadManager = new UploadManager(client, { enforceMD5: true });
   }
@@ -73,7 +73,15 @@ export class TeamService
             team.crestUrl.lastIndexOf('.'),
           )}.png`;
           try {
-            const imageData = await this.convertSvg(team.crestUrl);
+            let imageData;
+            if (
+              team.crestUrl ===
+              'https://upload.wikimedia.org/wikipedia/commons/b/b5/Legia_Warszawa.svg'
+            ) {
+              imageData = await this.convertSvg(legiaSvg);
+            } else {
+              imageData = await this.convertSvg(team.crestUrl);
+            }
             const crestImageUrl = await this.uploadImage(imageName, imageData);
             if (crestImageUrl) {
               team.crestImageUrl = crestImageUrl;
@@ -104,32 +112,22 @@ export class TeamService
   private async uploadImage(imageName: string, data: Uint8Array): Promise<string | undefined> {
     let imageUrl = '';
     try {
-      const callback = (res: any) => {
-        logger.debug('Blob was uploaded successfully. Response: %s', res);
-
-        imageUrl = `${this.OCI_BUCKET_PREFIX}${imageName}`;
-      };
-      await this.uploadManager.upload(
-        {
-          content: {
-            stream: data,
-          },
-          requestDetails: {
-            namespaceName: this.OCI_BUCKET_NAMESPACE,
-            bucketName: this.OCI_BUCKET_NAME,
-            objectName: imageName,
-          },
+      const uploadResponse = await this.uploadManager.upload({
+        content: {
+          stream: data,
         },
-        callback,
-      );
+        requestDetails: {
+          namespaceName: this.OCI_BUCKET_NAMESPACE,
+          bucketName: this.OCI_BUCKET_NAME,
+          objectName: imageName,
+        },
+      });
+      logger.debug('uploadResponse: %s', uploadResponse);
+      imageUrl = `${this.OCI_BUCKET_PREFIX}${imageName}`;
     } catch (err: any) {
-      logger.error(
-        'uploadFile failed, requestId - %s, statusCode - %n, errorCode - %n',
-        err.details.requestId,
-        err.statusCode,
-        err.details.errorCode,
-      );
+      logger.error('uploadFile failed, error: %s', err);
     }
+    logger.debug('imageUrl: %s', imageUrl);
     return imageUrl;
   }
 
