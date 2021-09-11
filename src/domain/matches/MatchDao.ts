@@ -17,17 +17,33 @@ export interface IMatchDao extends ICommonDao<IMatch> {
     pageNumber: number,
   ): Promise<IMatch[]>;
   seasonMatchesByStatusCount(seasonId: ObjectId, status: MatchStatus): Promise<number>;
+  seasonMatchesByStatusAndCurrentMatchdayCount(
+    seasonId: ObjectId,
+    status: MatchStatus,
+    currentMatchday: number,
+  ): Promise<number>;
+  seasonMatchesByStatusAndCurrentMatchdayPaged(
+    seasonId: ObjectId,
+    status: MatchStatus,
+    pageNumber: number,
+    currentMatchday: number,
+  ): Promise<IMatch[]>;
 }
 
-const getScheduledMatchesAggregateQuery = (seasonId: ObjectId, status: MatchStatus) => [
+const getScheduledMatchesAggregateQuery = (
+  seasonId: ObjectId,
+  status: MatchStatus,
+  matchday?: number,
+) => [
   {
     $match: {
       'season._id': seasonId,
       status,
+      ...(matchday && { matchday }),
     },
   },
   {
-    $sort: { utcDate: 1 },
+    $sort: { utcDate: 1, group: 1 },
   },
   {
     $lookup: {
@@ -125,5 +141,31 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
     const query = { 'season._id': seasonId, status };
     const count = await this.collection.countDocuments(query);
     return count;
+  }
+
+  async seasonMatchesByStatusAndCurrentMatchdayCount(
+    seasonId: ObjectId,
+    status: MatchStatus,
+    matchday: number,
+  ): Promise<number> {
+    const query = { 'season._id': seasonId, status, matchday };
+    const count = await this.collection.countDocuments(query);
+    return count;
+  }
+
+  async seasonMatchesByStatusAndCurrentMatchdayPaged(
+    seasonId: ObjectId,
+    status: MatchStatus,
+    pageNumber: number,
+    matchday: number,
+  ): Promise<IMatch[]> {
+    const query = [
+      ...getScheduledMatchesAggregateQuery(seasonId, status, matchday),
+      { $skip: pageNumber * MAX_MATCH_COUNT_PER_PAGE },
+      { $limit: MAX_MATCH_COUNT_PER_PAGE },
+    ];
+    const cursor = this.collection.aggregate(query);
+    const matches = await this.toEntityArray(cursor);
+    return matches;
   }
 }

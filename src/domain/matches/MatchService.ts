@@ -11,7 +11,13 @@ import { MatchStatus } from '../types/Base';
 import { ISeasonService } from '../seasons/SeasonService';
 import { ITeamShort, TeamShort } from '../teams/TeamShort';
 import { ITeamService } from '../teams/TeamService';
-import { API, getFinalPartOfLeagueIndex, LeagueCodes, LeagueCodesStageMapper, Stages } from '../../const';
+import {
+  API,
+  getFinalPartOfLeagueIndex,
+  LeagueCodes,
+  LeagueCodesStageMapper,
+  Stages,
+} from '../../const';
 
 type PagedMatches = { matches: IMatch[]; totalMatchesCount: number };
 
@@ -98,16 +104,35 @@ export class MatchService
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
     if (!competition || !competition.currentSeason._id) return emptyResult;
 
-    const allScheduledMatchesCount = await this.dao.seasonMatchesByStatusCount(
-      competition.currentSeason._id,
-      MatchStatus.SCHEDULED,
-    );
+    let allScheduledMatchesCount;
 
-    const matches = await this.dao.seasonMatchesByStatusPaged(
-      competition.currentSeason._id,
-      MatchStatus.SCHEDULED,
-      pageNumber,
-    );
+    let matches;
+
+    const { currentMatchday = 0 } = competition.currentSeason;
+    // если это групповой этап (?? уточнить), то берем матчи текущего тура
+    if (currentMatchday) {
+      allScheduledMatchesCount = await this.dao.seasonMatchesByStatusAndCurrentMatchdayCount(
+        competition.currentSeason._id,
+        MatchStatus.SCHEDULED,
+        currentMatchday,
+      );
+      matches = await this.dao.seasonMatchesByStatusAndCurrentMatchdayPaged(
+        competition.currentSeason._id,
+        MatchStatus.SCHEDULED,
+        pageNumber,
+        currentMatchday,
+      );
+    } else {
+      allScheduledMatchesCount = await this.dao.seasonMatchesByStatusCount(
+        competition.currentSeason._id,
+        MatchStatus.SCHEDULED,
+      );
+      matches = await this.dao.seasonMatchesByStatusPaged(
+        competition.currentSeason._id,
+        MatchStatus.SCHEDULED,
+        pageNumber,
+      );
+    }
 
     return {
       matches,

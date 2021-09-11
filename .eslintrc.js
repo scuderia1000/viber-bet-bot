@@ -31,6 +31,7 @@ module.exports = {
     '@typescript-eslint/no-useless-constructor': 'error',
     'no-shadow': 'off',
     'no-underscore-dangle': 'off',
+    'no-unused-vars': 'off',
   },
   settings: {
     'import/resolver': {

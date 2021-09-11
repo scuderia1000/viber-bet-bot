@@ -15,7 +15,8 @@ import {
   LeagueCodesStageMapper,
   MATCH_BEGAN_TEXT,
   predictNotFoundMessage,
-  SELECT_LEAGUE_TEXT_MESSAGE, Stages,
+  SELECT_LEAGUE_TEXT_MESSAGE,
+  Stages,
   VIBER_MIN_API_LEVEL,
 } from '../const';
 import { IModules } from '../domain';
@@ -294,6 +295,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   });
 
   // Нажали на кнопку Мои прогнозы
+  // TODO переделать, неправильно определил, для чего currentMatchday
   bot.onTextMessage(/^myPredictions.*$/i, async (message, response) => {
     const user = await modules.userModule.service.getById(response.userProfile.id);
     if (!user) return;

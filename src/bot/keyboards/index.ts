@@ -90,7 +90,13 @@ export const makePredictionKeyboardPaged = (pageNumber: number, allCount: number
         )
       : disabledActionButton(NEXT_PAGE.LABEL, '', 3),
     actionButton(MAKE_PREDICTION.LABEL, MAKE_PREDICTION.REPLAY_TEXT),
-    actionButton(USER_PREDICTIONS.LABEL, USER_PREDICTIONS.REPLAY_TEXT, undefined, 2),
+    actionButton(
+      `<font color=”${COLORS.DISABLED_TEXT}”><i>${USER_PREDICTIONS.LABEL} ${DISABLED_TEXT}</i></font>`,
+      USERS_RESULTS.REPLAY_DISABLED,
+      COLORS.DISABLED_BACKGROUND,
+      2,
+    ),
+    // actionButton(USER_PREDICTIONS.LABEL, USER_PREDICTIONS.REPLAY_TEXT, undefined, 2),
     USERS_RESULTS.DISABLED
       ? disabledActionButton(
           `${USERS_RESULTS.LABEL} ${DISABLED_TEXT}`,

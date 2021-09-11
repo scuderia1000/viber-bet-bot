@@ -60,7 +60,11 @@ export const API = {
     },
     CHAMPIONS_LEAGUE: {
       AVAILABLE_STAGES: [
-        // счет начинается с 1 в currentMatchday
+        // TODO исправить использование currentMatchday
+        // не верно определил, для чего нужен currentMatchday
+        // пока узнал, что он используется в групповом этапе GROUP_STAGE,
+        // для обозначения текущего тура
+        // счет начинается с 1 в currentMatchday -- неверно использую
         ChampionsLeagueStages.NONE,
         ChampionsLeagueStages['1ST_QUALIFYING_ROUND'],
         ChampionsLeagueStages['2ND_QUALIFYING_ROUND'],

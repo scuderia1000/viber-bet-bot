@@ -27,7 +27,7 @@ interface IBaseMatch {
    */
   utcDate: Date;
   status: MatchStatus;
-  matchday: string | null;
+  matchday: number | null;
   stage: Stages;
   group: string | null; // TODO тоже самое
   lastUpdated: DateTimeISOString;
@@ -48,7 +48,7 @@ export class Match extends ApiEntity implements IMatch {
 
   lastUpdated: DateTimeISOString;
 
-  matchday: string | null;
+  matchday: number | null;
 
   score: IScore;
 
