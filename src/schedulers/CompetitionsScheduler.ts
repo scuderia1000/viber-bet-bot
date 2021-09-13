@@ -6,7 +6,7 @@ import getApiFootballDataOrg, { IFootballDataOrgApi } from '../api/football-data
 import { Season } from '../domain/seasons/Season';
 
 const competitionUpdateInterval = 24 * 60 * 60 * 1000; // 1 день
-const matchesUpdateInterval = 10 * 1000; // 1 час
+const matchesUpdateInterval = 60 * 1000; // 1 мин
 const teamUpdateInterval = 60 * 60 * 1000; // 1 час
 
 export interface ICompetitionsScheduler {
