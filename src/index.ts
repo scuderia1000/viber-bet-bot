@@ -1,4 +1,5 @@
 import * as http from 'http';
+import * as https from 'https';
 import dotenv from 'dotenv';
 import ngrok from './util/get-public-url';
 import initializeBot from './bot';
@@ -26,7 +27,7 @@ connectDb()
     const bot = initializeBot(TOKEN, modules);
 
     if (URL) {
-      http.createServer(bot.middleware()).listen(PORT, HOST, () => bot.setWebhook(URL));
+      https.createServer(bot.middleware()).listen(PORT, HOST, () => bot.setWebhook(URL));
     } else {
       logger.debug(
         'Could not find the now.sh/Heroku environment variables. Please make sure you followed readme guide.',
