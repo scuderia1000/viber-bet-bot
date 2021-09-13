@@ -15,6 +15,8 @@ if (process.env.NODE_ENV !== 'production') {
 const TOKEN = process.env.BOT_ACCOUNT_TOKEN ?? '';
 const URL = process.env.NOW_URL || process.env.HEROKU_URL;
 const PORT = process.env.PORT || 8080;
+logger.debug('URL: %s', URL);
+logger.debug('PORT: %s', PORT);
 
 connectDb()
   .then((db) => {
