@@ -14,7 +14,7 @@ if (process.env.NODE_ENV !== 'production') {
 
 const TOKEN = process.env.BOT_ACCOUNT_TOKEN ?? '';
 const URL = process.env.NOW_URL || process.env.HEROKU_URL;
-const PORT = process.env.PORT || 8080;
+const PORT = ((process.env.PORT as unknown) as number) || 8080;
 logger.debug('URL: %s', URL);
 logger.debug('PORT: %s', PORT);
 
@@ -25,7 +25,7 @@ connectDb()
     const bot = initializeBot(TOKEN, modules);
 
     if (URL) {
-      http.createServer(bot.middleware()).listen(PORT, () => bot.setWebhook(URL));
+      http.createServer(bot.middleware()).listen(PORT, URL, () => bot.setWebhook(URL));
     } else {
       logger.debug(
         'Could not find the now.sh/Heroku environment variables. Please make sure you followed readme guide.',
