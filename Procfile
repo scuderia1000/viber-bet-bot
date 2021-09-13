@@ -1,1 +1,1 @@
-web: node dist/index.js --bind :$PORT
+worker: node dist/index.js
