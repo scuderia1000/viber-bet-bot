@@ -33,9 +33,10 @@ export class TeamService
   constructor(dao: ITeamDao) {
     super();
     this.dao = dao;
-    const provider: ConfigFileAuthenticationDetailsProvider = new ConfigFileAuthenticationDetailsProvider();
-    const client = new ObjectStorageClient({ authenticationDetailsProvider: provider });
-    this.uploadManager = new UploadManager(client, { enforceMD5: true });
+    // TODO разобраться, как конфиг для oci сделать в heroku
+    // const provider: ConfigFileAuthenticationDetailsProvider = new ConfigFileAuthenticationDetailsProvider();
+    // const client = new ObjectStorageClient({ authenticationDetailsProvider: provider });
+    // this.uploadManager = new UploadManager(client, { enforceMD5: true });
   }
 
   getDao(): ICommonDao<ITeam> {
@@ -67,30 +68,31 @@ export class TeamService
 
         if (currentExistTeam?.crestImageUrl) {
           team.crestImageUrl = currentExistTeam.crestImageUrl;
-        } else if (team.crestUrl) {
-          const imageName = `${team.crestUrl.substring(
-            team.crestUrl.lastIndexOf('/') + 1,
-            team.crestUrl.lastIndexOf('.'),
-          )}.png`;
-          try {
-            let imageData;
-            if (
-              team.crestUrl ===
-              'https://upload.wikimedia.org/wikipedia/commons/b/b5/Legia_Warszawa.svg'
-            ) {
-              imageData = await this.convertSvg(legiaSvg);
-            } else {
-              imageData = await this.convertSvg(team.crestUrl);
-            }
-            const crestImageUrl = await this.uploadImage(imageName, imageData);
-            if (crestImageUrl) {
-              team.crestImageUrl = crestImageUrl;
-            }
-          } catch (err) {
-            logger.error('Error processing team crest image: %s', err);
-            logger.error('Error team: %s', team);
-          }
         }
+        // else if (team.crestUrl) {
+        //   const imageName = `${team.crestUrl.substring(
+        //     team.crestUrl.lastIndexOf('/') + 1,
+        //     team.crestUrl.lastIndexOf('.'),
+        //   )}.png`;
+        //   try {
+        //     let imageData;
+        //     if (
+        //       team.crestUrl ===
+        //       'https://upload.wikimedia.org/wikipedia/commons/b/b5/Legia_Warszawa.svg'
+        //     ) {
+        //       imageData = await this.convertSvg(legiaSvg);
+        //     } else {
+        //       imageData = await this.convertSvg(team.crestUrl);
+        //     }
+        //     const crestImageUrl = await this.uploadImage(imageName, imageData);
+        //     if (crestImageUrl) {
+        //       team.crestImageUrl = crestImageUrl;
+        //     }
+        //   } catch (err) {
+        //     logger.error('Error processing team crest image: %s', err);
+        //     logger.error('Error team: %s', team);
+        //   }
+        // }
         return team;
       }),
     );
