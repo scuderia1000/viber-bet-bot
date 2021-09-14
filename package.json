@@ -9,7 +9,7 @@
     "tsc": "tsc",
     "start-dev": "ts-node src/index.ts",
     "start": "node dist/index.js",
-    "heroku-postbuild": "npm run tsc"
+    "postinstall": "npm run tsc"
   },
   "keywords": [],
   "author": "",
