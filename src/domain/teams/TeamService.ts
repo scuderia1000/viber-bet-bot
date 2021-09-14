@@ -111,27 +111,27 @@ export class TeamService
   }
 
   // Oracle upload
-  private async uploadImage(imageName: string, data: Uint8Array): Promise<string | undefined> {
-    let imageUrl = '';
-    try {
-      const uploadResponse = await this.uploadManager.upload({
-        content: {
-          stream: data,
-        },
-        requestDetails: {
-          namespaceName: this.OCI_BUCKET_NAMESPACE,
-          bucketName: this.OCI_BUCKET_NAME,
-          objectName: imageName,
-        },
-      });
-      logger.debug('uploadResponse: %s', uploadResponse);
-      imageUrl = `${this.OCI_BUCKET_PREFIX}${imageName}`;
-    } catch (err: any) {
-      logger.error('uploadFile failed, error: %s', err);
-    }
-    logger.debug('imageUrl: %s', imageUrl);
-    return imageUrl;
-  }
+  // private async uploadImage(imageName: string, data: Uint8Array): Promise<string | undefined> {
+  //   let imageUrl = '';
+  //   try {
+  //     const uploadResponse = await this.uploadManager.upload({
+  //       content: {
+  //         stream: data,
+  //       },
+  //       requestDetails: {
+  //         namespaceName: this.OCI_BUCKET_NAMESPACE,
+  //         bucketName: this.OCI_BUCKET_NAME,
+  //         objectName: imageName,
+  //       },
+  //     });
+  //     logger.debug('uploadResponse: %s', uploadResponse);
+  //     imageUrl = `${this.OCI_BUCKET_PREFIX}${imageName}`;
+  //   } catch (err: any) {
+  //     logger.error('uploadFile failed, error: %s', err);
+  //   }
+  //   logger.debug('imageUrl: %s', imageUrl);
+  //   return imageUrl;
+  // }
 
   async getAllTeamsShort(): Promise<Record<number, ITeamShort>> {
     const teamsResult = await this.dao.getAllTeamsShort();
