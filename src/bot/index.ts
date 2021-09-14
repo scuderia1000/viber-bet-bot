@@ -115,7 +115,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   const bot = new ViberBot(logger, {
     authToken: token,
     name: 'Phoenix Bet Bot', // <--- Your bot name here
-    avatar: 'https://viberbot.blob.core.windows.net/pictures/phoenix_007.jpg', // It is recommended to be 720x720, and no more than 100kb.
+    avatar: `${process.env.OCI_BUCKET_PREFIX}phoenix_007.jpg`, // It is recommended to be 720x720, and no more than 100kb.
   });
 
   // Перешли по ссылке
