@@ -26,13 +26,9 @@ export interface IModules {
 }
 
 const getModules = (db: Db): IModules => {
-  console.log('getModules');
   const roleModule = getRoleModule(db);
-  console.log('roleModule', roleModule);
   const userModule = getUserModule(db, roleModule.service);
-  console.log('userModule', userModule);
   const competitionModule = getCompetitionModule(db);
-  console.log('competitionModule', competitionModule);
   const seasonsModule = getSeasonModule(db, competitionModule.service);
   console.log('seasonsModule', seasonsModule);
   const teamModule = getTeamModule(db);
