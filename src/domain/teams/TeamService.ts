@@ -1,6 +1,6 @@
 import svg2img from 'svg2img';
-import { ConfigFileAuthenticationDetailsProvider } from 'oci-common';
-import { ObjectStorageClient, UploadManager } from 'oci-objectstorage';
+// import { ConfigFileAuthenticationDetailsProvider } from 'oci-common';
+// import { ObjectStorageClient, UploadManager } from 'oci-objectstorage';
 import { IService } from '../common/IService';
 import { ITeam, Team } from './Team';
 import AbstractService from '../common/AbstractService';
@@ -26,7 +26,7 @@ export class TeamService
   private OCI_BUCKET_PREFIX = process.env.OCI_BUCKET_PREFIX || '';
 
   // Oracle Cloud Infrastructure
-  private uploadManager: UploadManager;
+  // private uploadManager: UploadManager;
 
   private readonly dao: ITeamDao;
 
