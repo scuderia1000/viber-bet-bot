@@ -17,8 +17,8 @@ const TOKEN = process.env.BOT_ACCOUNT_TOKEN ?? '';
 const URL = process.env.NOW_URL || process.env.HEROKU_URL || process.env.OCI_URL;
 const PORT = ((process.env.PORT as unknown) as number) || 8080;
 const HOST = '0.0.0.0';
-logger.debug('URL: %s', URL);
-logger.debug('PORT: %s', PORT);
+console.log('URL: %s', URL);
+console.log('PORT: %s', PORT);
 
 connectDb()
   .then((db) => {

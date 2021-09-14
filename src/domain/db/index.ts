@@ -7,11 +7,11 @@ export const connectDb = async (dbName: string = DB.DEFAULT_NAME): Promise<Db> =
   const uri = `mongodb+srv://${MONGO_USER}:${MONGO_PWD}@${MONGO_CLUSTER}?retryWrites=true&w=majority`;
 
   const client = new MongoClient(uri, { useUnifiedTopology: true });
-  logger.debug('db client', client);
+  console.log('db client', client);
   const connection = await client.connect();
-  logger.debug('db connection', connection);
+  console.log('db connection', connection);
   const db = connection.db(dbName);
-  logger.debug('Connected successfully to DB server');
+  console.log('Connected successfully to DB server');
   return db;
 };
 
