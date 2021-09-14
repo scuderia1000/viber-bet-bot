@@ -23,12 +23,8 @@ console.log('PORT: %s', PORT);
 connectDb()
   .then((db) => {
     const modules = getModules(db);
-    console.log('modules', modules);
     configSchedulers(modules);
-    console.log('configSchedulers');
     const bot = initializeBot(TOKEN, modules);
-    console.log('bot: %s', bot);
-    console.log('after connectDb PORT: %s', PORT);
     if (URL) {
       https.createServer(bot.middleware()).listen(PORT, HOST, () => bot.setWebhook(URL));
     } else {
@@ -48,5 +44,5 @@ connectDb()
     }
   })
   .catch((err) => {
-    logger.error(`DB error: `, err);
+    console.log(`Initialize error: `, err);
   });

@@ -33,11 +33,8 @@ export class TeamService
   constructor(dao: ITeamDao) {
     super();
     this.dao = dao;
-    console.log('TeamService dao');
     const provider: ConfigFileAuthenticationDetailsProvider = new ConfigFileAuthenticationDetailsProvider();
-    console.log('provider', provider);
     const client = new ObjectStorageClient({ authenticationDetailsProvider: provider });
-    console.log('client', client);
     this.uploadManager = new UploadManager(client, { enforceMD5: true });
   }
 
