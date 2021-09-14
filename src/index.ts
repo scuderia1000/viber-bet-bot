@@ -22,7 +22,6 @@ console.log('PORT: %s', PORT);
 
 connectDb()
   .then((db) => {
-    console.log('db', db);
     const modules = getModules(db);
     console.log('modules', modules);
     configSchedulers(modules);

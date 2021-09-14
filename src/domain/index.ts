@@ -26,6 +26,7 @@ export interface IModules {
 }
 
 const getModules = (db: Db): IModules => {
+  console.log('getModules');
   const roleModule = getRoleModule(db);
   const userModule = getUserModule(db, roleModule.service);
   const competitionModule = getCompetitionModule(db);
@@ -38,7 +39,7 @@ const getModules = (db: Db): IModules => {
     teamService: teamModule.service,
   });
   const predictionModule = getPredictionModule(db, matchModule.service);
-
+  console.log('getModules end');
   return {
     userModule,
     competitionModule,
