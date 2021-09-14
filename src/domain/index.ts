@@ -28,18 +28,23 @@ export interface IModules {
 const getModules = (db: Db): IModules => {
   console.log('getModules');
   const roleModule = getRoleModule(db);
+  console.log('roleModule', roleModule);
   const userModule = getUserModule(db, roleModule.service);
+  console.log('userModule', userModule);
   const competitionModule = getCompetitionModule(db);
+  console.log('competitionModule', competitionModule);
   const seasonsModule = getSeasonModule(db, competitionModule.service);
+  console.log('seasonsModule', seasonsModule);
   const teamModule = getTeamModule(db);
-
+  console.log('teamModule', teamModule);
   const matchModule = getMatchModule(db, {
     competitionService: competitionModule.service,
     seasonService: seasonsModule.service,
     teamService: teamModule.service,
   });
+  console.log('matchModule', matchModule);
   const predictionModule = getPredictionModule(db, matchModule.service);
-  console.log('getModules end');
+  console.log('predictionModule', predictionModule);
   return {
     userModule,
     competitionModule,
