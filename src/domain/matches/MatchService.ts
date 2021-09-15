@@ -13,11 +13,13 @@ import { ITeamShort, TeamShort } from '../teams/TeamShort';
 import { ITeamService } from '../teams/TeamService';
 import {
   API,
+  ChampionsLeagueStages,
   getFinalPartOfLeagueIndex,
   LeagueCodes,
   LeagueCodesStageMapper,
   Stages,
 } from '../../const';
+import logger from '../../util/logger';
 
 type PagedMatches = { matches: IMatch[]; totalMatchesCount: number };
 
@@ -26,10 +28,19 @@ export interface IMatchService extends IService<IMatch> {
   getMatchTeamByType(matchId: ObjectId, matchTeamType: MatchTeamType): Promise<ITeamShort | null>;
   isMatchBegan(matchId: ObjectId): Promise<boolean>;
   getMatchesByIds(matchIds: ObjectId[]): Promise<IMatch[]>;
-  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: Stages): Promise<IMatch[]>;
+  getMatchesBySeasonAndStage(
+    seasonMongoId: ObjectId,
+    stage: ChampionsLeagueStages,
+  ): Promise<IMatch[]>;
   getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]>;
-  getPagedScheduledMatches(competitionCode: LeagueCodes, pageNumber: number): Promise<PagedMatches>;
+  getPagedMatchesByStatuses(
+    competitionCode: LeagueCodes,
+    pageNumber: number,
+    statuses: MatchStatus[],
+  ): Promise<PagedMatches>;
   isFinalPart(leagueCode: LeagueCodes, matchStage: Stages): boolean;
+  getCurrentStage(leagueCode?: LeagueCodes): Promise<ChampionsLeagueStages>;
+  getCurrentSeasonMatchesIdsByStage(competitionCode: LeagueCodes): Promise<ObjectId[]>;
 }
 
 export class MatchService
@@ -93,9 +104,10 @@ export class MatchService
     return matches;
   }
 
-  async getPagedScheduledMatches(
+  async getPagedMatchesByStatuses(
     competitionCode = LeagueCodes.CL,
     pageNumber = 0,
+    statuses: MatchStatus[],
   ): Promise<PagedMatches> {
     const emptyResult = {
       matches: [],
@@ -113,12 +125,12 @@ export class MatchService
     if (currentMatchday) {
       allScheduledMatchesCount = await this.dao.seasonMatchesByStatusAndCurrentMatchdayCount(
         competition.currentSeason._id,
-        MatchStatus.SCHEDULED,
+        statuses,
         currentMatchday,
       );
       matches = await this.dao.seasonMatchesByStatusAndCurrentMatchdayPaged(
         competition.currentSeason._id,
-        MatchStatus.SCHEDULED,
+        statuses,
         pageNumber,
         currentMatchday,
       );
@@ -164,7 +176,10 @@ export class MatchService
     return this.getAllByIds(matchIds);
   }
 
-  getMatchesBySeasonAndStage(seasonMongoId: ObjectId, stage: Stages): Promise<IMatch[]> {
+  getMatchesBySeasonAndStage(
+    seasonMongoId: ObjectId,
+    stage: ChampionsLeagueStages,
+  ): Promise<IMatch[]> {
     return this.dao.matchesBySeasonAndStage(seasonMongoId, stage);
   }
 
@@ -184,5 +199,34 @@ export class MatchService
     const stageIndex = Object.values(leagueStages).indexOf(matchStage);
     const leagueFinalPartIndex = getFinalPartOfLeagueIndex(leagueCode);
     return stageIndex >= leagueFinalPartIndex;
+  }
+
+  async getCurrentStage(competitionCode = LeagueCodes.CL): Promise<ChampionsLeagueStages> {
+    const competition = await this.competitionService.getCompetitionByCode(competitionCode);
+    if (!competition) return Promise.reject();
+
+    // const { currentMatchday = 0 } = competition.currentSeason;
+    const scheduledMatches: PagedMatches = await this.getPagedMatchesByStatuses(
+      competitionCode,
+      0,
+      [MatchStatus.SCHEDULED],
+    );
+    const { matches = [] } = scheduledMatches;
+    logger.debug(
+      'ChampionsLeagueStages[matches[0].stage]: %s',
+      ChampionsLeagueStages[matches[0].stage],
+    );
+    return ChampionsLeagueStages[matches[0].stage];
+  }
+
+  async getCurrentSeasonMatchesIdsByStage(competitionCode = LeagueCodes.CL): Promise<ObjectId[]> {
+    const competition = await this.competitionService.getCompetitionByCode(competitionCode);
+    if (!competition) return Promise.reject();
+
+    const stage = await this.getCurrentStage();
+    logger.debug('stage: %s', stage);
+    const currentSeasonId = competition.currentSeason._id;
+    const matches = await this.getMatchesBySeasonAndStage(currentSeasonId, stage);
+    return matches.map((match) => match._id);
   }
 }

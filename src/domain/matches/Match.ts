@@ -4,7 +4,7 @@ import Collection from '../../annotation/Collection';
 import ApiEntity from '../common/ApiEntity';
 import { ITeamShort } from '../teams/TeamShort';
 import CommonObject from '../common/CommonObject';
-import { Stages } from '../../const';
+import { ChampionsLeagueStages, Stages } from '../../const';
 
 export interface IScoreResult {
   homeTeam: number | null;
@@ -28,7 +28,7 @@ interface IBaseMatch {
   utcDate: Date;
   status: MatchStatus;
   matchday: number | null;
-  stage: Stages;
+  stage: ChampionsLeagueStages;
   group: string | null; // TODO тоже самое
   lastUpdated: DateTimeISOString;
   score: IScore;
@@ -54,7 +54,7 @@ export class Match extends ApiEntity implements IMatch {
 
   season: ISeason;
 
-  stage: Stages;
+  stage: ChampionsLeagueStages;
 
   status: MatchStatus;
 

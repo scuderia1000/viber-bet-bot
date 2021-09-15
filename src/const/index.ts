@@ -120,10 +120,8 @@ const championsLeagueStagesToRuTextMapper = {
   [ChampionsLeagueStages.FINAL]: 'финала',
 };
 
-export const predictNotFoundMessage = (matchDay: number): string =>
-  `Ты не делал прогноз на матчи ${
-    Object.values(championsLeagueStagesToRuTextMapper)[matchDay]
-  } этапа`;
+export const predictNotFoundMessage = (stage: ChampionsLeagueStages): string =>
+  `Ты не делал прогноз на матчи ${championsLeagueStagesToRuTextMapper[stage]}`;
 
 export const MAX_MATCH_COUNT_PER_PAGE = 6;
 

@@ -14,7 +14,12 @@ import { ITeamShort } from '../../../domain/teams/TeamShort';
 import { IPrediction } from '../../../domain/predictions/Prediction';
 import { MAKE_PREDICTION, TEAM } from '../../../const/buttons';
 import { MatchStatus } from '../../../domain/types/Base';
-import { ChampionsLeagueStages, FinalPartPredictionStages, LeagueCodes, Stages } from '../../../const';
+import {
+  ChampionsLeagueStages,
+  FinalPartPredictionStages,
+  LeagueCodes,
+  Stages,
+} from '../../../const';
 
 export const actionButton = (
   text: string,
@@ -88,7 +93,7 @@ const getTeamEmblemButton = (url: string, columns = ButtonSize.S): IButton => ({
   Rows: 2,
   ActionType: ActionType.NONE,
   ActionBody: 'none',
-  Image: url,
+  Image: url ?? '',
   ImageScaleType: BgMediaScaleType.FIT,
 });
 

@@ -10,10 +10,9 @@ import {
   conversationStartedText,
   EMPTY_SCHEDULED_MATCHES,
   FinalPartPredictionStages,
-  getFinalPartOfLeagueIndex,
   LeagueCodes,
-  LeagueCodesStageMapper,
   MATCH_BEGAN_TEXT,
+  MAX_MATCH_COUNT_PER_PAGE,
   predictNotFoundMessage,
   SELECT_LEAGUE_TEXT_MESSAGE,
   Stages,
@@ -30,6 +29,8 @@ import { IKeyboard, IRichMedia, MatchTeamType, ViberResponse } from '../types/ba
 import { IMatch } from '../domain/matches/Match';
 import { IPrediction } from '../domain/predictions/Prediction';
 import getParams from '../util/parse-message-params';
+import { MatchStatus } from '../domain/types/Base';
+import { MY_PREDICTION_REPLAY_TEXT } from '../const/buttons';
 
 const initializeBot = (token: string, modules: IModules): Bot => {
   const TextMessage = Message.Text;
@@ -62,17 +63,17 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     const searchParams = getParams(message.text);
     const page = Number(searchParams.get('page') ?? '0');
 
-    const scheduledMatchesPaged = await modules.matchModule.service.getPagedScheduledMatches(
+    const scheduledAndFinishedMatchesPaged = await modules.matchModule.service.getPagedMatchesByStatuses(
       user?.selectedLeagueCode,
       page,
+      [MatchStatus.SCHEDULED],
     );
-    const allCount = scheduledMatchesPaged.totalMatchesCount;
-    const scheduledMatches = scheduledMatchesPaged.matches;
+    const allCount = scheduledAndFinishedMatchesPaged.totalMatchesCount;
+    const scheduledMatches = scheduledAndFinishedMatchesPaged.matches;
 
     const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
       response.userProfile.id,
     );
-
     if (scheduledMatches.length) {
       const keyboard = makePredictionKeyboardPaged(page, allCount);
       response.send(matchesRichMessage(scheduledMatches, userPredictions, keyboard));
@@ -300,20 +301,8 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     const user = await modules.userModule.service.getById(response.userProfile.id);
     if (!user) return;
 
-    const competition = await modules.competitionModule.service.getCompetitionByCode(
-      user.selectedLeagueCode,
-    );
-    const currentMatchday = competition?.currentSeason.currentMatchday;
-    const messageArray = message.text?.split('?') ?? [];
-    const matchDayTextParam =
-      messageArray.length > 1 ? messageArray[1] : `currentMatchday=${currentMatchday}`;
-    const searchParams = new URLSearchParams(matchDayTextParam);
-    const matchDay = Number(searchParams.get('currentMatchday'));
-    // достать из competitions текущий сезон,
-    // из сезона достать currentMatchday: number,
-    // из API.FOOTBALL_DATA_ORG.CHAMPIONS_LEAGUE.AVAILABLE_STAGES достать по индексу (currentMatchday) текущий этап,
-    // из matches достать все _id матчей с этапом из AVAILABLE_STAGES,
-    const stageMatchesIds = await modules.matchModule.service.getMatchesIdsByMatchday(matchDay);
+    const stage = await modules.matchModule.service.getCurrentStage();
+    const stageMatchesIds = await modules.matchModule.service.getCurrentSeasonMatchesIdsByStage();
     // из predictions достать все прогнозы юзера с _id матчей, полученных на пред. шаге
     const userPredictions = await modules.predictionModule.service.getPredictionsByMatchesIds(
       response.userProfile.id,
@@ -322,7 +311,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     if (!userPredictions) {
       response.send(
         new TextMessage(
-          predictNotFoundMessage(matchDay),
+          predictNotFoundMessage(stage),
           makePredictionKeyboard(),
           undefined,
           undefined,
@@ -335,7 +324,18 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     const predictMatchesIds = Object.keys(userPredictions).map((matchId) => new ObjectId(matchId));
     const userPredictionsMatches = await modules.matchModule.service.getAllByIds(predictMatchesIds);
 
-    response.send(matchesRichMessage(userPredictionsMatches, userPredictions));
+    const searchParams = getParams(message.text);
+    const page = Number(searchParams.get('page') ?? '0');
+    if (userPredictionsMatches.length) {
+      const allCount = userPredictionsMatches.length;
+      const keyboard = makePredictionKeyboardPaged(page, allCount, MY_PREDICTION_REPLAY_TEXT);
+
+      const userPredictionsMatchesPaged = userPredictionsMatches.slice(
+        page * MAX_MATCH_COUNT_PER_PAGE,
+        (page + 1) * MAX_MATCH_COUNT_PER_PAGE,
+      );
+      response.send(matchesRichMessage(userPredictionsMatchesPaged, userPredictions, keyboard));
+    }
   });
 
   // TODO пока переход сразу на Сделать прогноз, добавить историю и переходить на предыдущий шаг

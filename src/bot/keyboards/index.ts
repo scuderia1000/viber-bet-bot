@@ -71,32 +71,20 @@ export const makePredictionKeyboard = (): IKeyboard =>
 /**
  * Клавиатура "Сделать прогноз" с кнопками Вперед, Назад
  */
-export const makePredictionKeyboardPaged = (pageNumber: number, allCount: number): IKeyboard =>
+export const makePredictionKeyboardPaged = (
+  pageNumber: number,
+  allCount: number,
+  replayText = PREVIOUS_PAGE.REPLAY_TEXT,
+): IKeyboard =>
   hiddenInputKeyboard([
     pageNumber > 0
-      ? actionButton(
-          PREVIOUS_PAGE.LABEL,
-          `${PREVIOUS_PAGE.REPLAY_TEXT}page=${pageNumber - 1}`,
-          undefined,
-          3,
-        )
+      ? actionButton(PREVIOUS_PAGE.LABEL, `${replayText}page=${pageNumber - 1}`, undefined, 3)
       : disabledActionButton(PREVIOUS_PAGE.LABEL, '', 3),
     (pageNumber + 1) * MAX_MATCH_COUNT_PER_PAGE < allCount
-      ? actionButton(
-          NEXT_PAGE.LABEL,
-          `${NEXT_PAGE.REPLAY_TEXT}page=${pageNumber + 1}`,
-          undefined,
-          3,
-        )
+      ? actionButton(NEXT_PAGE.LABEL, `${replayText}page=${pageNumber + 1}`, undefined, 3)
       : disabledActionButton(NEXT_PAGE.LABEL, '', 3),
     actionButton(MAKE_PREDICTION.LABEL, MAKE_PREDICTION.REPLAY_TEXT),
-    actionButton(
-      `<font color=”${COLORS.DISABLED_TEXT}”><i>${USER_PREDICTIONS.LABEL} ${DISABLED_TEXT}</i></font>`,
-      USERS_RESULTS.REPLAY_DISABLED,
-      COLORS.DISABLED_BACKGROUND,
-      2,
-    ),
-    // actionButton(USER_PREDICTIONS.LABEL, USER_PREDICTIONS.REPLAY_TEXT, undefined, 2),
+    actionButton(USER_PREDICTIONS.LABEL, USER_PREDICTIONS.REPLAY_TEXT, undefined, 2),
     USERS_RESULTS.DISABLED
       ? disabledActionButton(
           `${USERS_RESULTS.LABEL} ${DISABLED_TEXT}`,

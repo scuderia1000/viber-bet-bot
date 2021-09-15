@@ -2,6 +2,7 @@ import { LeagueCodes } from './index';
 
 const DISABLED_TEXT = 'в разработке';
 const MAKE_PREDICTION_REPLAY_TEXT = 'makePrediction?';
+export const MY_PREDICTION_REPLAY_TEXT = 'myPredictions?';
 
 const LEAGUES = {
   CHAMPIONS: {
