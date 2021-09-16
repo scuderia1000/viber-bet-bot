@@ -40,9 +40,10 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     scheduledMatches: IMatch[],
     predictions: Record<string, IPrediction>,
     keyboard?: IKeyboard,
+    page = 0,
   ) =>
     new RichMediaMessage(
-      matchesWithPredictionsMessage(scheduledMatches, predictions),
+      matchesWithPredictionsMessage(scheduledMatches, predictions, page),
       keyboard ?? makePredictionKeyboard(),
       undefined,
       undefined,
@@ -63,20 +64,20 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     const searchParams = getParams(message.text);
     const page = Number(searchParams.get('page') ?? '0');
 
-    const scheduledAndFinishedMatchesPaged = await modules.matchModule.service.getPagedMatchesByStatuses(
+    const pagedMatches = await modules.matchModule.service.getPagedMatchesByStatuses(
       user?.selectedLeagueCode,
       page,
       [MatchStatus.SCHEDULED],
     );
-    const allCount = scheduledAndFinishedMatchesPaged.totalMatchesCount;
-    const scheduledMatches = scheduledAndFinishedMatchesPaged.matches;
+    const allCount = pagedMatches.totalMatchesCount;
+    const scheduledMatches = pagedMatches.matches;
 
     const userPredictions = await modules.predictionModule.service.getPredictionsByUser(
       response.userProfile.id,
     );
     if (scheduledMatches.length) {
       const keyboard = makePredictionKeyboardPaged(page, allCount);
-      response.send(matchesRichMessage(scheduledMatches, userPredictions, keyboard));
+      response.send(matchesRichMessage(scheduledMatches, userPredictions, keyboard, page));
       return true;
     }
 
@@ -134,12 +135,16 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     );
   });
 
-  // Нажали Выбрать чемпионат
+  /**
+   * Нажали Выбрать чемпионат
+   */
   bot.onTextMessage(/^selectLeague$/i, async (message, response) => {
     sendTextMessage(response, SELECT_LEAGUE_TEXT_MESSAGE, selectLeagueKeyboard());
   });
 
-  // Выбрали чемпионат
+  /**
+   * Выбрали чемпионат
+   */
   bot.onTextMessage(/^setLeague?.*$/i, async (message, response) => {
     const searchParams = getParams(message.text);
     const leagueCode = searchParams.get('code') as LeagueCodes;
@@ -156,8 +161,11 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     }
   });
 
-  // Нажали на кнопку Сделать прогноз в клавиатуре, возвращаем карусель с матчами,
-  // в клавиатуре показываем кнопки Вперед, Назад, т.к. стоит ограничение на к-во сообщений в 1 ответе = 6
+  /**
+   * Нажали на кнопку Сделать прогноз в клавиатуре, возвращаем карусель с матчами,
+   * в клавиатуре показываем кнопки Вперед, Назад,
+   * т.к. стоит ограничение на к-во сообщений в 1 ответе = 6
+   */
   bot.onTextMessage(/^makePrediction?.*$/i, async (message, response) => {
     const isScheduledMatchesResponseSent = await sendScheduledMatchesPagedResponse(
       message,
@@ -168,18 +176,20 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     }
   });
 
-  // Нажали на кнопку Сделать прогноз в сообщении о матчах, возвращаем вопрос с
-  // логотипом домашней команды и клавиатурой с кнопками от 0 до 11
+  /**
+   * Нажали на кнопку Сделать прогноз в сообщении о матчах, возвращаем вопрос с
+   * логотипом домашней команды и клавиатурой с кнопками от 0 до 11
+   */
   bot.onTextMessage(/^matchPrediction?.*$/i, async (message, response) => {
     const user = await modules.userModule.service.getById(response.userProfile.id);
     if (!user) return;
 
     const searchParams = getParams(message.text);
     const matchIdText = searchParams.get('matchId') ?? '';
-    const matchId = new ObjectId(matchIdText);
-
-    const leagueCode = user.selectedLeagueCode ?? LeagueCodes.CL;
     const stageText = searchParams.get('stage') ?? '';
+    const page = Number(searchParams.get('page') ?? '0');
+    const matchId = new ObjectId(matchIdText);
+    const leagueCode = user.selectedLeagueCode ?? LeagueCodes.CL;
     const isFinalPart = modules.matchModule.service.isFinalPart(leagueCode, stageText as Stages);
 
     // проверяем, что матч еще не начался
@@ -203,6 +213,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
           matchId,
           MatchTeamType.HOME_TEAM,
           FinalPartPredictionStages.REGULAR_TIME,
+          page,
         ),
       );
       return;
@@ -211,22 +222,17 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     sendRichMediaMessage(
       response,
       getMatchTeamPredictionMessage(homeTeam),
-      predictTeamScoreKeyboard(matchId, MatchTeamType.HOME_TEAM),
+      predictTeamScoreKeyboard(matchId, MatchTeamType.HOME_TEAM, undefined, page),
     );
   });
 
-  // Сделали прогноз, сколько забьет домашняя команда или гости.
-  // Нажали на кнопками с цифрами 0 до 11
+  /**
+   * Сделали прогноз, сколько забьет домашняя команда или гости.
+   * Нажали на кнопками с цифрами 0 до 11
+   */
   bot.onTextMessage(/^matchTeamScore?.*$/i, async (message, response) => {
     const searchParams = getParams(message.text);
     const matchIdText = searchParams.get('matchId') ?? '';
-    const matchId = new ObjectId(matchIdText);
-    // проверяем, что матч еще не начался
-    const isMatchBegan = await modules.matchModule.service.isMatchBegan(matchId);
-    if (isMatchBegan) {
-      sendTextMessage(response, MATCH_BEGAN_TEXT, makePredictionKeyboard());
-      return;
-    }
     // на какой этап матча сделан прогноз (основное время, дополнительное или серия пенальти)
     const stage = searchParams.get('stage')
       ? (searchParams.get('stage') as FinalPartPredictionStages)
@@ -234,6 +240,17 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     // на какую команду (хозяева или гости)
     const matchTeamType: MatchTeamType = (searchParams.get('matchTeamType') ??
       MatchTeamType.HOME_TEAM) as MatchTeamType;
+    // номер страницы, с которой ушли делать прогноз,
+    // нужен для возвращения на ту же страницу, после сделанного прогноза
+    // на обе команды
+    const page = Number(searchParams.get('page') ?? '0');
+    const matchId = new ObjectId(matchIdText);
+    // проверяем, что матч еще не начался
+    const isMatchBegan = await modules.matchModule.service.isMatchBegan(matchId);
+    if (isMatchBegan) {
+      sendTextMessage(response, MATCH_BEGAN_TEXT, makePredictionKeyboard());
+      return;
+    }
 
     const match = await modules.matchModule.service.getByMongoId(matchId);
     if (!match) return;
@@ -259,7 +276,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
         sendRichMediaMessage(
           response,
           getFinalPartMatchTeamPredictionMessage(team, stageValues[nextStageIndex]),
-          predictTeamScoreKeyboard(matchId, matchTeamType, stageValues[nextStageIndex]),
+          predictTeamScoreKeyboard(matchId, matchTeamType, stageValues[nextStageIndex], page),
         );
         return;
       }
@@ -280,7 +297,7 @@ const initializeBot = (token: string, modules: IModules): Bot => {
       sendRichMediaMessage(
         response,
         richMedia,
-        predictTeamScoreKeyboard(matchId, MatchTeamType.AWAY_TEAM, initialStage),
+        predictTeamScoreKeyboard(matchId, MatchTeamType.AWAY_TEAM, initialStage, page),
       );
       return;
     }
@@ -295,8 +312,9 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     }
   });
 
-  // Нажали на кнопку Мои прогнозы
-  // TODO переделать, неправильно определил, для чего currentMatchday
+  /**
+   * Нажали на кнопку Мои прогнозы
+   */
   bot.onTextMessage(/^myPredictions.*$/i, async (message, response) => {
     const user = await modules.userModule.service.getById(response.userProfile.id);
     if (!user) return;
@@ -339,7 +357,9 @@ const initializeBot = (token: string, modules: IModules): Bot => {
   });
 
   // TODO пока переход сразу на Сделать прогноз, добавить историю и переходить на предыдущий шаг
-  // Нажали на кнопку Назад
+  /**
+   * Нажали на кнопку Назад
+   */
   bot.onTextMessage(/^back$/i, async (message, response) => {
     response.send(
       new TextMessage(

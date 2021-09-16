@@ -102,11 +102,12 @@ export const predictTeamScoreKeyboard = (
   matchId: ObjectId,
   matchTeamType: MatchTeamType,
   predictStage?: FinalPartPredictionStages,
+  page = 0,
 ): IKeyboard => {
   const buttons = [];
   const replayText = predictStage
-    ? `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}&stage=${predictStage}`
-    : `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}`;
+    ? `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}&page=${page}&stage=${predictStage}`
+    : `matchTeamScore?matchId=${matchId}&matchTeamType=${matchTeamType}&page=${page}`;
   // eslint-disable-next-line no-plusplus
   for (let i = 0; i < PREDICT_SCORE_MAX_VALUE; i++) {
     buttons.push(actionButton(`${i}`, `${replayText}&score=${i}`, undefined, 1));

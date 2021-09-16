@@ -20,11 +20,12 @@ const getMessageBody = (columns = 6, rows = 6): IRichMedia => ({
 export const matchesWithPredictionsMessage = (
   scheduledMatches: IMatch[],
   predictions: Record<string, IPrediction>,
+  page = 0,
 ): IRichMedia => {
   const buttons: IButton[] = [];
   scheduledMatches.forEach((match) => {
     const prediction = predictions[match._id.toHexString()];
-    buttons.push(...getMessageMatchButton(match, prediction));
+    buttons.push(...getMessageMatchButton(match, prediction, page));
   });
 
   return {

@@ -135,3 +135,5 @@ export enum TeamType {
   HOME_TEAM = 'homeTeam',
   AWAY_TEAM = 'awayTeam',
 }
+
+export const CL_GROUP_STAGE_MAX_MATCH_DAY_COUNT = 6;

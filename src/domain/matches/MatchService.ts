@@ -14,6 +14,7 @@ import { ITeamService } from '../teams/TeamService';
 import {
   API,
   ChampionsLeagueStages,
+  CL_GROUP_STAGE_MAX_MATCH_DAY_COUNT,
   getFinalPartOfLeagueIndex,
   LeagueCodes,
   LeagueCodesStageMapper,
@@ -119,8 +120,16 @@ export class MatchService
     let allScheduledMatchesCount;
 
     let matches;
-
-    const { currentMatchday = 0 } = competition.currentSeason;
+    // TODO разобраться, за что еще отвечает currentMatchday в api football
+    let { currentMatchday = 0 } = competition.currentSeason;
+    allScheduledMatchesCount = await this.dao.seasonMatchesByStatusAndCurrentMatchdayCount(
+      competition.currentSeason._id,
+      statuses,
+      currentMatchday,
+    );
+    if (!allScheduledMatchesCount && currentMatchday < CL_GROUP_STAGE_MAX_MATCH_DAY_COUNT) {
+      currentMatchday += 1;
+    }
     // если это групповой этап (?? уточнить), то берем матчи текущего тура
     if (currentMatchday) {
       allScheduledMatchesCount = await this.dao.seasonMatchesByStatusAndCurrentMatchdayCount(
