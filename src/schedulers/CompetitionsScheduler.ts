@@ -4,6 +4,7 @@ import { EventType, IScheduler } from '../types/base';
 import { Competition } from '../domain/competitions/Competition';
 import getApiFootballDataOrg, { IFootballDataOrgApi } from '../api/football-data-org';
 import { Season } from '../domain/seasons/Season';
+import logger from '../util/logger';
 
 const competitionUpdateInterval = 24 * 60 * 60 * 1000; // 1 день
 const matchesUpdateInterval = 60 * 1000; // 30 сек
@@ -114,7 +115,9 @@ export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler
   ): () => Promise<void> {
     // eslint-disable-next-line func-names
     return async function () {
+      logger.info('updateCompetitionTeams');
       const competitionTeams = await api.getCompetitionTeams(competitionCode);
+      logger.debug('competitionTeams: %s', competitionTeams);
       if (!competitionTeams) return;
 
       events.notify(EventType.GET_TEAMS, competitionTeams);
