@@ -115,9 +115,9 @@ export class CompetitionsScheduler implements ICompetitionsScheduler, IScheduler
   ): () => Promise<void> {
     // eslint-disable-next-line func-names
     return async function () {
-      logger.info('updateCompetitionTeams');
+      console.log('updateCompetitionTeams');
       const competitionTeams = await api.getCompetitionTeams(competitionCode);
-      logger.debug('competitionTeams: %s', competitionTeams);
+      console.log('competitionTeams', competitionTeams);
       if (!competitionTeams) return;
 
       events.notify(EventType.GET_TEAMS, competitionTeams);
