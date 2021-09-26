@@ -51,6 +51,7 @@ export enum LeagueCodes {
 
 export const API = {
   FOOTBALL_DATA_ORG: {
+    URL: 'api.football-data.org',
     PREFIX: 'v2',
     COMPETITIONS: 'competitions',
     MATCHES: 'matches',

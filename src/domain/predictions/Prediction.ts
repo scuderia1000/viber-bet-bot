@@ -28,6 +28,7 @@ export interface IBasePrediction {
   userViberId: string;
   matchId: ObjectId;
   score: IUserPredictScore;
+  // TODO похоже не используется, проверить
   matchStatus: MatchStatus;
   matchStage: Stages;
   userPredictScore: number | null;
