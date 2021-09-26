@@ -4,11 +4,10 @@ import { EventType, IScheduler } from '../types/base';
 import { Competition } from '../domain/competitions/Competition';
 import getApiFootballDataOrg, { IFootballDataOrgApi } from '../api/football-data-org';
 import { Season } from '../domain/seasons/Season';
-import logger from '../util/logger';
 
 const competitionUpdateInterval = 24 * 60 * 60 * 1000; // 1 день
-const matchesUpdateInterval = 60 * 1000; // 30 сек
-const teamUpdateInterval = 15 * 1000; // 1 час
+const matchesUpdateInterval = 60 * 1000; // 1 мин
+const teamUpdateInterval = 60 * 60 * 1000; // 1 час
 
 export interface ICompetitionsScheduler {
   getCompetition(
