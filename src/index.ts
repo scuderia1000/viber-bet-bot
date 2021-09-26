@@ -1,5 +1,4 @@
-import * as https from 'https';
-// import * as http from 'http';
+import * as http from 'http';
 import dotenv from 'dotenv';
 import ngrok from './util/get-public-url';
 import initializeBot from './bot';
@@ -24,7 +23,7 @@ connectDb()
     configSchedulers(modules);
     const bot = initializeBot(TOKEN, modules);
     if (URL) {
-      https.createServer(bot.middleware()).listen(PORT, () => bot.setWebhook(URL));
+      http.createServer(bot.middleware()).listen(PORT, () => bot.setWebhook(URL));
       // http.createServer(bot.middleware()).listen(PORT, HOST, () => bot.setWebhook(URL));
     } else {
       logger.debug(
@@ -33,7 +32,7 @@ connectDb()
       ngrok
         .getPublicUrl()
         .then((publicUrl) => {
-          https.createServer(bot.middleware()).listen(PORT, () => bot.setWebhook(publicUrl));
+          http.createServer(bot.middleware()).listen(PORT, () => bot.setWebhook(publicUrl));
         })
         .catch((error) => {
           logger.debug('Can not connectDb to ngrok server. Is it running?');
