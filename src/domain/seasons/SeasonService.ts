@@ -35,6 +35,7 @@ export class SeasonService
     if (!existSeason) {
       await this.save(currentSeason);
     } else if (!currentSeason.equals(existSeason)) {
+      currentSeason._id = existSeason._id;
       await this.updateEntity(currentSeason);
     }
   }

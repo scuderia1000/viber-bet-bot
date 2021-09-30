@@ -38,6 +38,7 @@ export class Season extends ApiEntity implements IBaseSeason {
   equals(season: ISeason): boolean {
     return (
       this.id === season.id &&
+      this.currentMatchday === season.currentMatchday &&
       this.startDate === season.startDate &&
       this.endDate === season.endDate
     );

@@ -96,12 +96,12 @@ export class MatchService
 
   async getScheduledMatches(competitionCode = LeagueCodes.CL): Promise<IMatch[]> {
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
-    if (!competition || !competition.currentSeason._id) return Promise.resolve([]);
+    if (!competition || !competition.currentSeason.id) return Promise.resolve([]);
 
-    const matches = await this.dao.seasonMatchesByStatus(
-      competition.currentSeason._id,
-      MatchStatus.SCHEDULED,
-    );
+    const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
+    if (!currentSeason) return Promise.resolve([]);
+
+    const matches = await this.dao.seasonMatchesByStatus(currentSeason._id, MatchStatus.SCHEDULED);
     return matches;
   }
 
@@ -115,15 +115,18 @@ export class MatchService
       totalMatchesCount: 0,
     };
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
-    if (!competition || !competition.currentSeason._id) return emptyResult;
+    if (!competition || !competition.currentSeason.id) return emptyResult;
+
+    const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
+    if (!currentSeason) return emptyResult;
 
     let allScheduledMatchesCount;
 
     let matches;
     // TODO разобраться, за что еще отвечает currentMatchday в api football
-    let { currentMatchday = 0 } = competition.currentSeason;
+    let { currentMatchday = 0 } = currentSeason;
     allScheduledMatchesCount = await this.dao.seasonMatchesByStatusAndCurrentMatchdayCount(
-      competition.currentSeason._id,
+      currentSeason._id,
       statuses,
       currentMatchday,
     );
@@ -133,23 +136,25 @@ export class MatchService
     // если это групповой этап (?? уточнить), то берем матчи текущего тура
     if (currentMatchday) {
       allScheduledMatchesCount = await this.dao.seasonMatchesByStatusAndCurrentMatchdayCount(
-        competition.currentSeason._id,
+        currentSeason._id,
         statuses,
         currentMatchday,
       );
+      console.log('currentMatchday', currentMatchday);
+      console.log('allScheduledMatchesCount', allScheduledMatchesCount);
       matches = await this.dao.seasonMatchesByStatusAndCurrentMatchdayPaged(
-        competition.currentSeason._id,
+        currentSeason._id,
         statuses,
         pageNumber,
         currentMatchday,
       );
     } else {
       allScheduledMatchesCount = await this.dao.seasonMatchesByStatusCount(
-        competition.currentSeason._id,
+        currentSeason._id,
         MatchStatus.SCHEDULED,
       );
       matches = await this.dao.seasonMatchesByStatusPaged(
-        competition.currentSeason._id,
+        currentSeason._id,
         MatchStatus.SCHEDULED,
         pageNumber,
       );
@@ -196,8 +201,11 @@ export class MatchService
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
     if (!competition) return Promise.reject();
 
+    const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
+    if (!currentSeason) return Promise.reject();
+
     const stage = API.FOOTBALL_DATA_ORG.CHAMPIONS_LEAGUE.AVAILABLE_STAGES[matchday];
-    const currentSeasonId = competition.currentSeason._id;
+    const currentSeasonId = currentSeason._id;
     const matches = await this.getMatchesBySeasonAndStage(currentSeasonId, stage);
     return matches.map((match) => match._id);
   }
@@ -214,27 +222,30 @@ export class MatchService
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
     if (!competition) return Promise.reject();
 
-    // const { currentMatchday = 0 } = competition.currentSeason;
     const scheduledMatches: PagedMatches = await this.getPagedMatchesByStatuses(
       competitionCode,
       0,
       [MatchStatus.SCHEDULED],
     );
     const { matches = [] } = scheduledMatches;
+    console.log('scheduledMatches', scheduledMatches);
     logger.debug(
       'ChampionsLeagueStages[matches[0].stage]: %s',
-      ChampionsLeagueStages[matches[0].stage],
+      ChampionsLeagueStages[matches?.[0].stage],
     );
-    return ChampionsLeagueStages[matches[0].stage];
+    return ChampionsLeagueStages[matches?.[0].stage];
   }
 
   async getCurrentSeasonMatchesIdsByStage(competitionCode = LeagueCodes.CL): Promise<ObjectId[]> {
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
     if (!competition) return Promise.reject();
 
+    const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
+    if (!currentSeason) return Promise.reject();
+
     const stage = await this.getCurrentStage();
     logger.debug('stage: %s', stage);
-    const currentSeasonId = competition.currentSeason._id;
+    const currentSeasonId = currentSeason._id;
     const matches = await this.getMatchesBySeasonAndStage(currentSeasonId, stage);
     return matches.map((match) => match._id);
   }

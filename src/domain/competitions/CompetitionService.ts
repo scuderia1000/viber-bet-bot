@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { ICompetition } from './Competition';
 import { ICompetitionDao } from './CompetitionDao';
 import { ICompetitionListeners } from '../../types/base';
@@ -30,6 +31,10 @@ export class CompetitionService
       // заменяем существующую запись, т.к. меняется только сезон, а соревнование остается старым
       // eslint-disable-next-line no-param-reassign
       competition._id = existCompetition._id;
+      if (competition.season) {
+        // eslint-disable-next-line no-param-reassign
+        competition.season._id = new ObjectId('');
+      }
       await this.updateEntity(competition);
     }
   }
