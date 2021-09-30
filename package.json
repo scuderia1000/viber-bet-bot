@@ -40,7 +40,6 @@
     "oci-objectstorage": "^2.3.0",
     "reflect-metadata": "^0.1.13",
     "request": "^2.88.2",
-    "svg2img": "0.9.1",
     "viber-bot": "^1.0.16",
     "winston": "^3.3.3",
     "winston-console-formatter": "^1.0.0-beta.3"

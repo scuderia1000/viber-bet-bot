@@ -1,4 +1,4 @@
-import svg2img from 'svg2img';
+// import svg2img from 'svg2img';
 // import { ConfigFileAuthenticationDetailsProvider } from 'oci-common';
 // import { ObjectStorageClient, UploadManager } from 'oci-objectstorage';
 import { IService } from '../common/IService';
@@ -69,46 +69,47 @@ export class TeamService
 
         if (currentExistTeam?.crestImageUrl) {
           team.crestImageUrl = currentExistTeam.crestImageUrl;
-        } else if (team.crestUrl) {
-          const imageName = `${team.crestUrl.substring(
-            team.crestUrl.lastIndexOf('/') + 1,
-            team.crestUrl.lastIndexOf('.'),
-          )}.png`;
-          try {
-            let imageData;
-            if (
-              team.crestUrl ===
-              'https://upload.wikimedia.org/wikipedia/commons/b/b5/Legia_Warszawa.svg'
-            ) {
-              imageData = await this.convertSvg(legiaSvg);
-            } else {
-              imageData = await this.convertSvg(team.crestUrl);
-            }
-            const crestImageUrl = await this.uploadImage(imageName, imageData);
-            if (crestImageUrl) {
-              team.crestImageUrl = crestImageUrl;
-            }
-          } catch (err) {
-            logger.error('Error processing team crest image: %s', err);
-            logger.error('Error team: %s', team);
-          }
         }
+        // else if (team.crestUrl) {
+        //   const imageName = `${team.crestUrl.substring(
+        //     team.crestUrl.lastIndexOf('/') + 1,
+        //     team.crestUrl.lastIndexOf('.'),
+        //   )}.png`;
+        //   try {
+        //     let imageData;
+        //     if (
+        //       team.crestUrl ===
+        //       'https://upload.wikimedia.org/wikipedia/commons/b/b5/Legia_Warszawa.svg'
+        //     ) {
+        //       imageData = await this.convertSvg(legiaSvg);
+        //     } else {
+        //       imageData = await this.convertSvg(team.crestUrl);
+        //     }
+        //     const crestImageUrl = await this.uploadImage(imageName, imageData);
+        //     if (crestImageUrl) {
+        //       team.crestImageUrl = crestImageUrl;
+        //     }
+        //   } catch (err) {
+        //     logger.error('Error processing team crest image: %s', err);
+        //     logger.error('Error team: %s', team);
+        //   }
+        // }
         return team;
       }),
     );
     await this.updateEntities(existTeams, teams);
   }
 
-  private convertSvg(svgUrl: string): Promise<Uint8Array> {
-    return new Promise((resolve, reject) => {
-      svg2img(svgUrl, (error, buffer) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(buffer);
-      });
-    });
-  }
+  // private convertSvg(svgUrl: string): Promise<Uint8Array> {
+  //   return new Promise((resolve, reject) => {
+  //     svg2img(svgUrl, (error, buffer) => {
+  //       if (error) {
+  //         reject(error);
+  //       }
+  //       resolve(buffer);
+  //     });
+  //   });
+  // }
 
   // Oracle upload via REST API
   private async uploadImage(imageName: string, data: Uint8Array): Promise<string | undefined> {
