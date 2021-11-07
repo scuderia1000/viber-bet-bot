@@ -18,16 +18,18 @@ export interface IMatchDao extends ICommonDao<IMatch> {
     pageNumber: number,
   ): Promise<IMatch[]>;
   seasonMatchesByStatusCount(seasonId: ObjectId, status: MatchStatus): Promise<number>;
-  seasonMatchesByStatusAndCurrentMatchdayCount(
+  matchesByStatusCount(
     seasonId: ObjectId,
     status: MatchStatus[],
     currentMatchday: number,
+    stage: ChampionsLeagueStages,
   ): Promise<number>;
-  seasonMatchesByStatusAndCurrentMatchdayPaged(
+  matchesByStatusPaged(
     seasonId: ObjectId,
     status: MatchStatus[],
-    pageNumber: number,
     currentMatchday: number,
+    stage: ChampionsLeagueStages,
+    pageNumber?: number,
   ): Promise<IMatch[]>;
 }
 
@@ -35,11 +37,13 @@ const getScheduledMatchesAggregateQuery = (
   seasonId: ObjectId,
   status: MatchStatus[] | MatchStatus,
   matchday?: number,
+  stage?: ChampionsLeagueStages,
 ) => [
   {
     $match: {
       'season._id': seasonId,
       status: status instanceof Array ? { $in: status } : status,
+      ...(stage && { stage }),
       ...(matchday && { matchday }),
     },
   },
@@ -147,27 +151,33 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
     return count;
   }
 
-  async seasonMatchesByStatusAndCurrentMatchdayCount(
+  async matchesByStatusCount(
     seasonId: ObjectId,
     status: MatchStatus[],
     matchday: number,
+    stage: ChampionsLeagueStages,
   ): Promise<number> {
-    const query = { 'season._id': seasonId, status: { $in: status }, matchday };
+    const query = { 'season._id': seasonId, status: { $in: status }, stage, matchday };
     const count = await this.collection.countDocuments(query);
     return count;
   }
 
-  async seasonMatchesByStatusAndCurrentMatchdayPaged(
+  async matchesByStatusPaged(
     seasonId: ObjectId,
     status: MatchStatus[],
-    pageNumber: number,
     matchday: number,
+    stage: ChampionsLeagueStages,
+    pageNumber?: number,
   ): Promise<IMatch[]> {
-    const query = [
-      ...getScheduledMatchesAggregateQuery(seasonId, status, matchday),
-      { $skip: pageNumber * MAX_MATCH_COUNT_PER_PAGE },
-      { $limit: MAX_MATCH_COUNT_PER_PAGE },
+    // eslint-disable-next-line @typescript-eslint/ban-types
+    const query: object[] = [
+      ...getScheduledMatchesAggregateQuery(seasonId, status, matchday, stage),
     ];
+    if (pageNumber !== undefined) {
+      query.push(
+        ...[{ $skip: pageNumber * MAX_MATCH_COUNT_PER_PAGE }, { $limit: MAX_MATCH_COUNT_PER_PAGE }],
+      );
+    }
     const cursor = this.collection.aggregate(query);
     const matches = await this.toEntityArray(cursor);
     return matches;

@@ -122,7 +122,9 @@ const championsLeagueStagesToRuTextMapper = {
 };
 
 export const predictNotFoundMessage = (stage: ChampionsLeagueStages): string =>
-  `Ты не делал прогноз на матчи ${championsLeagueStagesToRuTextMapper[stage]}`;
+  stage === ChampionsLeagueStages.NONE
+    ? 'Не удалось определить этап турнира'
+    : `Ты не делал прогноз на предыдущий этап ${championsLeagueStagesToRuTextMapper[stage]}`;
 
 export const MAX_MATCH_COUNT_PER_PAGE = 6;
 

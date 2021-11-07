@@ -314,19 +314,21 @@ const initializeBot = (token: string, modules: IModules): Bot => {
 
   /**
    * Нажали на кнопку Мои прогнозы
+   *
    */
   bot.onTextMessage(/^myPredictions.*$/i, async (message, response) => {
     const user = await modules.userModule.service.getById(response.userProfile.id);
     if (!user) return;
 
     const stage = await modules.matchModule.service.getCurrentStage();
-    const stageMatchesIds = await modules.matchModule.service.getCurrentSeasonMatchesIdsByStage();
+
+    const stageMatchesIds = await modules.matchModule.service.prevStageMatchIds();
     // из predictions достать все прогнозы юзера с _id матчей, полученных на пред. шаге
     const userPredictions = await modules.predictionModule.service.getPredictionsByMatchesIds(
       response.userProfile.id,
       stageMatchesIds,
     );
-    if (!userPredictions) {
+    if (!userPredictions || !Object.keys(userPredictions).length) {
       response.send(
         new TextMessage(
           predictNotFoundMessage(stage),

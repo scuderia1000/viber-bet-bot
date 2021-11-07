@@ -42,6 +42,7 @@ export interface IMatchService extends IService<IMatch> {
   isFinalPart(leagueCode: LeagueCodes, matchStage: Stages): boolean;
   getCurrentStage(leagueCode?: LeagueCodes): Promise<ChampionsLeagueStages>;
   getCurrentSeasonMatchesIdsByStage(competitionCode: LeagueCodes): Promise<ObjectId[]>;
+  prevStageMatchIds(competitionCode: LeagueCodes): Promise<ObjectId[]>;
 }
 
 export class MatchService
@@ -120,33 +121,37 @@ export class MatchService
     const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
     if (!currentSeason) return emptyResult;
 
+    const stage = await this.getCurrentStage();
+    if (!stage) return emptyResult;
+
     let allScheduledMatchesCount;
 
     let matches;
     // TODO разобраться, за что еще отвечает currentMatchday в api football
     let { currentMatchday = 0 } = currentSeason;
-    allScheduledMatchesCount = await this.dao.seasonMatchesByStatusAndCurrentMatchdayCount(
+    allScheduledMatchesCount = await this.dao.matchesByStatusCount(
       currentSeason._id,
       statuses,
       currentMatchday,
+      stage,
     );
     if (!allScheduledMatchesCount && currentMatchday < CL_GROUP_STAGE_MAX_MATCH_DAY_COUNT) {
       currentMatchday += 1;
     }
     // если это групповой этап (?? уточнить), то берем матчи текущего тура
     if (currentMatchday) {
-      allScheduledMatchesCount = await this.dao.seasonMatchesByStatusAndCurrentMatchdayCount(
+      allScheduledMatchesCount = await this.dao.matchesByStatusCount(
         currentSeason._id,
         statuses,
         currentMatchday,
+        stage,
       );
-      console.log('currentMatchday', currentMatchday);
-      console.log('allScheduledMatchesCount', allScheduledMatchesCount);
-      matches = await this.dao.seasonMatchesByStatusAndCurrentMatchdayPaged(
+      matches = await this.dao.matchesByStatusPaged(
         currentSeason._id,
         statuses,
-        pageNumber,
         currentMatchday,
+        stage,
+        pageNumber,
       );
     } else {
       allScheduledMatchesCount = await this.dao.seasonMatchesByStatusCount(
@@ -220,20 +225,27 @@ export class MatchService
 
   async getCurrentStage(competitionCode = LeagueCodes.CL): Promise<ChampionsLeagueStages> {
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
-    if (!competition) return Promise.reject();
+    if (!competition) return ChampionsLeagueStages.NONE;
 
-    const scheduledMatches: PagedMatches = await this.getPagedMatchesByStatuses(
-      competitionCode,
-      0,
-      [MatchStatus.SCHEDULED],
+    const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
+    if (!currentSeason) return ChampionsLeagueStages.NONE;
+
+    let matches: IMatch[] = await this.dao.seasonMatchesByStatus(
+      currentSeason._id,
+      MatchStatus.SCHEDULED,
     );
-    const { matches = [] } = scheduledMatches;
-    console.log('scheduledMatches', scheduledMatches);
-    logger.debug(
-      'ChampionsLeagueStages[matches[0].stage]: %s',
-      ChampionsLeagueStages[matches?.[0].stage],
-    );
-    return ChampionsLeagueStages[matches?.[0].stage];
+
+    let nearestMatch = matches?.[0];
+    if (!nearestMatch) {
+      matches = await this.dao.seasonMatchesByStatus(currentSeason._id, MatchStatus.FINISHED);
+      nearestMatch = matches?.[matches.length - 1];
+    }
+    logger.debug('Current stage: %s', nearestMatch?.stage);
+
+    if (!nearestMatch) {
+      return ChampionsLeagueStages.NONE;
+    }
+    return nearestMatch?.stage;
   }
 
   async getCurrentSeasonMatchesIdsByStage(competitionCode = LeagueCodes.CL): Promise<ObjectId[]> {
@@ -244,9 +256,37 @@ export class MatchService
     if (!currentSeason) return Promise.reject();
 
     const stage = await this.getCurrentStage();
-    logger.debug('stage: %s', stage);
     const currentSeasonId = currentSeason._id;
     const matches = await this.getMatchesBySeasonAndStage(currentSeasonId, stage);
     return matches.map((match) => match._id);
+  }
+
+  async prevStageMatchIds(competitionCode = LeagueCodes.CL): Promise<ObjectId[]> {
+    const competition = await this.competitionService.getCompetitionByCode(competitionCode);
+    if (!competition) return Promise.reject();
+
+    const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
+    if (!currentSeason) return Promise.reject();
+
+    const stage = await this.getCurrentStage();
+    let { currentMatchday = 0 } = currentSeason;
+    // Если есть запланированные матчи, то тур еще не закончился, уменьшаем тур на 1
+    const allScheduledMatchesCount = await this.dao.matchesByStatusCount(
+      currentSeason._id,
+      [MatchStatus.SCHEDULED],
+      currentMatchday,
+      stage,
+    );
+
+    if (allScheduledMatchesCount) {
+      currentMatchday -= 1;
+    }
+    const matches = await this.dao.matchesByStatusPaged(
+      currentSeason._id,
+      [MatchStatus.FINISHED],
+      currentMatchday,
+      stage,
+    );
+    return matches?.map((match) => match._id);
   }
 }
