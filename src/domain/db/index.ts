@@ -1,5 +1,4 @@
 import { Db, MongoClient } from 'mongodb';
-import logger from '../../util/logger';
 import { DB } from '../../const';
 
 export const connectDb = async (dbName: string = DB.DEFAULT_NAME): Promise<Db> => {

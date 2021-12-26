@@ -24,6 +24,11 @@ import logger from '../../util/logger';
 
 type PagedMatches = { matches: IMatch[]; totalMatchesCount: number };
 
+export interface IUsersPrevStageResults {
+  name: string;
+  score: number;
+}
+
 export interface IMatchService extends IService<IMatch> {
   getScheduledMatches(competitionCode: LeagueCodes): Promise<IMatch[]>;
   getMatchTeamByType(matchId: ObjectId, matchTeamType: MatchTeamType): Promise<ITeamShort | null>;
@@ -41,8 +46,17 @@ export interface IMatchService extends IService<IMatch> {
   ): Promise<PagedMatches>;
   isFinalPart(leagueCode: LeagueCodes, matchStage: Stages): boolean;
   getCurrentStage(leagueCode?: LeagueCodes): Promise<ChampionsLeagueStages>;
+  getCurrentMatchday(leagueCode?: LeagueCodes): Promise<number>;
   getCurrentSeasonMatchesIdsByStage(competitionCode: LeagueCodes): Promise<ObjectId[]>;
   prevStageMatchIds(competitionCode: LeagueCodes): Promise<ObjectId[]>;
+  allUsersResultPrevStage(
+    competitionCode: LeagueCodes,
+    pageNumber: number,
+  ): Promise<IUsersPrevStageResults[]>;
+  allUsersResults(
+    competitionCode: LeagueCodes,
+    pageNumber: number,
+  ): Promise<IUsersPrevStageResults[]>;
 }
 
 export class MatchService
@@ -124,46 +138,24 @@ export class MatchService
     const stage = await this.getCurrentStage();
     if (!stage) return emptyResult;
 
-    let allScheduledMatchesCount;
-
-    let matches;
     // TODO разобраться, за что еще отвечает currentMatchday в api football
-    let { currentMatchday = 0 } = currentSeason;
-    allScheduledMatchesCount = await this.dao.matchesByStatusCount(
+    //  узнать, может быть значение 0 или нет
+    const currentMatchday = await this.getCurrentMatchday(competitionCode);
+    if (!currentMatchday) return emptyResult;
+
+    const allScheduledMatchesCount = await this.dao.matchesByStatusCount(
       currentSeason._id,
       statuses,
       currentMatchday,
       stage,
     );
-    if (!allScheduledMatchesCount && currentMatchday < CL_GROUP_STAGE_MAX_MATCH_DAY_COUNT) {
-      currentMatchday += 1;
-    }
-    // если это групповой этап (?? уточнить), то берем матчи текущего тура
-    if (currentMatchday) {
-      allScheduledMatchesCount = await this.dao.matchesByStatusCount(
-        currentSeason._id,
-        statuses,
-        currentMatchday,
-        stage,
-      );
-      matches = await this.dao.matchesByStatusPaged(
-        currentSeason._id,
-        statuses,
-        currentMatchday,
-        stage,
-        pageNumber,
-      );
-    } else {
-      allScheduledMatchesCount = await this.dao.seasonMatchesByStatusCount(
-        currentSeason._id,
-        MatchStatus.SCHEDULED,
-      );
-      matches = await this.dao.seasonMatchesByStatusPaged(
-        currentSeason._id,
-        MatchStatus.SCHEDULED,
-        pageNumber,
-      );
-    }
+    const matches = await this.dao.matchesByStatusPaged(
+      currentSeason._id,
+      statuses,
+      currentMatchday,
+      stage,
+      pageNumber,
+    );
 
     return {
       matches,
@@ -236,6 +228,7 @@ export class MatchService
     );
 
     let nearestMatch = matches?.[0];
+    console.log('nearestMatch', nearestMatch);
     if (!nearestMatch) {
       matches = await this.dao.seasonMatchesByStatus(currentSeason._id, MatchStatus.FINISHED);
       nearestMatch = matches?.[matches.length - 1];
@@ -255,7 +248,7 @@ export class MatchService
     const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
     if (!currentSeason) return Promise.reject();
 
-    const stage = await this.getCurrentStage();
+    const stage = await this.getCurrentStage(competitionCode);
     const currentSeasonId = currentSeason._id;
     const matches = await this.getMatchesBySeasonAndStage(currentSeasonId, stage);
     return matches.map((match) => match._id);
@@ -268,8 +261,8 @@ export class MatchService
     const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
     if (!currentSeason) return Promise.reject();
 
-    const stage = await this.getCurrentStage();
-    let { currentMatchday = 0 } = currentSeason;
+    const stage = await this.getCurrentStage(competitionCode);
+    let currentMatchday = await this.getCurrentMatchday(competitionCode);
     // Если есть запланированные матчи, то тур еще не закончился, уменьшаем тур на 1
     const allScheduledMatchesCount = await this.dao.matchesByStatusCount(
       currentSeason._id,
@@ -277,8 +270,9 @@ export class MatchService
       currentMatchday,
       stage,
     );
-
-    if (allScheduledMatchesCount) {
+    // TODO узнать, в других этапах турнира есть туры
+    //  сделать переключение на пред. тур
+    if (stage === ChampionsLeagueStages.GROUP_STAGE && allScheduledMatchesCount) {
       currentMatchday -= 1;
     }
     const matches = await this.dao.matchesByStatusPaged(
@@ -287,6 +281,41 @@ export class MatchService
       currentMatchday,
       stage,
     );
+    logger.debug('prevStageMatchIds currentMatchday: %s', currentMatchday);
     return matches?.map((match) => match._id);
+  }
+
+  async getCurrentMatchday(competitionCode = LeagueCodes.CL): Promise<number> {
+    const competition = await this.competitionService.getCompetitionByCode(competitionCode);
+    if (!competition || !competition.currentSeason.id) return 0;
+
+    const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
+    if (!currentSeason) return 0;
+
+    return currentSeason.currentMatchday;
+  }
+
+  async allUsersResultPrevStage(
+    competitionCode = LeagueCodes.CL,
+    pageNumber: number,
+  ): Promise<IUsersPrevStageResults[]> {
+    let result: IUsersPrevStageResults[] = [];
+    const stage = await this.getCurrentStage();
+    if (ChampionsLeagueStages.NONE) return result;
+
+    const matchday = await this.getCurrentMatchday(competitionCode);
+    if (!matchday) return result;
+
+    result = await this.dao.allUsersResultPrevStage(stage, matchday, pageNumber);
+
+    return result;
+  }
+
+  async allUsersResults(
+    competitionCode: LeagueCodes,
+    pageNumber: number,
+  ): Promise<IUsersPrevStageResults[]> {
+    // const result = await this.dao.allUsersResultPrevStage(1, 1, pageNumber);
+    return [];
   }
 }

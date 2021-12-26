@@ -1,7 +1,8 @@
 import 'reflect-metadata';
 import {
   BulkWriteOperation,
-  Collection, Cursor,
+  Collection,
+  Cursor,
   Db,
   FilterQuery,
   ObjectId,

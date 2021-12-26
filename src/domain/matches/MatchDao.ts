@@ -4,8 +4,9 @@ import { IMatch, Match } from './Match';
 import CRUDDao from '../common/CRUDDao';
 import { MatchStatus } from '../types/Base';
 import { ITeamShort, TeamShort } from '../teams/TeamShort';
-import { ChampionsLeagueStages, MAX_MATCH_COUNT_PER_PAGE, Stages } from '../../const';
-import logger from '../../util/logger';
+import { ChampionsLeagueStages, MAX_MATCH_COUNT_PER_PAGE } from '../../const';
+import { IUsersPrevStageResults } from './MatchService';
+import { getScheduledMatchesAggregateQuery, prevStageUsersResultQuery } from './queries';
 
 export interface IMatchDao extends ICommonDao<IMatch> {
   matchesBySeasonId(seasonId?: number): Promise<Record<number, IMatch>>;
@@ -31,54 +32,13 @@ export interface IMatchDao extends ICommonDao<IMatch> {
     stage: ChampionsLeagueStages,
     pageNumber?: number,
   ): Promise<IMatch[]>;
+  allUsersResultPrevStage(
+    stage: ChampionsLeagueStages,
+    matchday: number,
+    pageNumber: number,
+  ): Promise<IUsersPrevStageResults[]>;
+  allUsersResults(pageNumber: number): Promise<IUsersPrevStageResults[]>;
 }
-
-const getScheduledMatchesAggregateQuery = (
-  seasonId: ObjectId,
-  status: MatchStatus[] | MatchStatus,
-  matchday?: number,
-  stage?: ChampionsLeagueStages,
-) => [
-  {
-    $match: {
-      'season._id': seasonId,
-      status: status instanceof Array ? { $in: status } : status,
-      ...(stage && { stage }),
-      ...(matchday && { matchday }),
-    },
-  },
-  {
-    $sort: { utcDate: 1, group: 1 },
-  },
-  {
-    $lookup: {
-      from: 'teams',
-      let: { team_id: '$homeTeam.id' },
-      pipeline: [
-        { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
-        { $project: { _id: 1, id: 1, name: 1, crestImageUrl: 1 } },
-      ],
-      as: 'homeTeam',
-    },
-  },
-  {
-    $unwind: '$homeTeam',
-  },
-  {
-    $lookup: {
-      from: 'teams',
-      let: { team_id: '$awayTeam.id' },
-      pipeline: [
-        { $match: { $expr: { $eq: ['$id', '$$team_id'] } } },
-        { $project: { _id: 1, id: 1, name: 1, crestImageUrl: 1 } },
-      ],
-      as: 'awayTeam',
-    },
-  },
-  {
-    $unwind: '$awayTeam',
-  },
-];
 
 export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
   constructor(db: Db) {
@@ -181,5 +141,25 @@ export class MatchDao extends CRUDDao<IMatch> implements IMatchDao {
     const cursor = this.collection.aggregate(query);
     const matches = await this.toEntityArray(cursor);
     return matches;
+  }
+
+  async allUsersResultPrevStage(
+    stage: ChampionsLeagueStages,
+    matchday: number,
+    pageNumber: number,
+  ): Promise<IUsersPrevStageResults[]> {
+    const query = [...prevStageUsersResultQuery(stage, matchday)];
+    if (pageNumber !== undefined) {
+      query.push(
+        ...[{ $skip: pageNumber * MAX_MATCH_COUNT_PER_PAGE }, { $limit: MAX_MATCH_COUNT_PER_PAGE }],
+      );
+    }
+    const cursor = this.collection.aggregate<IUsersPrevStageResults>(query);
+    const result: IUsersPrevStageResults[] = await cursor.toArray();
+    return result;
+  }
+
+  async allUsersResults(pageNumber: number): Promise<IUsersPrevStageResults[]> {
+    return [];
   }
 }

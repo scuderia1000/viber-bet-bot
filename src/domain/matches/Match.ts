@@ -78,6 +78,8 @@ export class Match extends ApiEntity implements IMatch {
     return (
       this.id === match.id &&
       this.status === match.status &&
+      this.stage === match.stage &&
+      this.season.currentMatchday === match.season.currentMatchday &&
       this.utcDate.getTime() === match.utcDate.getTime()
     );
   }
