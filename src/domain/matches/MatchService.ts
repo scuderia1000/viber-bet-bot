@@ -14,17 +14,17 @@ import { ITeamService } from '../teams/TeamService';
 import {
   API,
   ChampionsLeagueStages,
-  CL_GROUP_STAGE_MAX_MATCH_DAY_COUNT,
-  getFinalPartOfLeagueIndex,
+  ChampionsLeagueStagesMatchdays,
   LeagueCodes,
   LeagueCodesStageMapper,
   Stages,
 } from '../../const';
 import logger from '../../util/logger';
+import { getFinalPartOfLeagueIndex, getPrevStage } from '../../util';
 
 type PagedMatches = { matches: IMatch[]; totalMatchesCount: number };
 
-export interface IUsersPrevStageResults {
+export interface IUsersPredictionsResults {
   name: string;
   score: number;
 }
@@ -37,6 +37,7 @@ export interface IMatchService extends IService<IMatch> {
   getMatchesBySeasonAndStage(
     seasonMongoId: ObjectId,
     stage: ChampionsLeagueStages,
+    statuses?: MatchStatus[],
   ): Promise<IMatch[]>;
   getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]>;
   getPagedMatchesByStatuses(
@@ -45,18 +46,11 @@ export interface IMatchService extends IService<IMatch> {
     statuses: MatchStatus[],
   ): Promise<PagedMatches>;
   isFinalPart(leagueCode: LeagueCodes, matchStage: Stages): boolean;
-  getCurrentStage(leagueCode?: LeagueCodes): Promise<ChampionsLeagueStages>;
+  getCurrentStage(leagueCode?: LeagueCodes): Promise<Stages>;
   getCurrentMatchday(leagueCode?: LeagueCodes): Promise<number>;
   getCurrentSeasonMatchesIdsByStage(competitionCode: LeagueCodes): Promise<ObjectId[]>;
   prevStageMatchIds(competitionCode: LeagueCodes): Promise<ObjectId[]>;
-  allUsersResultPrevStage(
-    competitionCode: LeagueCodes,
-    pageNumber: number,
-  ): Promise<IUsersPrevStageResults[]>;
-  allUsersResults(
-    competitionCode: LeagueCodes,
-    pageNumber: number,
-  ): Promise<IUsersPrevStageResults[]>;
+  allUsersResultPrevStage(competitionCode: LeagueCodes): Promise<IUsersPredictionsResults[]>;
 }
 
 export class MatchService
@@ -189,11 +183,13 @@ export class MatchService
 
   getMatchesBySeasonAndStage(
     seasonMongoId: ObjectId,
-    stage: ChampionsLeagueStages,
+    stage: Stages,
+    statuses?: MatchStatus[],
   ): Promise<IMatch[]> {
-    return this.dao.matchesBySeasonAndStage(seasonMongoId, stage);
+    return this.dao.matchesBySeasonAndStage(seasonMongoId, stage, statuses);
   }
 
+  // Deprecated
   async getMatchesIdsByMatchday(matchday: number, competitionCode?: string): Promise<ObjectId[]> {
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
     if (!competition) return Promise.reject();
@@ -215,7 +211,7 @@ export class MatchService
     return stageIndex >= leagueFinalPartIndex;
   }
 
-  async getCurrentStage(competitionCode = LeagueCodes.CL): Promise<ChampionsLeagueStages> {
+  async getCurrentStage(competitionCode = LeagueCodes.CL): Promise<Stages> {
     const competition = await this.competitionService.getCompetitionByCode(competitionCode);
     if (!competition) return ChampionsLeagueStages.NONE;
 
@@ -228,7 +224,6 @@ export class MatchService
     );
 
     let nearestMatch = matches?.[0];
-    console.log('nearestMatch', nearestMatch);
     if (!nearestMatch) {
       matches = await this.dao.seasonMatchesByStatus(currentSeason._id, MatchStatus.FINISHED);
       nearestMatch = matches?.[matches.length - 1];
@@ -263,16 +258,14 @@ export class MatchService
 
     const stage = await this.getCurrentStage(competitionCode);
     let currentMatchday = await this.getCurrentMatchday(competitionCode);
-    // Если есть запланированные матчи, то тур еще не закончился, уменьшаем тур на 1
     const allScheduledMatchesCount = await this.dao.matchesByStatusCount(
       currentSeason._id,
       [MatchStatus.SCHEDULED],
       currentMatchday,
       stage,
     );
-    // TODO узнать, в других этапах турнира есть туры
-    //  сделать переключение на пред. тур
-    if (stage === ChampionsLeagueStages.GROUP_STAGE && allScheduledMatchesCount) {
+    // Если есть запланированные матчи, то этап тура еще не закончился, уменьшаем этап на 1
+    if (currentMatchday > 1 && allScheduledMatchesCount) {
       currentMatchday -= 1;
     }
     const matches = await this.dao.matchesByStatusPaged(
@@ -297,25 +290,48 @@ export class MatchService
 
   async allUsersResultPrevStage(
     competitionCode = LeagueCodes.CL,
-    pageNumber: number,
-  ): Promise<IUsersPrevStageResults[]> {
-    let result: IUsersPrevStageResults[] = [];
-    const stage = await this.getCurrentStage();
-    if (ChampionsLeagueStages.NONE) return result;
+  ): Promise<IUsersPredictionsResults[]> {
+    let result: IUsersPredictionsResults[] = [];
+    const competition = await this.competitionService.getCompetitionByCode(competitionCode);
+    if (!competition) return result;
 
-    const matchday = await this.getCurrentMatchday(competitionCode);
+    const currentSeason = await this.seasonService.getById(competition.currentSeason.id);
+    if (!currentSeason) return result;
+
+    let stage = await this.getCurrentStage(competitionCode);
+    if (stage === ChampionsLeagueStages.NONE) return result;
+
+    let matchday = await this.getCurrentMatchday(competitionCode);
     if (!matchday) return result;
 
-    result = await this.dao.allUsersResultPrevStage(stage, matchday, pageNumber);
+    const allScheduledMatchesCount = await this.dao.matchesByStatusCount(
+      currentSeason._id,
+      [MatchStatus.SCHEDULED],
+      matchday,
+      stage,
+    );
+
+    // тур еще не закончен, показываем результаты пред. тура
+    if (allScheduledMatchesCount) {
+      const stageMatchDaysInterval = ChampionsLeagueStagesMatchdays[stage];
+      // если сейчас начало нового этапа турнира, берем предыдущий этап
+      if (matchday === stageMatchDaysInterval?.min) {
+        stage = getPrevStage(competitionCode, stage);
+      }
+      matchday -= 1;
+    }
+    result = await this.dao.allUsersResultByStage(stage, matchday);
 
     return result;
   }
 
-  async allUsersResults(
-    competitionCode: LeagueCodes,
-    pageNumber: number,
-  ): Promise<IUsersPrevStageResults[]> {
-    // const result = await this.dao.allUsersResultPrevStage(1, 1, pageNumber);
-    return [];
+  private async lastMatchDayOfStage(seasonMongoId: ObjectId, stage: Stages): Promise<number> {
+    const finishedMatches = await this.getMatchesBySeasonAndStage(seasonMongoId, stage, [
+      MatchStatus.FINISHED,
+    ]);
+    if (!finishedMatches || !finishedMatches.length || !finishedMatches[0].matchday) return 0;
+
+    console.log('finishedMatches[0]', finishedMatches[0]);
+    return finishedMatches[0].matchday;
   }
 }

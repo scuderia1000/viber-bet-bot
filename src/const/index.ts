@@ -26,6 +26,27 @@ export enum ChampionsLeagueStages {
   FINAL = 'FINAL',
 }
 
+interface IMinMax {
+  min: number;
+  max: number;
+}
+
+type ChampionsLeagueStagesMatchdaysMap = {
+  [key in ChampionsLeagueStages]?: IMinMax;
+};
+
+// TODO дополнить
+export const ChampionsLeagueStagesMatchdays: ChampionsLeagueStagesMatchdaysMap = {
+  [ChampionsLeagueStages.GROUP_STAGE]: {
+    min: 1,
+    max: 6,
+  },
+  [ChampionsLeagueStages.ROUND_OF_16]: {
+    min: 7,
+    max: 9,
+  },
+};
+
 export enum EuroCupStages {
   NONE = 'NONE',
 }
@@ -105,9 +126,6 @@ export const LeagueFinalPartMapper = {
   [LeagueCodes.WC]: WorldCupStages.NONE,
 };
 
-export const getFinalPartOfLeagueIndex = (code: LeagueCodes): number =>
-  Object.values(LeagueCodesStageMapper[code]).indexOf(LeagueFinalPartMapper[code]);
-
 const championsLeagueStagesToRuTextMapper = {
   [ChampionsLeagueStages.NONE]: '',
   [ChampionsLeagueStages['1ST_QUALIFYING_ROUND']]: '1-го квалификационного раунда',
@@ -121,7 +139,7 @@ const championsLeagueStagesToRuTextMapper = {
   [ChampionsLeagueStages.FINAL]: 'финала',
 };
 
-export const predictNotFoundMessage = (stage: ChampionsLeagueStages): string =>
+export const predictNotFoundMessage = (stage: Stages): string =>
   stage === ChampionsLeagueStages.NONE
     ? 'Не удалось определить этап турнира'
     : `Ты не делал прогноз на предыдущий этап ${championsLeagueStagesToRuTextMapper[stage]}`;

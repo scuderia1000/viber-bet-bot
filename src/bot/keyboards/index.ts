@@ -14,6 +14,7 @@ import {
   SELECT_LEAGUE,
   USER_PREDICTIONS,
   USERS_RESULTS,
+  USERS_PREV_RESULTS,
 } from '../../const/buttons';
 import { IButton, IKeyboard, InputFieldState, KeyboardType, MatchTeamType } from '../../types/base';
 import COLORS from '../../const/colors';
@@ -75,25 +76,31 @@ export const makePredictionKeyboardPaged = (
   pageNumber: number,
   allCount: number,
   replayText = PREVIOUS_PAGE.REPLAY_TEXT,
-): IKeyboard =>
-  hiddenInputKeyboard([
+): IKeyboard => {
+  const prevButton =
     pageNumber > 0
       ? actionButton(PREVIOUS_PAGE.LABEL, `${replayText}page=${pageNumber - 1}`, undefined, 3)
-      : disabledActionButton(PREVIOUS_PAGE.LABEL, '', 3),
+      : disabledActionButton(PREVIOUS_PAGE.LABEL, '', 3);
+  const nextButton =
     (pageNumber + 1) * MAX_MATCH_COUNT_PER_PAGE < allCount
       ? actionButton(NEXT_PAGE.LABEL, `${replayText}page=${pageNumber + 1}`, undefined, 3)
-      : disabledActionButton(NEXT_PAGE.LABEL, '', 3),
+      : disabledActionButton(NEXT_PAGE.LABEL, '', 3);
+  const allResultsButton = USERS_RESULTS.DISABLED
+    ? disabledActionButton(
+        `${USERS_RESULTS.LABEL} ${DISABLED_TEXT}`,
+        USERS_RESULTS.REPLAY_DISABLED,
+        2,
+      )
+    : actionButton(USERS_RESULTS.LABEL, USERS_RESULTS.REPLAY_TEXT, undefined, 2);
+  return hiddenInputKeyboard([
+    prevButton,
+    nextButton,
     actionButton(MAKE_PREDICTION.LABEL, MAKE_PREDICTION.REPLAY_TEXT),
     actionButton(USER_PREDICTIONS.LABEL, USER_PREDICTIONS.REPLAY_TEXT, undefined, 2),
-    USERS_RESULTS.DISABLED
-      ? disabledActionButton(
-          `${USERS_RESULTS.LABEL} ${DISABLED_TEXT}`,
-          USERS_RESULTS.REPLAY_DISABLED,
-          2,
-        )
-      : actionButton(USERS_RESULTS.LABEL, USERS_RESULTS.REPLAY_TEXT, undefined, 2),
+    allResultsButton,
     actionButton(SELECT_LEAGUE.LABEL, SELECT_LEAGUE.REPLAY_TEXT, undefined, 2),
   ]);
+};
 
 /**
  * Клавиатура "Результат матча" с кнопками от 0 до 11
@@ -117,3 +124,15 @@ export const predictTeamScoreKeyboard = (
     actionButton(MAKE_PREDICTION.LABEL, MAKE_PREDICTION.REPLAY_TEXT),
   ]);
 };
+
+/**
+ * Клавиатура "Сделать прогноз" с кнопками
+ * показывается после нажатия на Все результаты
+ */
+export const makePredictionKeyboardResults = (): IKeyboard =>
+  hiddenInputKeyboard([
+    actionButton(MAKE_PREDICTION.LABEL, MAKE_PREDICTION.REPLAY_TEXT),
+    actionButton(USER_PREDICTIONS.LABEL, USER_PREDICTIONS.REPLAY_TEXT, undefined, 2),
+    actionButton(USERS_RESULTS.LABEL, USERS_RESULTS.REPLAY_TEXT, undefined, 2),
+    actionButton(USERS_PREV_RESULTS.LABEL, USERS_PREV_RESULTS.REPLAY_TEXT, undefined, 2),
+  ]);

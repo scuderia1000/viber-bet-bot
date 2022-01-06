@@ -7,7 +7,7 @@ import { IService } from '../common/IService';
 import { ICompetitionListeners, MatchTeamType } from '../../types/base';
 import { FinalPartPredictionStages, LeagueCodes, TeamType } from '../../const';
 import { IMatch, IScore } from '../matches/Match';
-import { IMatchService } from '../matches/MatchService';
+import { IMatchService, IUsersPredictionsResults } from '../matches/MatchService';
 import { MatchStatus } from '../types/Base';
 import { ICompetitionWithMatches } from '../../api/football-data-org';
 
@@ -24,6 +24,7 @@ export interface IPredictionService extends IService<IPrediction> {
     userViberId: string,
     matchesIds: ObjectId[],
   ): Promise<Record<string, IPrediction>>;
+  allUsersResults(): Promise<IUsersPredictionsResults[]>;
 }
 
 interface MatchStageScore {
@@ -330,5 +331,10 @@ export class PredictionService
       whoWonExtraTime,
       whoWonPenalties,
     };
+  }
+
+  async allUsersResults(): Promise<IUsersPredictionsResults[]> {
+    const result: IUsersPredictionsResults[] = await this.dao.allUsersResults();
+    return result;
   }
 }

@@ -2,6 +2,8 @@ import { Cursor, Db, ObjectId } from 'mongodb';
 import { ICommonDao } from '../common/ICommonDao';
 import { IPrediction, Prediction } from './Prediction';
 import CRUDDao from '../common/CRUDDao';
+import { IUsersPredictionsResults } from '../matches/MatchService';
+import { allUsersResults } from '../matches/queries';
 
 export interface IPredictionDao extends ICommonDao<IPrediction> {
   predictionsByUser(userViberId: string): Promise<Record<string, IPrediction>>;
@@ -11,6 +13,7 @@ export interface IPredictionDao extends ICommonDao<IPrediction> {
     matchesIds: ObjectId[],
   ): Promise<Record<string, IPrediction>>;
   emptyUsersPredictionsScore(): Promise<IPrediction[]>;
+  allUsersResults(): Promise<IUsersPredictionsResults[]>;
 }
 
 export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDao {
@@ -70,6 +73,14 @@ export class PredictionDao extends CRUDDao<IPrediction> implements IPredictionDa
         result[prediction.matchId.toHexString()] = prediction;
       }
     });
+    return result;
+  }
+
+  async allUsersResults(): Promise<IUsersPredictionsResults[]> {
+    const query = [...allUsersResults];
+
+    const cursor = this.collection.aggregate<IUsersPredictionsResults>(query);
+    const result: IUsersPredictionsResults[] = await cursor.toArray();
     return result;
   }
 }

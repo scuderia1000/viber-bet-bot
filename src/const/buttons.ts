@@ -44,7 +44,14 @@ const USERS_RESULTS = {
   LABEL: 'Все результаты',
   REPLAY_TEXT: 'usersResults',
   REPLAY_DISABLED: '',
-  DISABLED: true,
+  DISABLED: false,
+};
+
+const USERS_PREV_RESULTS = {
+  LABEL: 'Результаты пред. тура',
+  REPLAY_TEXT: 'prevUsersResults',
+  REPLAY_DISABLED: '',
+  DISABLED: false,
 };
 
 const SELECT_LEAGUE = {
@@ -67,6 +74,7 @@ export {
   TEAM,
   USER_PREDICTIONS,
   USERS_RESULTS,
+  USERS_PREV_RESULTS,
   LEAGUES,
   DISABLED_TEXT,
   SELECT_LEAGUE,

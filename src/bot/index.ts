@@ -3,6 +3,7 @@ import { ObjectId } from 'mongodb';
 import {
   makePredictionKeyboard,
   makePredictionKeyboardPaged,
+  makePredictionKeyboardResults,
   predictTeamScoreKeyboard,
   selectLeagueKeyboard,
 } from './keyboards';
@@ -31,6 +32,8 @@ import { IPrediction } from '../domain/predictions/Prediction';
 import getParams from '../util/parse-message-params';
 import { MatchStatus } from '../domain/types/Base';
 import { MY_PREDICTION_REPLAY_TEXT } from '../const/buttons';
+import { IUsersPredictionsResults } from '../domain/matches/MatchService';
+import { userResultsText } from '../util';
 
 const initializeBot = (token: string, modules: IModules): Bot => {
   const TextMessage = Message.Text;
@@ -114,13 +117,18 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     );
   };
 
+  const sendResultNotFound = (response: ViberResponse) =>
+    sendTextMessage(response, `Результаты не найдены`, makePredictionKeyboard());
+
   const bot = new ViberBot(logger, {
     authToken: token,
     name: 'Phoenix Bet Bot', // <--- Your bot name here
     avatar: `${process.env.OCI_BUCKET_PREFIX}phoenix_007.jpg`, // It is recommended to be 720x720, and no more than 100kb.
   });
 
-  // Перешли по ссылке
+  /**
+   * Перешли по ссылке
+   */
   bot.onConversationStarted(async (userProfile, isSubscribed, context, onFinish) => {
     await modules.userModule.service.saveViberUser(userProfile);
     onFinish(
@@ -366,6 +374,56 @@ const initializeBot = (token: string, modules: IModules): Bot => {
     response.send(
       new TextMessage(
         `Hi there ${response.userProfile.name}. You are go back`,
+        makePredictionKeyboard(),
+        undefined,
+        undefined,
+        undefined,
+        VIBER_MIN_API_LEVEL,
+      ),
+    );
+  });
+
+  /**
+   * Нажали на Все результаты
+   */
+  bot.onTextMessage(/^usersResults.*$/i, async (message, response) => {
+    const user = await modules.userModule.service.getById(response.userProfile.id);
+    if (!user) return;
+
+    const result = await modules.predictionModule.service.allUsersResults();
+    if (!result.length) {
+      sendResultNotFound(response);
+      return;
+    }
+    const text = userResultsText(result);
+    response.send(
+      new TextMessage(
+        text,
+        makePredictionKeyboardResults(),
+        undefined,
+        undefined,
+        undefined,
+        VIBER_MIN_API_LEVEL,
+      ),
+    );
+  });
+
+  /**
+   * Нажали на Результаты пред. тура
+   */
+  bot.onTextMessage(/^prevUsersResults.*$/i, async (message, response) => {
+    const user = await modules.userModule.service.getById(response.userProfile.id);
+    if (!user) return;
+
+    const result = await modules.matchModule.service.allUsersResultPrevStage();
+    if (!result.length) {
+      sendResultNotFound(response);
+      return;
+    }
+    const text = userResultsText(result);
+    response.send(
+      new TextMessage(
+        text,
         makePredictionKeyboard(),
         undefined,
         undefined,
